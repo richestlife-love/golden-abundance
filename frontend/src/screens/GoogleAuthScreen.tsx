@@ -154,7 +154,9 @@ export default function GoogleAuthScreen({ onCancel, onSuccess }: Props) {
                   {a.name[0]}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: fs(14), color: "#202124", fontWeight: 500 }}>{a.name}</div>
+                  <div style={{ fontSize: fs(14), color: "#202124", fontWeight: 500 }}>
+                    {a.name}
+                  </div>
                   <div
                     style={{
                       fontSize: fs(12),

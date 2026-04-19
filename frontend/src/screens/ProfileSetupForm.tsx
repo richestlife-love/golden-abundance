@@ -233,7 +233,9 @@ export default function ProfileSetupForm({
           {(user?.name || "U").slice(0, 1).toUpperCase()}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: fs(14), fontWeight: 700, color: fg }}>{user?.name || "新志工"}</div>
+          <div style={{ fontSize: fs(14), fontWeight: 700, color: fg }}>
+            {user?.name || "新志工"}
+          </div>
           <div
             style={{
               fontSize: fs(11),

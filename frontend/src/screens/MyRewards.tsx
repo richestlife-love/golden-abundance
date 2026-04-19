@@ -199,7 +199,9 @@ export default function MyRewards({
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: fs(14), fontWeight: 800, color: fg }}>金牌志工達成 🎉</div>
-                <div style={{ fontSize: fs(11), color: muted, marginTop: 2 }}>你已解鎖所有階段獎勵</div>
+                <div style={{ fontSize: fs(11), color: muted, marginTop: 2 }}>
+                  你已解鎖所有階段獎勵
+                </div>
               </div>
             </div>
           ) : (

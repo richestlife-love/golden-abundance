@@ -217,7 +217,9 @@ export default function TeamForm({ onCancel, onSubmit }: Props) {
                         flexWrap: "wrap",
                       }}
                     >
-                      <div style={{ fontSize: fs(14), fontWeight: 700, color: fg }}>{team.name}</div>
+                      <div style={{ fontSize: fs(14), fontWeight: 700, color: fg }}>
+                        {team.name}
+                      </div>
                       <div
                         style={{
                           fontSize: fs(9),

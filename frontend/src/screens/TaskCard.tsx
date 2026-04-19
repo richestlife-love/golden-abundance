@@ -159,7 +159,9 @@ export default function TaskCard({
               flexWrap: "wrap",
             }}
           >
-            <div style={{ fontSize: fs(11), color: muted }}>{t.due ? `截止 ${t.due}` : "無截止日"}</div>
+            <div style={{ fontSize: fs(11), color: muted }}>
+              {t.due ? `截止 ${t.due}` : "無截止日"}
+            </div>
             <div
               style={{
                 display: "inline-flex",
@@ -192,7 +194,9 @@ export default function TaskCard({
               flexWrap: "wrap",
             }}
           >
-            <div style={{ fontSize: fs(11), color: muted }}>{t.due ? `截止 ${t.due}` : "無截止日"}</div>
+            <div style={{ fontSize: fs(11), color: muted }}>
+              {t.due ? `截止 ${t.due}` : "無截止日"}
+            </div>
             {t.due && typeof t.daysLeft === "number" && (
               <div
                 style={{

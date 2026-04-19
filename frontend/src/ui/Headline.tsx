@@ -1,17 +1,15 @@
-import { fs } from "../utils";
-
 type Props = {
   text: string;
-  fontSize: number;
+  fontSizeCss: string;
 };
 
-export default function Headline({ text, fontSize }: Props) {
+export default function Headline({ text, fontSizeCss }: Props) {
   return (
     <div
       style={{
         textAlign: "center",
         lineHeight: 1,
-        fontSize: fs(fontSize),
+        fontSize: fontSizeCss,
         fontWeight: 400,
         letterSpacing: 6,
         fontFamily: "var(--font-display)",

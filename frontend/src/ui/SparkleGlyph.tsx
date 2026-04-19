@@ -1,16 +1,23 @@
 type Props = {
   x: number | string;
   y: number | string;
-  size?: number;
+  /** Any valid CSS length — `18`, `"18px"`, `"calc(var(--ms) * 0.07)"`, etc. */
+  sizeCss?: number | string;
   color?: string;
   delay?: number;
 };
 
-export default function SparkleGlyph({ x, y, size = 18, color = "#fff", delay = 0 }: Props) {
+export default function SparkleGlyph({
+  x,
+  y,
+  sizeCss = 18,
+  color = "#fff",
+  delay = 0,
+}: Props) {
   return (
     <svg
-      width={size}
-      height={size}
+      width={sizeCss}
+      height={sizeCss}
       viewBox="0 0 24 24"
       style={{
         position: "absolute",

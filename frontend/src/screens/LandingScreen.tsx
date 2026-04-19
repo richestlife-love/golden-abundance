@@ -1,5 +1,4 @@
 import { fs } from "../utils";
-import { useState, useEffect, useRef } from "react";
 import PaperBackground from "../ui/PaperBackground";
 import MascotHero from "../ui/MascotHero";
 import Headline from "../ui/Headline";
@@ -7,51 +6,16 @@ import GradientButton from "../ui/GradientButton";
 
 type Props = { onStart: () => void };
 
+// Hero is the smaller of 90% of the container's short edge (cqi) and 48% of
+// its height (cqb), clamped between 200 and 480px. Title follows the same
+// shape but scaled down. Using container-query units keeps the hero sized
+// to the screen itself even when the app is embedded in a narrower frame.
+const HERO_SIZE = "clamp(200px, min(90cqi, 48cqb), 480px)";
+const TITLE_SIZE = "clamp(28px, min(11.5cqi, 5.5cqb), 46px)";
+
 export default function LandingScreen({ onStart }: Props) {
-  const getInitial = () => {
-    const w = Math.min(typeof window !== "undefined" ? window.innerWidth : 390, 440);
-    const h = typeof window !== "undefined" ? window.innerHeight : 800;
-    return { w: w || 390, h: h || 800 };
-  };
-  const [dims, setDims] = useState(getInitial);
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const update = () => {
-      if (rootRef.current) {
-        const r = rootRef.current.getBoundingClientRect();
-        // guard against zero readings before layout has settled
-        if (r.width > 0 && r.height > 0) {
-          setDims({ w: r.width, h: r.height });
-        }
-      }
-    };
-    // measure on next frame AND after a tick, so layout has settled
-    const raf = requestAnimationFrame(update);
-    const t = setTimeout(update, 80);
-    let ro: ResizeObserver | undefined;
-    if (typeof ResizeObserver !== "undefined" && rootRef.current) {
-      ro = new ResizeObserver(update);
-      ro.observe(rootRef.current);
-    }
-    window.addEventListener("resize", update);
-    return () => {
-      cancelAnimationFrame(raf);
-      clearTimeout(t);
-      if (ro) ro.disconnect();
-      window.removeEventListener("resize", update);
-    };
-  }, []);
-
-  // Responsive scaling based on viewport, with sensible floors
-  const short = Math.max(Math.min(dims.w || 390, 440), 280);
-  const tall = Math.max(dims.h || 800, 520);
-  const heroSize = Math.max(Math.min(short * 0.9, tall * 0.48, 480), 200);
-  const titleSize = Math.max(Math.min(short * 0.115, tall * 0.055, 46), 28);
-
   return (
     <div
-      ref={rootRef}
       data-screen-label="Landing"
       style={{
         flex: 1,
@@ -61,6 +25,7 @@ export default function LandingScreen({ onStart }: Props) {
         display: "flex",
         flexDirection: "column",
         color: "var(--fg)",
+        containerType: "size",
       }}
     >
       <PaperBackground />
@@ -136,7 +101,7 @@ export default function LandingScreen({ onStart }: Props) {
             animation: "fadeInUp 0.9s 0.1s ease backwards",
           }}
         >
-          <MascotHero size={heroSize} />
+          <MascotHero sizeCss={HERO_SIZE} />
         </div>
 
         {/* Headline */}
@@ -146,7 +111,7 @@ export default function LandingScreen({ onStart }: Props) {
             flexShrink: 0,
           }}
         >
-          <Headline text="金富有志工" fontSize={titleSize} />
+          <Headline text="金富有志工" fontSizeCss={TITLE_SIZE} />
         </div>
 
         {/* Subtitle */}

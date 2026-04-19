@@ -91,13 +91,11 @@ async def test_search_team_refs_filters_by_q_on_name(session: AsyncSession) -> N
     wei_team.alias = "完全無關"
     await session.commit()
 
-    # Name match (default team name contains zh_name + "的團隊")
     by_name = await search_team_refs(
         session, q="簡傑特", topic=None, leader_display_id=None, cursor=None, limit=20
     )
     assert [t.id for t in by_name.items] == [jet_team.id]
 
-    # Alias match
     by_alias = await search_team_refs(
         session, q="金富有", topic=None, leader_display_id=None, cursor=None, limit=20
     )

@@ -227,12 +227,8 @@ async def approve_join_request(
     session.add(TeamMembershipRow(team_id=team.id, user_id=req.user_id))  # ty: ignore[missing-argument]
     await session.flush()
 
-    # Team just grew — reward any user on this team whose challenge-task
-    # cap is now met. Short-circuit when no bonused challenges exist (the
-    # default Phase-5 seed: T3.bonus is None) so we skip the per-member
-    # reward cascade entirely instead of burning N × (3–4 SELECTs) per
-    # approval. This keeps the branch ready for when a bonused challenge
-    # does ship, without paying for it today.
+    # Skip the reward cascade when no bonused challenges exist —
+    # default seed has no bonuses, saving an N+1 per approval.
     challenge_defs = (
         await session.execute(
             select(TaskDefRow)
@@ -243,8 +239,7 @@ async def approve_join_request(
     if not challenge_defs:
         return
 
-    # Post-flush: the query returns the just-added membership, so
-    # leader + memberships covers every team member exactly once.
+    # Post-flush: query includes the just-added membership.
     memberships = (
         await session.execute(
             select(TeamMembershipRow).where(TeamMembershipRow.team_id == team.id)  # ty: ignore[invalid-argument-type]

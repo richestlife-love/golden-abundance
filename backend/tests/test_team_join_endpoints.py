@@ -29,11 +29,6 @@ async def test_create_join_request_leader_to_own_team_409(client: AsyncClient) -
 async def test_create_join_request_existing_member_to_same_team_409(
     client: AsyncClient,
 ) -> None:
-    """A user who is already a member of team X cannot post a join-request
-    to team X. Exercises the `existing_membership is not None` branch in
-    `create_join_request`, which the any-team and pending checks don't
-    cover (both fire ahead of it for the same-team case only after a
-    successful approve → leave → rejoin-same-team sequence)."""
     jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
     out = await sign_in_and_complete(client, "out@example.com", "外人")
     req = (
@@ -45,8 +40,6 @@ async def test_create_join_request_existing_member_to_same_team_409(
         f"/api/v1/teams/{jet.led_team_id}/join-requests/{req['id']}/approve",
         headers=jet.headers,
     )
-    # `out` is now a member of jet's team. Posting another join-request
-    # to the same team should 409.
     response = await client.post(
         f"/api/v1/teams/{jet.led_team_id}/join-requests", headers=out.headers
     )

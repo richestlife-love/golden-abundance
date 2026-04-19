@@ -96,3 +96,17 @@ Surfaced during Phase 5b (Google-stub auth + HS256 JWT + `/auth/google`, `/auth/
 
 ### Dependencies
 - **`email-validator` is an undeclared direct dependency** — used by [`backend/src/backend/auth/google_stub.py`](../backend/src/backend/auth/google_stub.py) via the `pydantic[email]` transitive. Pin explicitly in `backend/pyproject.toml` (`"email-validator>=2"`) so a future `pydantic` extra change can't silently break the auth stub.
+
+## Tech debt / review findings (Phase 5c)
+
+Surfaced during Phase 5c (profile completion + teams read/update + full join-request workflow). Address before production sign-ups land or as each route becomes hot; none block Phase 5d (content) or 5e (polish).
+
+### Concurrency / consistency
+- **`create_join_request` is non-atomic** — [`backend/src/backend/services/team.py`](../backend/src/backend/services/team.py). The 4 conflict checks (self-leader, member-of-this-team, member-of-any-team, has-pending-request) are separate SELECTs before the INSERT. Two concurrent requests by the same user can both pass and both INSERT, violating the at-most-one-pending invariant. Acceptable for single-tenant Phase-5 dev; tighten in Phase 6 with a partial unique index `WHERE status='pending'` on `join_requests(user_id)` + catch `IntegrityError` for a clean 409 retranslate, or wrap the precheck-then-insert in a `SELECT … FOR UPDATE` row lock on the requester's UserRow.
+
+### Performance
+- **`row_to_contract_team` N+1** — [`backend/src/backend/services/team.py`](../backend/src/backend/services/team.py). Members are batch-loaded but each pending join-request fetches its requester via a separate `session.get(UserRow, …)`. Fine for teams ≤ 10 members; if `GET /teams/{id}` ever becomes hot, batch the requester user loads with one `select(UserRow).where(UserRow.id.in_(…))` the same way members are batched today.
+- **Reward-cascade N+1 in `approve_join_request`** — [`backend/src/backend/services/team.py`](../backend/src/backend/services/team.py). After approval, the function loops over all members (leader + new + existing) and calls `maybe_grant_challenge_rewards` per user, which itself runs 3-4 SELECTs (challenge defs, led team, led mems, joined link, joined mems, existing reward). For a 6-member team that's roughly 24 queries on a single approval. Acceptable for Phase-5 single-tenant scale; if approval becomes hot, batch the per-user reward check into one query that joins members × challenge defs × existing rewards, or move the cascade to a background job.
+
+### Architecture
+- **`services/team.py` is approaching god-module size** — ~347 LOC, 9 public functions across 4 conceptual groups (mapper + search, team lifecycle, join-request workflow, reward cascade). Coherent today but a Phase-6 split candidate: `team/queries.py` (`row_to_contract_team`, `search_team_refs`, `user_to_ref`), `team/lifecycle.py` (`create_led_team`), `team/membership.py` (`JoinConflict` + `create/approve/reject_join_request`, `leave_team`, `maybe_grant_challenge_rewards`).

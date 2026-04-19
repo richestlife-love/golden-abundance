@@ -51,14 +51,14 @@ const MeIcon = () => (
   </svg>
 );
 
-export default function BottomNav({ current, muted, onNavigate }: Props) {
-  const items: { key: ScreenId; label: string; icon: ReactNode }[] = [
-    { key: "home", label: "首页", icon: <HomeIcon /> },
-    { key: "tasks", label: "任务", icon: <TasksIcon /> },
-    { key: "rank", label: "排行", icon: <RankIcon /> },
-    { key: "me", label: "我的", icon: <MeIcon /> },
-  ];
+const ITEMS: { key: ScreenId; label: string; icon: ReactNode }[] = [
+  { key: "home", label: "首页", icon: <HomeIcon /> },
+  { key: "tasks", label: "任务", icon: <TasksIcon /> },
+  { key: "rank", label: "排行", icon: <RankIcon /> },
+  { key: "me", label: "我的", icon: <MeIcon /> },
+];
 
+export default function BottomNav({ current, muted, onNavigate }: Props) {
   return (
     <div
       style={{
@@ -72,7 +72,7 @@ export default function BottomNav({ current, muted, onNavigate }: Props) {
         borderTop: "1px solid rgba(254,210,52,0.25)",
       }}
     >
-      {items.map((n) => {
+      {ITEMS.map((n) => {
         const active = n.key === current;
         return (
           <button

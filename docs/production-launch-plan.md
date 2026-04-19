@@ -27,8 +27,8 @@ See the [design spec](superpowers/specs/2026-04-19-api-contract-design.md).
 - [ ] Replace in-file mock arrays with real fetches
 
 ## Phase 5 — Persistence
-- [ ] Add Postgres via SQLModel
-- [ ] Set up Alembic migrations
+- [x] Add Postgres via SQLModel
+- [x] Set up Alembic migrations
 - [ ] Implement CRUD for each resource
 
 ## Phase 6 — Auth

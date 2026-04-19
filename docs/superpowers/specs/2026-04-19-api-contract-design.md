@@ -44,7 +44,7 @@ All IDs are `UUID` unless noted otherwise. All timestamps are `datetime` seriali
 
 - `UserRef` — thin embedding for use inside other entities: `{id, display_id, name, avatar_url}`.
 - `TeamRef` — thin embedding: `{id, display_id, name, topic, leader: UserRef}`.
-- `Paginated[T]` — generic: `{items: list[T], cursor: str | None, total: int | None}`.
+- `Paginated[T]` — generic: `{items: list[T], next_cursor: str | None}`. `next_cursor` is the cursor to pass to the next call (not the current cursor echoed back); `null` means no more pages. No `total` field — counting is expensive at scale and no current screen uses it; add later if a UI needs it.
 
 No custom `ProblemDetail` — FastAPI's default `{detail}` is used.
 
@@ -113,9 +113,18 @@ The user-facing `Task` is a server-side merge of the global task definition and 
 
 **`TeamChallengeProgress`**: `{total: int, cap: int, led_total: int, joined_total: int}`. `total = max(led_total, joined_total)` — the higher of the caller's led-team or joined-team head count. Server-computed; frontend displays only.
 
-**Form bodies (polymorphic request body for `POST /tasks/{task_id}/submit`)**:
+**Derivation rules (server-authoritative):**
+
+- `status == "locked"` iff any id in `requires` is not in the caller's set of completed task ids. Frontend and backend must use this rule; do not invent alternatives.
+- `status == "expired"` iff `due_at` is set and in the past and the task is not yet completed by the caller.
+- `progress` is authoritative. Clients display `steps[].done` for checklist UX but must never compute `progress` from step counts; the server's value wins.
+
+**Form bodies (discriminated union for `POST /tasks/{task_id}/submit`)**:
+
+Each body carries a `form_type` literal that acts as the Pydantic 2 discriminator. The endpoint declares `Annotated[InterestFormBody | TicketFormBody, Field(discriminator="form_type")]` — OpenAPI emits a tagged `oneOf`, and generated TypeScript gets a clean discriminated union.
 
 - **`InterestFormBody`** (task 1):
+  - `form_type: Literal["interest"]`
   - `name: str` (required)
   - `phone: str` (required)
   - `interests: list[str]` (required, `min_length=1`)
@@ -123,6 +132,7 @@ The user-facing `Task` is a server-side merge of the global task definition and 
   - `availability: list[str]` (required, `min_length=1`)
 
 - **`TicketFormBody`** (task 2):
+  - `form_type: Literal["ticket"]`
   - `name: str` (required)
   - `ticket_725: str` (required)
   - `ticket_726: str` (required)
@@ -130,7 +140,7 @@ The user-facing `Task` is a server-side merge of the global task definition and 
 
 Task 3 (team challenge) has no form body — its state is driven by team operations. Task 4 (expired training) has no form body either — its status is fixed at `expired`.
 
-Clients pick the body by reading `Task.form_type` from the task response: `"interest"` → send `InterestFormBody`, `"ticket"` → send `TicketFormBody`, `None` → task does not accept submissions (400). Backend dispatches the same way, and the request body at `POST /tasks/{task_id}/submit` is a `Union[InterestFormBody, TicketFormBody]` with runtime validation against the task's declared `form_type`.
+Clients pick the body by reading `Task.form_type` from the task response: `"interest"` → send `InterestFormBody` (with `form_type: "interest"`), `"ticket"` → send `TicketFormBody` (with `form_type: "ticket"`), `None` → task does not accept submissions (400).
 
 **`TaskSubmissionResponse`** (response for submit): `{task: Task, reward: Reward | None}`.
 
@@ -178,15 +188,19 @@ Clients pick the body by reading `Task.form_type` from the task response: `"inte
 | `earned_at` | `datetime` | |
 | `claimed_at` | `datetime \| None` | |
 
+A task with `bonus == None` does **not** create a `Reward` row on completion. `Reward.bonus` is therefore always non-null.
+
 ### 1.7 `News` — `news.py`
 
-**`NewsItem`**: `{id: UUID, title: str, body: str, image_url: str | None, published_at: datetime, pinned: bool}`.
+**`NewsItem`**: `{id: UUID, title: str, body: str, category: Literal["公告","活動","通知"], image_url: str \| None, published_at: datetime, pinned: bool}`.
+
+`category` drives the badge colour on the home-screen news carousel (the mapping from category → colour lives on the client; see `frontend/app.jsx` NewsBoard).
 
 ### 1.8 `Auth` — `auth.py`
 
 - **`GoogleAuthRequest`**: `{id_token: str}`.
 - **`AuthResponse`**: `{access_token: str, token_type: Literal["bearer"], expires_in: int, user: User, profile_complete: bool}`.
-- **`TokenClaims`** (documentation only; not a request body): `{sub: UUID, email: EmailStr, exp: int, iat: int}`.
+- **`TokenClaims`** (documentation only — describes the JWT payload shape; **not exported from `backend.contract.__init__`** and not used as a request/response body): `{sub: UUID, email: EmailStr, exp: int, iat: int}`.
 
 ## 2. Endpoints
 
@@ -215,7 +229,7 @@ All paths under `/api/v1/`. `Auth` column: `—` = public, `B` = `Authorization:
 | Method | Path | Auth | Request | Response | Errors |
 |---|---|---|---|---|---|
 | GET | `/tasks/{task_id}` | B | — | 200 `Task` | 401, 404 |
-| POST | `/tasks/{task_id}/submit` | B | `InterestFormBody` \| `TicketFormBody` (depends on task) | 200 `TaskSubmissionResponse` | 400 task has no form, 401, 404, 409 already completed, 412 prerequisites unmet, 422 |
+| POST | `/tasks/{task_id}/submit` | B | discriminated union `InterestFormBody \| TicketFormBody` on `form_type` | 200 `TaskSubmissionResponse` | 400 task has no form / wrong `form_type`, 401, 404, 409 already completed (idempotent — resubmitting a completed task returns 409 rather than silently succeeding), 412 prerequisites unmet, 422 |
 
 ### 2.4 Teams
 
@@ -224,12 +238,15 @@ All paths under `/api/v1/`. `Auth` column: `—` = public, `B` = `Authorization:
 | GET | `/teams` | B | query: `q`, `topic`, `leader_display_id`, `cursor`, `limit` | 200 `Paginated[TeamRef]` | 401, 422 |
 | GET | `/teams/{team_id}` | B | — | 200 `Team` | 401, 404 |
 | PATCH | `/teams/{team_id}` | B | `TeamUpdate` | 200 `Team` | 401, 403 not leader, 404, 422 |
-| DELETE | `/teams/{team_id}` | B | — | 204 (disbands) | 401, 403 not leader, 404 |
-| POST | `/teams/{team_id}/join-requests` | B | — | 201 `JoinRequest` | 401, 404, 409 already member/requester/has-joined-team |
+| POST | `/teams/{team_id}/join-requests` | B | — | 201 `JoinRequest` | 401, 404, 409 (see note below) |
 | DELETE | `/teams/{team_id}/join-requests/{req_id}` | B | — | 204 | 401, 403 not requester, 404 |
 | POST | `/teams/{team_id}/join-requests/{req_id}/approve` | B | — | 200 `Team` | 401, 403 not leader, 404 |
 | POST | `/teams/{team_id}/join-requests/{req_id}/reject` | B | — | 204 | 401, 403 not leader, 404 |
 | POST | `/teams/{team_id}/leave` | B | — | 204 | 401, 403 leader cannot leave own team, 404 |
+
+**409 on `POST /teams/{team_id}/join-requests`** fires when any of the following holds: caller is already a member or leader of this team; caller already has a pending request to this team; caller is already a member (or has a pending request) of **any other** team. A user may belong to at most one joined team at a time, and may have at most one outstanding join request at a time.
+
+**No `DELETE /teams/{team_id}`.** The frontend does not expose a "disband" affordance anywhere — the "退出" button in `TeamCard` is gated by `!isLeader` (see `frontend/app.jsx:6845`). Leaders manage their team via `PATCH` (rename/topic); they cannot disband it. This preserves the invariant that every profile-complete user has a led team.
 
 ### 2.5 Rank
 
@@ -242,12 +259,14 @@ All paths under `/api/v1/`. `Auth` column: `—` = public, `B` = `Authorization:
 
 | Method | Path | Auth | Request | Response | Errors |
 |---|---|---|---|---|---|
-| GET | `/news` | B | query: `cursor`, `limit=20` | 200 `Paginated[NewsItem]` | 401, 422 |
+| GET | `/news` | B | query: `cursor`, `limit=20` | 200 `Paginated[NewsItem]` (sorted `pinned DESC, published_at DESC`) | 401, 422 |
 
 ### 2.7 Endpoint notes
 
 - **No `POST /teams`.** Every user's led team is auto-created by `POST /me/profile`. Users cannot lead more than one team. Multi-team leadership, if ever wanted, is a new endpoint.
-- **`POST /tasks/{task_id}/submit`** uses a task-dependent body. The chosen approach (task-scoped route with polymorphic body) keeps the frontend's mental model task-centric. Alternative — separate per-form endpoints — was rejected because it scatters related behavior.
+- **No `DELETE /teams/{team_id}`.** Leaders cannot disband — see §2.4 note. The `leaveLedTeam` handler in `frontend/app.jsx` is dead code (not wired to any button).
+- **`GET /me/teams.led` is effectively non-null for any profile-complete caller.** The led team is created atomically with profile completion and cannot be disbanded.
+- **`POST /tasks/{task_id}/submit`** uses a task-dependent discriminated body keyed on `form_type`. Task-scoped route was chosen over per-form endpoints to keep the frontend's mental model task-centric.
 - **Task 3 (team challenge) has no endpoint.** Its status is derived server-side from team membership. Any team-membership-mutating action (`approve`, `leave`, etc.) recomputes the caller's task 3 status in the same transaction.
 - **`Team.requests` is caller-scoped.** Members see `None`; only the leader sees the pending queue. Enforced server-side, not by field omission on the client.
 
@@ -276,9 +295,9 @@ Body:  { "id_token": "<Google ID token>" }
 401:   invalid/expired id_token
 ```
 
-Backend responsibilities inside this endpoint:
+Backend responsibilities inside this endpoint (Phase 5 when the handler is written):
 
-- Verify Google ID token (audience, signature, expiry). Stubbed in Phase 2; real verification in Phase 6.
+- Verify Google ID token (audience, signature, expiry). Phase 5 will scaffold a stub handler that accepts any non-empty `id_token`; real verification against Google's JWKS lands in Phase 6. (Phase 2 produces no running service, so there is nothing to stub in this phase.)
 - Upsert user by email. First-time users get a generated `display_id` (`U` + deterministic hash of email, collision-suffixed) and `profile_complete=false`.
 - Mint a JWT with claims `{sub: user.id, email, exp, iat}`, HS256, 24h TTL. Secret from env.
 
@@ -352,7 +371,7 @@ Each endpoint's non-obvious error codes are listed in the `Errors` column of the
 
 **Pagination rules:**
 
-- `cursor=null` in response → no more pages.
+- The response `next_cursor` is the cursor to pass on the next call. `null` → no more pages.
 - Each paginated endpoint has a default `limit` and a hard max of 100. Over-max → 422.
 - Cursor format is opaque to clients. Backend may encode offset, last-id, or timestamp; free to change.
 
@@ -366,6 +385,7 @@ Each endpoint's non-obvious error codes are listed in the `Errors` column of the
 - **Version bumps:** `/api/v2/` is a breaking-change event (schema changes to existing fields, removed endpoints). Additive changes (new fields with defaults, new endpoints) stay on `/v1`.
 - **Content type:** `application/json` only. UTF-8.
 - **Datetimes:** ISO 8601 with `Z` (UTC). Pydantic 2 default.
+- **Field naming.** Contract is **snake_case** (`est_minutes`, `phone_code`, `week_points`). The frontend prototype currently uses **camelCase** (`estMinutes`, `phoneCode`, `weekPoints`) — 73 occurrences across `app.jsx`. Phase 4 will rename either via a codegen option (`datamodel-code-generator --snake-case-field` is available but awkward to apply to JS consumers) or a thin adapter layer. Decision deferred to Phase 4; the contract stays snake_case regardless.
 
 CORS, TLS, and deployment concerns are out of scope for this contract; they live with the backend service.
 
@@ -429,8 +449,10 @@ justfile                         Add recipe: `just contract-validate` →
 
 ## 8. Open points deferred past Phase 2
 
-- **i18n.** All user-visible strings in the frontend are hard-coded Chinese. Contract leaves `tag`, `topic`, form option values as Chinese strings. Localization strategy — translation keys vs. enum IDs — is a later-phase decision.
-- **Tag taxonomy.** `Literal["探索","社区","陪伴"]` is closed; growing the set is a schema migration. Future extensibility via a tags table is open.
+- **i18n.** All user-visible strings in the frontend are hard-coded Chinese. Contract leaves `tag`, `topic`, form option values, and news `category` as Chinese strings. Localization strategy — translation keys vs. enum IDs — is a later-phase decision.
+- **Simplified vs Traditional characters.** `Task.tag` uses `"社区"` (simplified) because the frontend's `TASKS` data uses it (see `frontend/app.jsx:819, 898, 2324`). Other copy in the same codebase uses `"社區"` (traditional), e.g. news body (`:1234`) and team topics (`:9422`). The contract mirrors the existing inconsistency; Phase 8 (or an explicit i18n pass) should normalise to one set.
+- **Tag taxonomy.** `Literal["探索","社区","陪伴"]` and `Literal["公告","活動","通知"]` are closed; growing either set is a schema migration. Future extensibility via a tags table is open.
+- **Rank UX for self-lookup.** Cursor pagination on `/rank/users` and `/rank/teams` makes "jump to my position" and stable page numbers awkward. A follow-up endpoint — `GET /rank/users/me` (returns the caller's entry with surrounding context) or a `?include=caller` query param — would restore that UX without abandoning cursor pagination. Not blocking for Phase 2.
 - **Avatar uploads.** `avatar_url` is a placeholder. The frontend currently uses gradient strings; real uploads arrive later with a storage choice (S3 / R2 / etc.) and a presigned-URL flow.
 - **Realtime.** No WebSocket / SSE in Phase 2. Team join-request updates, rank board, news are polled.
 - **Notifications.** No push or email endpoints.

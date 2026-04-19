@@ -36,6 +36,31 @@ export default function GlobalStyles() {
       }
       html, body { margin: 0; padding: 0; background: var(--bg-shell); }
       * { box-sizing: border-box; }
+
+      /* Focus rings — keyboard-only via :focus-visible */
+      button, [role="button"], a, input, textarea, select { outline: none; }
+      button:focus-visible, [role="button"]:focus-visible, [tabindex="0"]:focus-visible, a:focus-visible {
+        outline: 2px solid var(--gold-deep);
+        outline-offset: 2px;
+      }
+
+      /* Shared form-field base — inputs & textareas */
+      .ga-input {
+        width: 100%;
+        padding: 0 14px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.85);
+        color: var(--fg);
+        font-family: inherit;
+        box-sizing: border-box;
+        border: 1px solid rgba(254, 210, 52, 0.4);
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+      .ga-input:focus-visible {
+        outline: none;
+        border-color: var(--gold-deep);
+        box-shadow: 0 0 0 3px rgba(254, 199, 1, 0.25);
+      }
       .news-track::-webkit-scrollbar, .rw-hscroll::-webkit-scrollbar { display: none; }
       @keyframes spin { to { transform: rotate(360deg); } }
       @keyframes bobble { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }

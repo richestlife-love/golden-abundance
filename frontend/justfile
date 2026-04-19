@@ -1,5 +1,3 @@
-default: dev
-
 # Run full CI (install, lint, format, typecheck + bundle). Mirrors backend's `ci`.
 ci:
     pnpm install

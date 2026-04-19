@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import FormShell from '../ui/FormShell';
-import FieldLabel from '../ui/FieldLabel';
-import TextInput from '../ui/TextInput';
-import ChipGroup from '../ui/ChipGroup';
-import SubmitButton from '../ui/SubmitButton';
+import { useState } from "react";
+import FormShell from "../ui/FormShell";
+import FieldLabel from "../ui/FieldLabel";
+import TextInput from "../ui/TextInput";
+import ChipGroup from "../ui/ChipGroup";
+import SubmitButton from "../ui/SubmitButton";
 
 type Props = {
   onCancel: () => void;
@@ -22,11 +22,7 @@ export default function InterestForm({ onCancel, onSubmit }: Props) {
   const [skills, setSkills] = useState<string[]>([]);
   const [availability, setAvailability] = useState<string[]>([]);
 
-  const valid =
-    name.trim() &&
-    phone.trim() &&
-    interests.length > 0 &&
-    availability.length > 0;
+  const valid = name.trim() && phone.trim() && interests.length > 0 && availability.length > 0;
   const card = {
     padding: "14px 14px",
     borderRadius: 16,
@@ -42,40 +38,21 @@ export default function InterestForm({ onCancel, onSubmit }: Props) {
       subtitle="填寫個人資訊、興趣與可投入時段"
       onCancel={onCancel}
       footer={
-        <SubmitButton
-          label="提交表單"
-          onClick={onSubmit}
-          disabled={!valid}
-          color="#fec701"
-        />
+        <SubmitButton label="提交表單" onClick={onSubmit} disabled={!valid} color="#fec701" />
       }
     >
       <div style={card}>
-        <FieldLabel required>
-          姓名
-        </FieldLabel>
-        <TextInput
-          value={name}
-          onChange={setName}
-          placeholder="請輸入你的姓名"
-        />
+        <FieldLabel required>姓名</FieldLabel>
+        <TextInput value={name} onChange={setName} placeholder="請輸入你的姓名" />
       </div>
 
       <div style={card}>
-        <FieldLabel required>
-          聯絡電話
-        </FieldLabel>
-        <TextInput
-          value={phone}
-          onChange={setPhone}
-          placeholder="09xx-xxxxxx"
-        />
+        <FieldLabel required>聯絡電話</FieldLabel>
+        <TextInput value={phone} onChange={setPhone} placeholder="09xx-xxxxxx" />
       </div>
 
       <div style={card}>
-        <FieldLabel required>
-          興趣方向
-        </FieldLabel>
+        <FieldLabel required>興趣方向</FieldLabel>
         <div
           style={{
             fontSize: 11,
@@ -133,9 +110,7 @@ export default function InterestForm({ onCancel, onSubmit }: Props) {
       </div>
 
       <div style={card}>
-        <FieldLabel required>
-          可投入時段
-        </FieldLabel>
+        <FieldLabel required>可投入時段</FieldLabel>
         <ChipGroup
           options={["平日白天", "平日晚上", "週末白天", "週末晚上"]}
           value={availability}

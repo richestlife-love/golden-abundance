@@ -1,4 +1,9 @@
-type Props = { value: string; onChange: (value: string) => void; placeholder?: string; rows?: number; };
+type Props = {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  rows?: number;
+};
 
 export default function Textarea({ value, onChange, placeholder, rows = 3 }: Props) {
   const fg = "#241c00";

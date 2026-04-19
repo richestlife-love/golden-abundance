@@ -7,7 +7,8 @@ type Props = {
   hideHeader?: boolean;
 };
 
-export default function MyRewards({ fg,
+export default function MyRewards({
+  fg,
   muted,
   cardBg,
   cardBorder,
@@ -56,19 +57,14 @@ export default function MyRewards({ fg,
 
   // Determine current + next tier
   const unlockedCount = tiers.filter((t) => totalPoints >= t.required).length;
-  const nextTier =
-    tiers.find((t) => totalPoints < t.required) || tiers[tiers.length - 1];
+  const nextTier = tiers.find((t) => totalPoints < t.required) || tiers[tiers.length - 1];
   const prevRequired =
     tiers.find((t, i) => t === nextTier) && tiers.indexOf(nextTier) > 0
       ? tiers[tiers.indexOf(nextTier) - 1].required
       : 0;
   const progressPct = Math.min(
     1,
-    Math.max(
-      0,
-      (totalPoints - prevRequired) /
-      Math.max(1, nextTier.required - prevRequired),
-    ),
+    Math.max(0, (totalPoints - prevRequired) / Math.max(1, nextTier.required - prevRequired)),
   );
   const reachedMax = totalPoints >= tiers[tiers.length - 1].required;
 
@@ -180,9 +176,7 @@ export default function MyRewards({ fg,
             const x = (i * 41) % 100,
               y = (i * 17) % 80,
               r = ((i % 3) + 1) * 0.9;
-            return (
-              <circle key={i} cx={`${x}%`} cy={`${y}%`} r={r} fill="#fec701" />
-            );
+            return <circle key={i} cx={`${x}%`} cy={`${y}%`} r={r} fill="#fec701" />;
           })}
         </svg>
         <div style={{ position: "relative", zIndex: 1 }}>
@@ -205,12 +199,8 @@ export default function MyRewards({ fg,
                 {renderIcon("crown", 24)}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: fg }}>
-                  金牌志工達成 🎉
-                </div>
-                <div style={{ fontSize: 11, color: muted, marginTop: 2 }}>
-                  你已解鎖所有階段獎勵
-                </div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: fg }}>金牌志工達成 🎉</div>
+                <div style={{ fontSize: 11, color: muted, marginTop: 2 }}>你已解鎖所有階段獎勵</div>
               </div>
             </div>
           ) : (
@@ -384,9 +374,7 @@ export default function MyRewards({ fg,
                   alignItems: "center",
                   justifyContent: "center",
                   boxShadow: unlocked ? `0 6px 16px ${t.color}55` : "none",
-                  border: unlocked
-                    ? "none"
-                    : "1px dashed rgba(152,119,1,0.3)",
+                  border: unlocked ? "none" : "1px dashed rgba(152,119,1,0.3)",
                   position: "relative",
                   marginBottom: 8,
                 }}
@@ -463,7 +451,7 @@ export default function MyRewards({ fg,
                   marginTop: 6,
                   fontSize: 10,
                   fontWeight: 800,
-                  color: unlocked ? ("#987701") : muted,
+                  color: unlocked ? "#987701" : muted,
                 }}
               >
                 ★ {t.required.toLocaleString()}
@@ -571,7 +559,7 @@ export default function MyRewards({ fg,
         ];
 
         // Grouped by day label for visual rhythm
-        const grouped: Array<{ header?: string; entry?: typeof history[0] }> = [];
+        const grouped: Array<{ header?: string; entry?: (typeof history)[0] }> = [];
         let lastDate: string | null = null;
         history.forEach((h) => {
           const key = h.date.split(" ")[0];
@@ -605,10 +593,7 @@ export default function MyRewards({ fg,
                       letterSpacing: 0.8,
                       color: muted,
                       textTransform: "uppercase",
-                      borderTop:
-                        i === 0
-                          ? "none"
-                          : "1px solid rgba(254,199,1,0.14)",
+                      borderTop: i === 0 ? "none" : "1px solid rgba(254,199,1,0.14)",
                       background: "rgba(254,210,52,0.06)",
                     }}
                   >
@@ -677,9 +662,7 @@ export default function MyRewards({ fg,
                     >
                       <span>{h.source}</span>
                       <span>·</span>
-                      <span>
-                        {h.date.split(" ").slice(1).join(" ") || h.date}
-                      </span>
+                      <span>{h.date.split(" ").slice(1).join(" ") || h.date}</span>
                     </div>
                   </div>
                   {/* Points */}

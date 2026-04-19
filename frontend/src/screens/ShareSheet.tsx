@@ -1,4 +1,4 @@
-import type { Team } from '../types';
+import type { Team } from "../types";
 
 type Props = {
   team: Team;
@@ -10,15 +10,7 @@ type Props = {
   muted: string;
 };
 
-export default function ShareSheet({
-  team,
-  message,
-  copied,
-  onCopy,
-  onClose,
-  fg,
-  muted,
-}: Props) {
+export default function ShareSheet({ team, message, copied, onCopy, onClose, fg, muted }: Props) {
   const apps = [
     { key: "line", label: "LINE", bg: "#06C755", glyph: "L" },
     { key: "whatsapp", label: "WhatsApp", bg: "#25D366", glyph: "◉" },
@@ -85,9 +77,7 @@ export default function ShareSheet({
           />
         </div>
 
-        <div
-          style={{ fontSize: 16, fontWeight: 800, color: fg, marginBottom: 2 }}
-        >
+        <div style={{ fontSize: 16, fontWeight: 800, color: fg, marginBottom: 2 }}>
           分享團隊邀請
         </div>
         <div style={{ fontSize: 12, color: muted, marginBottom: 14 }}>
@@ -211,7 +201,6 @@ export default function ShareSheet({
           </button>
         </div>
       </div>
-
     </div>
   );
 }

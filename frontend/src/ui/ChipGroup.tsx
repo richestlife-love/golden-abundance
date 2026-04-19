@@ -1,11 +1,14 @@
-type Props = { options: string[]; value: string[]; onChange: (next: string[]) => void; multi?: boolean; };
+type Props = {
+  options: string[];
+  value: string[];
+  onChange: (next: string[]) => void;
+  multi?: boolean;
+};
 
 export default function ChipGroup({ options, value, onChange, multi = true }: Props) {
   const toggle = (opt: string) => {
     if (multi) {
-      onChange(
-        value.includes(opt) ? value.filter((x) => x !== opt) : [...value, opt],
-      );
+      onChange(value.includes(opt) ? value.filter((x) => x !== opt) : [...value, opt]);
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onChange(opt as any);
@@ -29,15 +32,11 @@ export default function ChipGroup({ options, value, onChange, multi = true }: Pr
               fontWeight: 600,
               fontFamily: "inherit",
               cursor: "pointer",
-              border: sel
-                ? "1.5px solid #cb9f01"
-                : "1px solid rgba(254,210,52,0.35)",
+              border: sel ? "1.5px solid #cb9f01" : "1px solid rgba(254,210,52,0.35)",
               background: sel
                 ? "linear-gradient(135deg, rgba(254,210,52,0.25), rgba(254,233,154,0.28))"
                 : "rgba(255,255,255,0.6)",
-              color: sel
-                ? "#655001"
-                : "#241c00",
+              color: sel ? "#655001" : "#241c00",
               transition: "all 0.15s",
             }}
           >

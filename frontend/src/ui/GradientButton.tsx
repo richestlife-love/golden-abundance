@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 type Props = {
   label: string;
@@ -21,8 +21,7 @@ export default function GradientButton({ label, onClick }: Props) {
         borderRadius: 999,
         border: "none",
         cursor: "pointer",
-        background:
-          "linear-gradient(135deg, #fed234 0%, #fec701 45%, #fec701 100%)",
+        background: "linear-gradient(135deg, #fed234 0%, #fec701 45%, #fec701 100%)",
         color: "#fff",
         fontSize: 20,
         fontWeight: 700,
@@ -45,8 +44,7 @@ export default function GradientButton({ label, onClick }: Props) {
           left: 0,
           right: 0,
           height: "50%",
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.35), transparent)",
+          background: "linear-gradient(180deg, rgba(255,255,255,0.35), transparent)",
           borderRadius: "999px 999px 0 0",
         }}
       />

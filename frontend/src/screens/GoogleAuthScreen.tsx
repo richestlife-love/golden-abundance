@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import GoogleLogo from '../ui/GoogleLogo';
-import GoogleSpinner from '../ui/GoogleSpinner';
-import type { User } from '../types';
+import { useState } from "react";
+import GoogleLogo from "../ui/GoogleLogo";
+import GoogleSpinner from "../ui/GoogleSpinner";
+import type { User } from "../types";
 
 type Props = {
   onCancel: () => void;
-  onSuccess: (user: Pick<User, 'email' | 'name' | 'avatar'>) => void;
+  onSuccess: (user: Pick<User, "email" | "name" | "avatar">) => void;
 };
 
 export default function GoogleAuthScreen({ onCancel, onSuccess }: Props) {
   // Stages: 'chooser' -> 'loading' -> success
   const [stage, setStage] = useState("chooser");
-  const [selected, setSelected] = useState<Pick<User, 'email' | 'name' | 'avatar'> | null>(null);
+  const [selected, setSelected] = useState<Pick<User, "email" | "name" | "avatar"> | null>(null);
 
-  const accounts: Pick<User, 'email' | 'name' | 'avatar'>[] = [
+  const accounts: Pick<User, "email" | "name" | "avatar">[] = [
     { name: "陈志明", email: "chen.zhiming@gmail.com", avatar: "#fed234" },
     { name: "林佳怡", email: "lin.jiayi@gmail.com", avatar: "#fec701" },
   ];
 
-  const pickAccount = (a: Pick<User, 'email' | 'name' | 'avatar'>) => {
+  const pickAccount = (a: Pick<User, "email" | "name" | "avatar">) => {
     setSelected(a);
     setStage("loading");
     setTimeout(() => onSuccess(a), 1800);
@@ -27,11 +27,7 @@ export default function GoogleAuthScreen({ onCancel, onSuccess }: Props) {
   const useAnother = () => {
     setSelected({ name: "你", email: "you@gmail.com", avatar: "#fec701" });
     setStage("loading");
-    setTimeout(
-      () =>
-        onSuccess({ name: "你", email: "you@gmail.com", avatar: "#fec701" }),
-      1800,
-    );
+    setTimeout(() => onSuccess({ name: "你", email: "you@gmail.com", avatar: "#fec701" }), 1800);
   };
 
   return (
@@ -85,9 +81,7 @@ export default function GoogleAuthScreen({ onCancel, onSuccess }: Props) {
         </div>
 
         {stage === "chooser" && (
-          <div
-            style={{ padding: "24px 28px 0", animation: "fadeInUp 0.4s ease" }}
-          >
+          <div style={{ padding: "24px 28px 0", animation: "fadeInUp 0.4s ease" }}>
             <h1
               style={{
                 fontFamily: '"Google Sans", "Noto Sans SC", sans-serif',
@@ -136,12 +130,8 @@ export default function GoogleAuthScreen({ onCancel, onSuccess }: Props) {
                   borderBottom: "1px solid #DADCE0",
                   transition: "background 0.15s",
                 }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#F8F9FA")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "transparent")
-                }
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#F8F9FA")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
                 <div
                   style={{
@@ -161,11 +151,7 @@ export default function GoogleAuthScreen({ onCancel, onSuccess }: Props) {
                   {a.name[0]}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{ fontSize: 14, color: "#202124", fontWeight: 500 }}
-                  >
-                    {a.name}
-                  </div>
+                  <div style={{ fontSize: 14, color: "#202124", fontWeight: 500 }}>{a.name}</div>
                   <div
                     style={{
                       fontSize: 12,
@@ -190,12 +176,8 @@ export default function GoogleAuthScreen({ onCancel, onSuccess }: Props) {
                 cursor: "pointer",
                 transition: "background 0.15s",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "#F8F9FA")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "transparent")
-              }
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#F8F9FA")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
               <div
                 style={{
@@ -271,12 +253,8 @@ export default function GoogleAuthScreen({ onCancel, onSuccess }: Props) {
               {selected.name[0]}
             </div>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 14, color: "#5F6368", marginBottom: 4 }}>
-                正在登录…
-              </div>
-              <div style={{ fontSize: 13, color: "#202124" }}>
-                {selected.email}
-              </div>
+              <div style={{ fontSize: 14, color: "#5F6368", marginBottom: 4 }}>正在登录…</div>
+              <div style={{ fontSize: 13, color: "#202124" }}>{selected.email}</div>
             </div>
             <GoogleSpinner />
           </div>

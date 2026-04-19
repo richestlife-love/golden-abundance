@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { Team } from '../types';
+import { useState } from "react";
+import type { Team } from "../types";
 
 type Props = {
   team: Team;
@@ -55,9 +55,7 @@ export default function RenameTeamSheet({ team, onClose, onSave, fg, muted }: Pr
             }}
           />
         </div>
-        <div
-          style={{ fontSize: 16, fontWeight: 800, color: fg, marginBottom: 2 }}
-        >
+        <div style={{ fontSize: 16, fontWeight: 800, color: fg, marginBottom: 2 }}>
           設定團隊組名
         </div>
         <div
@@ -141,9 +139,7 @@ export default function RenameTeamSheet({ team, onClose, onSave, fg, muted }: Pr
               fontWeight: 800,
               fontFamily: "inherit",
               cursor: value.trim() ? "pointer" : "not-allowed",
-              boxShadow: value.trim()
-                ? "0 4px 12px rgba(254,199,1,0.4)"
-                : "none",
+              boxShadow: value.trim() ? "0 4px 12px rgba(254,199,1,0.4)" : "none",
             }}
           >
             儲存

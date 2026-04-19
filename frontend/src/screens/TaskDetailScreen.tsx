@@ -1,6 +1,6 @@
-import { getEffectiveStatus } from '../utils';
-import { TASKS } from '../data';
-import type { Task } from '../types';
+import { getEffectiveStatus } from "../utils";
+import { TASKS } from "../data";
+import type { Task } from "../types";
 
 type Props = {
   tasks: Task[];
@@ -382,9 +382,7 @@ export default function TaskDetailScreen({
               >
                 <span>+{t.points}</span>
                 <span style={{ fontSize: 18 }}>★</span>
-                <span style={{ fontSize: 13, fontWeight: 700, opacity: 0.7 }}>
-                  星點
-                </span>
+                <span style={{ fontSize: 13, fontWeight: 700, opacity: 0.7 }}>星點</span>
               </div>
             </div>
           </div>
@@ -537,12 +535,10 @@ export default function TaskDetailScreen({
                 }}
               >
                 <span style={{ fontSize: 14 }}>🔗</span>
-                <div style={{ fontSize: 13, fontWeight: 700, color: fg }}>
-                  前置任務
-                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: fg }}>前置任務</div>
                 <div style={{ fontSize: 11, color: muted, marginLeft: "auto" }}>
-                  {prereqTasks.filter((p) => p.status === "completed").length}/
-                  {prereqTasks.length} 已完成
+                  {prereqTasks.filter((p) => p.status === "completed").length}/{prereqTasks.length}{" "}
+                  已完成
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -596,11 +592,7 @@ export default function TaskDetailScreen({
                         {p.title}
                       </div>
                       <div style={{ fontSize: 11, color: muted }}>
-                        {done
-                          ? "已完成"
-                          : p.status === "in_progress"
-                            ? "進行中"
-                            : "待開始"}
+                        {done ? "已完成" : p.status === "in_progress" ? "進行中" : "待開始"}
                       </div>
                       <span style={{ color: muted, fontSize: 12 }}>›</span>
                     </div>
@@ -619,9 +611,7 @@ export default function TaskDetailScreen({
                 background: teamHasTeam
                   ? "linear-gradient(135deg, rgba(254,221,103,0.25), rgba(254,210,52,0.15))"
                   : cardBg,
-                border: teamHasTeam
-                  ? "1px solid rgba(254,199,1,0.4)"
-                  : cardBorder,
+                border: teamHasTeam ? "1px solid rgba(254,199,1,0.4)" : cardBorder,
                 backdropFilter: "blur(10px)",
                 flexShrink: 0,
               }}
@@ -652,9 +642,7 @@ export default function TaskDetailScreen({
                   ⚑
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: fg }}>
-                    組隊進度
-                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: fg }}>組隊進度</div>
                   <div style={{ fontSize: 11, color: muted, marginTop: 1 }}>
                     {teamHasTeam ? "集滿至少 6 人即可完成任務" : "尚未建立團隊"}
                   </div>
@@ -663,10 +651,7 @@ export default function TaskDetailScreen({
                   style={{
                     fontSize: 18,
                     fontWeight: 800,
-                    color:
-                      teamHasTeam && teamState.total >= teamState.cap
-                        ? "#2E9B65"
-                        : fg,
+                    color: teamHasTeam && teamState.total >= teamState.cap ? "#2E9B65" : fg,
                   }}
                 >
                   {teamHasTeam ? teamState.total : 0}
@@ -725,18 +710,14 @@ export default function TaskDetailScreen({
                             ? "linear-gradient(135deg, #fed234, #fec701)"
                             : "linear-gradient(135deg, #fec701, #fec701)"
                           : "transparent",
-                        border: filled
-                          ? "none"
-                          : "1.5px dashed rgba(254,210,52,0.45)",
+                        border: filled ? "none" : "1.5px dashed rgba(254,210,52,0.45)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         fontSize: 10,
                         fontWeight: 700,
                         color: filled ? "#fff" : muted,
-                        boxShadow: filled
-                          ? "0 3px 10px rgba(254,199,1,0.35)"
-                          : "none",
+                        boxShadow: filled ? "0 3px 10px rgba(254,199,1,0.35)" : "none",
                       }}
                     >
                       {isLeader ? "⚑" : filled ? "✓" : ""}
@@ -754,10 +735,7 @@ export default function TaskDetailScreen({
                     textAlign: "center",
                   }}
                 >
-                  還差{" "}
-                  <strong style={{ color: fg }}>
-                    {teamState.cap - teamState.total}
-                  </strong>{" "}
+                  還差 <strong style={{ color: fg }}>{teamState.cap - teamState.total}</strong>{" "}
                   位隊員即可達標·前往「我的」頁面繼續邀請
                 </div>
               )}
@@ -809,9 +787,7 @@ export default function TaskDetailScreen({
                   marginBottom: 10,
                 }}
               >
-                <div style={{ fontSize: 13, fontWeight: 700, color: fg }}>
-                  步驟進度
-                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: fg }}>步驟進度</div>
                 <div style={{ fontSize: 12, color: muted, fontWeight: 600 }}>
                   {completedSteps}/{totalSteps}
                 </div>
@@ -852,9 +828,7 @@ export default function TaskDetailScreen({
                         borderRadius: 999,
                         flexShrink: 0,
                         background: s.done ? t.color : "transparent",
-                        border: s.done
-                          ? "none"
-                          : `1.5px solid ${"rgba(120,110,150,0.3)"}`,
+                        border: s.done ? "none" : `1.5px solid ${"rgba(120,110,150,0.3)"}`,
                         color: "#fff",
                         fontSize: 11,
                         fontWeight: 700,
@@ -960,25 +934,14 @@ export default function TaskDetailScreen({
                 : cta.tone === "secondary"
                   ? "rgba(255,255,255,0.7)"
                   : `linear-gradient(135deg, ${t.color}, ${t.color}D0)`,
-              color: cta.disabled
-                ? muted
-                : cta.tone === "secondary"
-                  ? fg
-                  : "#fff",
-              border:
-                cta.tone === "secondary" ? `1.5px solid ${t.color}` : "none",
+              color: cta.disabled ? muted : cta.tone === "secondary" ? fg : "#fff",
+              border: cta.tone === "secondary" ? `1.5px solid ${t.color}` : "none",
               boxShadow: cta.disabled ? "none" : `0 8px 24px ${t.color}50`,
               transition: "transform 0.15s, box-shadow 0.15s",
             }}
-            onMouseDown={(e) =>
-              !cta.disabled && (e.currentTarget.style.transform = "scale(0.98)")
-            }
-            onMouseUp={(e) =>
-              !cta.disabled && (e.currentTarget.style.transform = "scale(1)")
-            }
-            onMouseLeave={(e) =>
-              !cta.disabled && (e.currentTarget.style.transform = "scale(1)")
-            }
+            onMouseDown={(e) => !cta.disabled && (e.currentTarget.style.transform = "scale(0.98)")}
+            onMouseUp={(e) => !cta.disabled && (e.currentTarget.style.transform = "scale(1)")}
+            onMouseLeave={(e) => !cta.disabled && (e.currentTarget.style.transform = "scale(1)")}
           >
             {cta.label}
           </button>

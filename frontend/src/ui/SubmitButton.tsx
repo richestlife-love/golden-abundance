@@ -1,4 +1,4 @@
-type Props = { label: string; onClick: () => void; disabled?: boolean; color?: string; };
+type Props = { label: string; onClick: () => void; disabled?: boolean; color?: string };
 
 export default function SubmitButton({ label, onClick, disabled, color = "#cb9f01" }: Props) {
   const muted = "rgba(40,30,70,0.45)";

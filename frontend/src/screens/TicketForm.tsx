@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import FormShell from '../ui/FormShell';
-import FieldLabel from '../ui/FieldLabel';
-import TextInput from '../ui/TextInput';
-import Textarea from '../ui/Textarea';
-import SubmitButton from '../ui/SubmitButton';
+import { useState } from "react";
+import FormShell from "../ui/FormShell";
+import FieldLabel from "../ui/FieldLabel";
+import TextInput from "../ui/TextInput";
+import Textarea from "../ui/Textarea";
+import SubmitButton from "../ui/SubmitButton";
 
 type Props = {
   onCancel: () => void;
@@ -37,20 +37,14 @@ export default function TicketForm({ onCancel, onSubmit }: Props) {
       subtitle="請輸入 7/25 與 7/26 場次票券編號"
       onCancel={onCancel}
       footer={
-        <SubmitButton
-          label="提交報名"
-          onClick={onSubmit}
-          disabled={!valid}
-          color="#8AD4B0"
-        />
+        <SubmitButton label="提交報名" onClick={onSubmit} disabled={!valid} color="#8AD4B0" />
       }
     >
       <div
         style={{
           padding: "14px 16px",
           borderRadius: 16,
-          background:
-            "linear-gradient(135deg, rgba(138,212,176,0.18), rgba(138,212,176,0.08))",
+          background: "linear-gradient(135deg, rgba(138,212,176,0.18), rgba(138,212,176,0.08))",
           border: `1px solid ${"rgba(138,212,176,0.4)"}`,
           fontSize: 12,
           color: "#2E7B5A",
@@ -63,48 +57,26 @@ export default function TicketForm({ onCancel, onSubmit }: Props) {
       </div>
 
       <div style={card}>
-        <FieldLabel required>
-          姓名
-        </FieldLabel>
-        <TextInput
-          value={name}
-          onChange={setName}
-          placeholder="請輸入你的姓名"
-        />
+        <FieldLabel required>姓名</FieldLabel>
+        <TextInput value={name} onChange={setName} placeholder="請輸入你的姓名" />
       </div>
 
       <div style={card}>
-        <FieldLabel required>
-          7/25 票券編號
-        </FieldLabel>
-        <TextInput
-          value={ticket725}
-          onChange={setTicket725}
-          placeholder="例如：RL-0725-8420"
-        />
+        <FieldLabel required>7/25 票券編號</FieldLabel>
+        <TextInput value={ticket725} onChange={setTicket725} placeholder="例如：RL-0725-8420" />
         <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>
           可於購票 Email 或錢包中找到 12 位編號
         </div>
       </div>
 
       <div style={card}>
-        <FieldLabel required>
-          7/26 票券編號
-        </FieldLabel>
-        <TextInput
-          value={ticket726}
-          onChange={setTicket726}
-          placeholder="例如：RL-0726-1173"
-        />
+        <FieldLabel required>7/26 票券編號</FieldLabel>
+        <TextInput value={ticket726} onChange={setTicket726} placeholder="例如：RL-0726-1173" />
       </div>
 
       <div style={card}>
         <FieldLabel>備註</FieldLabel>
-        <Textarea
-          value={note}
-          onChange={setNote}
-          placeholder="飲食需求、交通協助等（可留白）"
-        />
+        <Textarea value={note} onChange={setNote} placeholder="飲食需求、交通協助等（可留白）" />
       </div>
     </FormShell>
   );

@@ -1,4 +1,4 @@
-type Props = { value: string; onChange: (value: string) => void; placeholder?: string; };
+type Props = { value: string; onChange: (value: string) => void; placeholder?: string };
 
 export default function TextInput({ value, onChange, placeholder }: Props) {
   const fg = "#241c00";

@@ -1,5 +1,5 @@
-import type { Task } from '../types';
-import { getEffectiveStatus } from '../utils';
+import type { Task } from "../types";
+import { getEffectiveStatus } from "../utils";
 
 type Props = {
   t: Task;
@@ -8,7 +8,7 @@ type Props = {
   cardBorder: string;
   muted: string;
   fg: string;
-  index?: number;                // default 0
+  index?: number; // default 0
   onOpen: (id: number) => void;
 };
 
@@ -26,32 +26,31 @@ export default function TaskCard({
   const urgent = status === "todo" && t.daysLeft != null && t.daysLeft > 0 && t.daysLeft <= 7;
   const icon = t.tag === "探索" ? "✦" : t.tag === "社区" ? "◉" : "❋";
 
-
   const statusChip =
     status === "completed"
       ? {
-        label: "已完成",
-        color: "#2E9B65",
-        bg: "rgba(60,180,120,0.12)",
-      }
+          label: "已完成",
+          color: "#2E9B65",
+          bg: "rgba(60,180,120,0.12)",
+        }
       : status === "in_progress"
         ? {
-          label: "進行中",
-          color: "#C17F1E",
-          bg: "rgba(220,150,40,0.14)",
-        }
+            label: "進行中",
+            color: "#C17F1E",
+            bg: "rgba(220,150,40,0.14)",
+          }
         : status === "expired"
           ? {
-            label: "已過期",
-            color: "#C0564E",
-            bg: "rgba(200,80,70,0.12)",
-          }
+              label: "已過期",
+              color: "#C0564E",
+              bg: "rgba(200,80,70,0.12)",
+            }
           : status === "locked"
             ? {
-              label: "未解鎖",
-              color: muted,
-              bg: "rgba(120,110,150,0.1)",
-            }
+                label: "未解鎖",
+                color: muted,
+                bg: "rgba(120,110,150,0.1)",
+              }
             : null;
 
   const logoBg =
@@ -62,15 +61,8 @@ export default function TaskCard({
         : `linear-gradient(135deg, ${t.color}, ${t.color}BB)`;
 
   const logoGlyph =
-    status === "completed"
-      ? "✓"
-      : status === "expired"
-        ? "✕"
-        : status === "locked"
-          ? "🔒"
-          : icon;
-  const logoColor =
-    status === "expired" ? ("#8a82a8") : "#fff";
+    status === "completed" ? "✓" : status === "expired" ? "✕" : status === "locked" ? "🔒" : icon;
+  const logoColor = status === "expired" ? "#8a82a8" : "#fff";
 
   return (
     <div
@@ -122,9 +114,7 @@ export default function TaskCard({
           gap: 6,
         }}
       >
-        <div
-          style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
           <div
             style={{
               fontSize: 14,
@@ -169,9 +159,7 @@ export default function TaskCard({
               flexWrap: "wrap",
             }}
           >
-            <div style={{ fontSize: 11, color: muted }}>
-              {t.due ? `截止 ${t.due}` : "無截止日"}
-            </div>
+            <div style={{ fontSize: 11, color: muted }}>{t.due ? `截止 ${t.due}` : "無截止日"}</div>
             <div
               style={{
                 display: "inline-flex",
@@ -204,9 +192,7 @@ export default function TaskCard({
               flexWrap: "wrap",
             }}
           >
-            <div style={{ fontSize: 11, color: muted }}>
-              {t.due ? `截止 ${t.due}` : "無截止日"}
-            </div>
+            <div style={{ fontSize: 11, color: muted }}>{t.due ? `截止 ${t.due}` : "無截止日"}</div>
             {t.due && typeof t.daysLeft === "number" && (
               <div
                 style={{
@@ -217,10 +203,8 @@ export default function TaskCard({
                   fontWeight: 600,
                   padding: "1px 6px",
                   borderRadius: 999,
-                  color: urgent ? ("#D9534F") : muted,
-                  background: urgent
-                    ? "rgba(217,83,79,0.1)"
-                    : "transparent",
+                  color: urgent ? "#D9534F" : muted,
+                  background: urgent ? "rgba(217,83,79,0.1)" : "transparent",
                 }}
               >
                 <span style={{ fontSize: 8 }}>⏱</span>
@@ -276,10 +260,7 @@ export default function TaskCard({
           style={{
             fontSize: 14,
             fontWeight: 800,
-            color:
-              status === "completed"
-                ? "#2E9B65"
-                : "#987701",
+            color: status === "completed" ? "#2E9B65" : "#987701",
             whiteSpace: "nowrap",
             letterSpacing: 0.2,
             display: "inline-flex",

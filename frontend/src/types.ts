@@ -40,10 +40,10 @@ export type Task = {
 };
 
 export type User = {
-  id: string;                       // "U" + derived suffix
+  id: string; // "U" + derived suffix
   email: string;
   name: string;
-  avatar?: string;                  // CSS gradient string from mock auth; Phase 4 maps to OAuth picture URL
+  avatar?: string; // CSS gradient string from mock auth; Phase 4 maps to OAuth picture URL
   zhName?: string;
   enName?: string;
   nickname?: string;
@@ -58,7 +58,7 @@ export type User = {
 export type TeamMemberRef = {
   id: string;
   name: string;
-  avatar: string;                   // CSS gradient string
+  avatar: string; // CSS gradient string
 };
 
 export type JoinRequest = {
@@ -72,7 +72,7 @@ export type TeamRole = "leader" | "member";
 // Team as carried in App state. `requests` is leader-only. `status`/`currentCount`
 // are only set on the joined-team branch (pending → approved flow).
 export type Team = {
-  id: string;                       // "T-..." format
+  id: string; // "T-..." format
   role: TeamRole;
   name: string;
   alias?: string;
@@ -81,9 +81,9 @@ export type Team = {
   members: TeamMemberRef[];
   requests?: JoinRequest[];
   cap?: number;
-  points?: number;                  // carried from MockTeam on the joined-team path; not set on ledTeam
-  weekPoints?: number;              // carried from MockTeam on the joined-team path; not set on ledTeam
-  rank?: number;                    // carried from MockTeam on the joined-team path; not set on ledTeam
+  points?: number; // carried from MockTeam on the joined-team path; not set on ledTeam
+  weekPoints?: number; // carried from MockTeam on the joined-team path; not set on ledTeam
+  rank?: number; // carried from MockTeam on the joined-team path; not set on ledTeam
   status?: "pending" | "approved";
   currentCount?: number;
 };
@@ -107,7 +107,7 @@ export type MockTeam = {
 export type MockMember = {
   id: string;
   name: string;
-  role: string;                     // job/skill label, e.g. "設計美編"
+  role: string; // job/skill label, e.g. "設計美編"
   avatar: string;
 };
 

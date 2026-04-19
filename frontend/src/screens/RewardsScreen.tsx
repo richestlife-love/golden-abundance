@@ -1,5 +1,5 @@
-import MyRewards from './MyRewards';
-import type { User, Task } from '../types';
+import MyRewards from "./MyRewards";
+import type { User, Task } from "../types";
 
 type Props = {
   user: User | null;
@@ -61,9 +61,7 @@ export default function RewardsScreen({ user, tasks, onBack }: Props) {
         >
           ‹
         </button>
-        <div style={{ fontSize: 16, fontWeight: 700, color: fg, flex: 1 }}>
-          我的獎勵
-        </div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: fg, flex: 1 }}>我的獎勵</div>
         <div style={{ width: 40 }} />
       </div>
 
@@ -104,15 +102,7 @@ export default function RewardsScreen({ user, tasks, onBack }: Props) {
               const x = (i * 41) % 100,
                 y = (i * 19) % 90,
                 r = ((i % 3) + 1) * 0.9;
-              return (
-                <circle
-                  key={i}
-                  cx={`${x}%`}
-                  cy={`${y}%`}
-                  r={r}
-                  fill="#fec701"
-                />
-              );
+              return <circle key={i} cx={`${x}%`} cy={`${y}%`} r={r} fill="#fec701" />;
             })}
           </svg>
 

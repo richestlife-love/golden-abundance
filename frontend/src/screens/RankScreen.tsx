@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import BottomNav from '../ui/BottomNav';
-import type { User, Task, ScreenId } from '../types';
+import { useState } from "react";
+import BottomNav from "../ui/BottomNav";
+import type { User, Task, ScreenId } from "../types";
 
 type Props = {
   user: User | null;
@@ -28,26 +28,28 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
   const [selectedChallengeId, setSelectedChallengeId] = useState<number | null>(
     challenges[0]?.id ?? null,
   );
-  const selectedChallenge =
-    challenges.find((c) => c.id === selectedChallengeId) || challenges[0];
+  const selectedChallenge = challenges.find((c) => c.id === selectedChallengeId) || challenges[0];
 
   // Mock challenge completion data keyed by task id
-  const challengeData: Record<number, {
-    totalTeams: number;
-    activeTeams: number;
-    totalUsers: number;
-    completionRate: number;
-    teams: Array<{
-      id: string;
-      name: string;
-      members: number;
-      leader: string;
-      completedAt: string;
-      days: number;
-      grad: string;
-      isMe?: boolean;
-    }>;
-  }> = {
+  const challengeData: Record<
+    number,
+    {
+      totalTeams: number;
+      activeTeams: number;
+      totalUsers: number;
+      completionRate: number;
+      teams: Array<{
+        id: string;
+        name: string;
+        members: number;
+        leader: string;
+        completedAt: string;
+        days: number;
+        grad: string;
+        isMe?: boolean;
+      }>;
+    }
+  > = {
     3: {
       totalTeams: 42,
       activeTeams: 58,
@@ -511,9 +513,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
 
   const isChallenge = tab === "challenge";
   const currentChallengeData =
-    isChallenge && selectedChallenge
-      ? challengeData[selectedChallenge.id]
-      : null;
+    isChallenge && selectedChallenge ? challengeData[selectedChallenge.id] : null;
 
   const raw = isChallenge
     ? currentChallengeData?.teams || []
@@ -538,8 +538,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
 
   // Podium positions: 2nd (left), 1st (center), 3rd (right)
   const podiumOrder = top3.length === 3 ? [top3[1], top3[0], top3[2]] : top3;
-  const heights =
-    top3.length === 3 ? [104, 132, 88] : [132, 104, 88].slice(0, top3.length);
+  const heights = top3.length === 3 ? [104, 132, 88] : [132, 104, 88].slice(0, top3.length);
   const medalColors = ["#C9C9D1", "#FEC701", "#C78A5B"]; // silver, gold, bronze
   const rankLabels = ["2", "1", "3"];
 
@@ -569,8 +568,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
             position: "absolute",
             inset: "-10% -10% auto -10%",
             height: 260,
-            background:
-              "radial-gradient(ellipse at 50% 0%, rgba(254,199,1,0.35), transparent 70%)",
+            background: "radial-gradient(ellipse at 50% 0%, rgba(254,199,1,0.35), transparent 70%)",
             pointerEvents: "none",
             zIndex: 0,
           }}
@@ -658,8 +656,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                     ? "linear-gradient(135deg, #fed234, #fec701)"
                     : "rgba(255,255,255,0.7)",
                 color: tab === t.k ? "#241c00" : fg,
-                boxShadow:
-                  tab === t.k ? "0 4px 14px rgba(254,199,1,0.32)" : "none",
+                boxShadow: tab === t.k ? "0 4px 14px rgba(254,199,1,0.32)" : "none",
                 transition: "all 0.2s ease",
               }}
             >
@@ -695,12 +692,8 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                     period === p.key
                       ? "1px solid rgba(254,199,1,0.7)"
                       : "1px solid rgba(0,0,0,0.08)",
-                  background:
-                    period === p.key
-                      ? "rgba(254,199,1,0.22)"
-                      : "transparent",
-                  color:
-                    period === p.key ? ("#987701") : muted,
+                  background: period === p.key ? "rgba(254,199,1,0.22)" : "transparent",
+                  color: period === p.key ? "#987701" : muted,
                 }}
               >
                 {p.label}
@@ -720,9 +713,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
             }}
           >
             {challenges.length === 0 ? (
-              <div style={{ fontSize: 12, color: muted, padding: "5px 0" }}>
-                暫無挑戰任務
-              </div>
+              <div style={{ fontSize: 12, color: muted, padding: "5px 0" }}>暫無挑戰任務</div>
             ) : (
               challenges.map((c) => {
                 const active = c.id === selectedChallengeId;
@@ -740,10 +731,8 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                       border: active
                         ? "1px solid rgba(254,199,1,0.7)"
                         : "1px solid rgba(0,0,0,0.08)",
-                      background: active
-                        ? "rgba(254,199,1,0.22)"
-                        : "transparent",
-                      color: active ? ("#987701") : muted,
+                      background: active ? "rgba(254,199,1,0.22)" : "transparent",
+                      color: active ? "#987701" : muted,
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 4,
@@ -869,9 +858,8 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                   />
                 </div>
                 <div style={{ fontSize: 10, color: muted, marginTop: 3 }}>
-                  完成率 {Math.round(currentChallengeData.completionRate * 100)}
-                  % ({currentChallengeData.totalTeams}/
-                  {currentChallengeData.activeTeams} 報名團隊)
+                  完成率 {Math.round(currentChallengeData.completionRate * 100)}% (
+                  {currentChallengeData.totalTeams}/{currentChallengeData.activeTeams} 報名團隊)
                 </div>
               </div>
             </div>
@@ -901,15 +889,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                   const x = (i * 37) % 100,
                     y = (i * 19) % 50,
                     r = ((i % 3) + 1) * 0.8;
-                  return (
-                    <circle
-                      key={i}
-                      cx={`${x}%`}
-                      cy={`${y}%`}
-                      r={r}
-                      fill="#fec701"
-                    />
-                  );
+                  return <circle key={i} cx={`${x}%`} cy={`${y}%`} r={r} fill="#fec701" />;
                 })}
               </svg>
 
@@ -1075,19 +1055,13 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                           background: isWinner
                             ? "linear-gradient(135deg, #FFE29A, #FFC070)"
                             : "rgba(254,199,1,0.18)",
-                          color: isWinner
-                            ? "#6B4000"
-                            : "#987701",
+                          color: isWinner ? "#6B4000" : "#987701",
                           fontSize: 11,
                           fontWeight: 800,
-                          boxShadow: isWinner
-                            ? "0 3px 10px rgba(255,180,80,0.3)"
-                            : "none",
+                          boxShadow: isWinner ? "0 3px 10px rgba(255,180,80,0.3)" : "none",
                         }}
                       >
-                        {isChallenge
-                          ? `⏱ ${entry.days} 天`
-                          : `★ ${entry.points?.toLocaleString()}`}
+                        {isChallenge ? `⏱ ${entry.days} 天` : `★ ${entry.points?.toLocaleString()}`}
                       </div>
                       {/* Plinth */}
                       <div
@@ -1099,15 +1073,11 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                           background: isWinner
                             ? "linear-gradient(180deg, #fed234, #fec701)"
                             : "rgba(255,255,255,0.85)",
-                          border: isWinner
-                            ? "none"
-                            : "1px solid rgba(254,199,1,0.28)",
+                          border: isWinner ? "none" : "1px solid rgba(254,199,1,0.28)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          color: isWinner
-                            ? "#241c00"
-                            : "#987701",
+                          color: isWinner ? "#241c00" : "#987701",
                           fontSize: 28,
                           fontWeight: 900,
                           fontFamily: '"Noto Serif SC", serif',
@@ -1145,11 +1115,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                 borderBottom: "1px solid rgba(254,199,1,0.12)",
               }}
             >
-              {tab === "personal"
-                ? "其他志工"
-                : tab === "team"
-                  ? "其他團隊"
-                  : "其他完成團隊"}
+              {tab === "personal" ? "其他志工" : tab === "team" ? "其他團隊" : "其他完成團隊"}
             </div>
             {rest.length === 0 ? (
               <div
@@ -1186,13 +1152,8 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                       display: "flex",
                       alignItems: "center",
                       gap: 12,
-                      borderTop:
-                        i === 0
-                          ? "none"
-                          : "1px solid rgba(254,199,1,0.12)",
-                      background: isMe
-                        ? "rgba(254,199,1,0.18)"
-                        : "transparent",
+                      borderTop: i === 0 ? "none" : "1px solid rgba(254,199,1,0.12)",
+                      background: isMe ? "rgba(254,199,1,0.18)" : "transparent",
                       position: "relative",
                     }}
                   >
@@ -1205,8 +1166,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                           bottom: 6,
                           width: 3,
                           borderRadius: "0 4px 4px 0",
-                          background:
-                            "linear-gradient(180deg, #fed234, #fec701)",
+                          background: "linear-gradient(180deg, #fed234, #fec701)",
                         }}
                       />
                     )}
@@ -1217,7 +1177,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                         textAlign: "center",
                         fontSize: 14,
                         fontWeight: 800,
-                        color: isMe ? ("#987701") : muted,
+                        color: isMe ? "#987701" : muted,
                         fontFamily: '"Noto Serif SC", serif',
                       }}
                     >
@@ -1280,8 +1240,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                               borderRadius: 6,
                               fontSize: 9,
                               fontWeight: 800,
-                              background:
-                                "linear-gradient(135deg, #fed234, #fec701)",
+                              background: "linear-gradient(135deg, #fed234, #fec701)",
                               color: "#241c00",
                               verticalAlign: "middle",
                             }}
@@ -1312,14 +1271,12 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
                       style={{
                         fontSize: 14,
                         fontWeight: 800,
-                        color: isMe ? ("#987701") : fg,
+                        color: isMe ? "#987701" : fg,
                         fontFamily: '"Noto Serif SC", serif',
                         letterSpacing: -0.3,
                       }}
                     >
-                      {isChallenge
-                        ? `⏱ ${entry.days} 天`
-                        : `★ ${entry.points?.toLocaleString()}`}
+                      {isChallenge ? `⏱ ${entry.days} 天` : `★ ${entry.points?.toLocaleString()}`}
                     </div>
                   </div>
                 );
@@ -1340,8 +1297,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
               borderRadius: 16,
               background: "rgba(255,255,255,0.96)",
               border: "1px solid rgba(254,199,1,0.45)",
-              boxShadow:
-                "0 10px 28px rgba(100,80,1,0.18), 0 0 0 1px rgba(254,210,52,0.18)",
+              boxShadow: "0 10px 28px rgba(100,80,1,0.18), 0 0 0 1px rgba(254,210,52,0.18)",
               backdropFilter: "blur(14px)",
               WebkitBackdropFilter: "blur(14px)",
               display: "flex",
@@ -1391,9 +1347,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
               {myName[0]}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: fg }}>
-                {myName}
-              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: fg }}>{myName}</div>
               <div style={{ fontSize: 10, color: muted }}>
                 {myRank <= 3
                   ? "太厲害了！你在前三名 🎉"
@@ -1416,11 +1370,7 @@ export default function RankScreen({ user, tasks, onNavigate }: Props) {
         )}
       </div>
 
-      <BottomNav
-        current="rank"
-        muted={muted}
-        onNavigate={onNavigate}
-      />
+      <BottomNav current="rank" muted={muted} onNavigate={onNavigate} />
     </div>
   );
 }

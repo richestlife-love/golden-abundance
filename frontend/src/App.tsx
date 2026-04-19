@@ -1,24 +1,24 @@
 // React app page — 金富有志工
 // Full-viewport mobile-app landing. No device frame. Responsive, CTA always visible.
 
-import { useState } from 'react';
-import { TASKS } from './data';
-import type { ScreenId, User, Task, SuccessData, Team } from './types';
-import GlobalStyles from './ui/GlobalStyles';
-import FormSuccessOverlay from './ui/FormSuccessOverlay';
-import LandingScreen from './screens/LandingScreen';
-import GoogleAuthScreen from './screens/GoogleAuthScreen';
-import HomeScreen from './screens/HomeScreen';
-import TasksScreen from './screens/TasksScreen';
-import TaskDetailScreen from './screens/TaskDetailScreen';
-import RankScreen from './screens/RankScreen';
-import RewardsScreen from './screens/RewardsScreen';
-import MyScreen from './screens/MyScreen';
-import ProfileScreen from './screens/ProfileScreen';
-import ProfileSetupForm from './screens/ProfileSetupForm';
-import InterestForm from './screens/InterestForm';
-import TicketForm from './screens/TicketForm';
-import TeamForm from './screens/TeamForm';
+import { useState } from "react";
+import { TASKS } from "./data";
+import type { ScreenId, User, Task, SuccessData, Team } from "./types";
+import GlobalStyles from "./ui/GlobalStyles";
+import FormSuccessOverlay from "./ui/FormSuccessOverlay";
+import LandingScreen from "./screens/LandingScreen";
+import GoogleAuthScreen from "./screens/GoogleAuthScreen";
+import HomeScreen from "./screens/HomeScreen";
+import TasksScreen from "./screens/TasksScreen";
+import TaskDetailScreen from "./screens/TaskDetailScreen";
+import RankScreen from "./screens/RankScreen";
+import RewardsScreen from "./screens/RewardsScreen";
+import MyScreen from "./screens/MyScreen";
+import ProfileScreen from "./screens/ProfileScreen";
+import ProfileSetupForm from "./screens/ProfileSetupForm";
+import InterestForm from "./screens/InterestForm";
+import TicketForm from "./screens/TicketForm";
+import TeamForm from "./screens/TeamForm";
 
 // ─── App ──────────────────────────────────────────────────────
 function App() {
@@ -53,7 +53,7 @@ function App() {
       .slice(0, 6)
       .padEnd(4, "0");
 
-  const handleSignIn = (rawUser: Pick<User, 'email' | 'name' | 'avatar'>) => {
+  const handleSignIn = (rawUser: Pick<User, "email" | "name" | "avatar">) => {
     const uid = userIdFromEmail(rawUser.email);
     const fullUser: User = { ...rawUser, id: uid };
     setUser(fullUser);
@@ -70,19 +70,15 @@ function App() {
       const cap = t.cap || 6;
       const ledTotal = led ? led.members.length + 1 : 0;
       const joinedTotal =
-        joined && joined.status === "approved"
-          ? (joined.currentCount || 0) + 1
-          : 0;
+        joined && joined.status === "approved" ? (joined.currentCount || 0) + 1 : 0;
       // Highest total wins for the task
       const total = Math.max(ledTotal, joinedTotal);
       const complete = total >= cap;
       const updated: Task = {
         ...t,
-        status:
-          !led && !joined ? "todo" : complete ? "completed" : "in_progress",
+        status: !led && !joined ? "todo" : complete ? "completed" : "in_progress",
         progress: Math.min(1, total / cap),
-        teamProgress:
-          led || joined ? { total, cap, ledTotal, joinedTotal } : null,
+        teamProgress: led || joined ? { total, cap, ledTotal, joinedTotal } : null,
       };
       const n = [...prev];
       n[idx] = updated;
@@ -172,7 +168,7 @@ function App() {
   };
 
   // Joining a team only — every user already leads their own team
-  const joinTeam = (teamData: Omit<Team, 'role'>) => {
+  const joinTeam = (teamData: Omit<Team, "role">) => {
     const newTeam: Team = { ...teamData, role: "member" };
     setJoinedTeam(newTeam);
     syncTeamTask(ledTeam, newTeam);
@@ -200,10 +196,7 @@ function App() {
     if (!req) return;
     const updated: Team = {
       ...ledTeam,
-      members: [
-        ...ledTeam.members,
-        { id: req.id, name: req.name, avatar: req.avatar },
-      ],
+      members: [...ledTeam.members, { id: req.id, name: req.name, avatar: req.avatar }],
       requests: (ledTeam.requests || []).filter((r) => r.id !== reqId),
     };
     setLedTeam(updated);
@@ -272,16 +265,9 @@ function App() {
       }}
     >
       <GlobalStyles />
-      {screen === "landing" && (
-        <LandingScreen
-          onStart={() => setScreen("auth")}
-        />
-      )}
+      {screen === "landing" && <LandingScreen onStart={() => setScreen("auth")} />}
       {screen === "auth" && (
-        <GoogleAuthScreen
-          onCancel={() => setScreen("landing")}
-          onSuccess={handleSignIn}
-        />
+        <GoogleAuthScreen onCancel={() => setScreen("landing")} onSuccess={handleSignIn} />
       )}
       {screen === "profileSetup" && (
         <ProfileSetupForm
@@ -321,19 +307,9 @@ function App() {
         />
       )}
       {screen === "tasks" && (
-        <TasksScreen
-          tasks={tasks}
-          onNavigate={setScreen}
-          onOpenTask={openTask}
-        />
+        <TasksScreen tasks={tasks} onNavigate={setScreen} onOpenTask={openTask} />
       )}
-      {screen === "rank" && (
-        <RankScreen
-          user={user}
-          tasks={tasks}
-          onNavigate={setScreen}
-        />
-      )}
+      {screen === "rank" && <RankScreen user={user} tasks={tasks} onNavigate={setScreen} />}
       {screen === "taskDetail" && (
         <TaskDetailScreen
           tasks={tasks}
@@ -345,22 +321,13 @@ function App() {
         />
       )}
       {screen === "form" && currentTaskId === 1 && (
-        <InterestForm
-          onCancel={() => setScreen("taskDetail")}
-          onSubmit={() => completeTask(1)}
-        />
+        <InterestForm onCancel={() => setScreen("taskDetail")} onSubmit={() => completeTask(1)} />
       )}
       {screen === "form" && currentTaskId === 2 && (
-        <TicketForm
-          onCancel={() => setScreen("taskDetail")}
-          onSubmit={() => completeTask(2)}
-        />
+        <TicketForm onCancel={() => setScreen("taskDetail")} onSubmit={() => completeTask(2)} />
       )}
       {screen === "form" && currentTaskId === 3 && (
-        <TeamForm
-          onCancel={() => setScreen("me")}
-          onSubmit={joinTeam}
-        />
+        <TeamForm onCancel={() => setScreen("me")} onSubmit={joinTeam} />
       )}
       {screen === "me" && (
         <MyScreen
@@ -385,18 +352,9 @@ function App() {
         />
       )}
       {screen === "rewards" && (
-        <RewardsScreen
-          user={user}
-          tasks={tasks}
-          onBack={() => setScreen(rewardsFrom)}
-        />
+        <RewardsScreen user={user} tasks={tasks} onBack={() => setScreen(rewardsFrom)} />
       )}
-      {successData && (
-        <FormSuccessOverlay
-          {...successData}
-          onDone={() => setSuccessData(null)}
-        />
-      )}
+      {successData && <FormSuccessOverlay {...successData} onDone={() => setSuccessData(null)} />}
     </div>
   );
 }

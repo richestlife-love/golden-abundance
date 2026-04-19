@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
-import BottomNav from '../ui/BottomNav';
-import TaskCard from './TaskCard';
-import { getEffectiveStatus } from '../utils';
-import { TASKS } from '../data';
-import type { Task, ScreenId } from '../types';
+import { useState, useMemo } from "react";
+import BottomNav from "../ui/BottomNav";
+import TaskCard from "./TaskCard";
+import { getEffectiveStatus } from "../utils";
+import { TASKS } from "../data";
+import type { Task, ScreenId } from "../types";
 
 type Props = {
   tasks: Task[];
@@ -11,11 +11,7 @@ type Props = {
   onOpenTask: (id: number) => void;
 };
 
-export default function TasksScreen({
-  tasks: tasksProp,
-  onNavigate,
-  onOpenTask,
-}: Props) {
+export default function TasksScreen({ tasks: tasksProp, onNavigate, onOpenTask }: Props) {
   const bg = "#FFFDF5";
   const cardBg = "rgba(255,255,255,0.7)";
   const cardBorder = "1px solid rgba(255,255,255,0.9)";
@@ -35,8 +31,7 @@ export default function TasksScreen({
     };
     tasks.forEach((t) => {
       const { status } = getEffectiveStatus(t, tasks);
-      if (status === "todo" || status === "in_progress" || status === "locked")
-        c.active++;
+      if (status === "todo" || status === "in_progress" || status === "locked") c.active++;
       if (status === "completed") c.completed++;
       else if (status === "expired") c.expired++;
       else if (status === "locked") c.locked++;
@@ -48,9 +43,7 @@ export default function TasksScreen({
     const { status } = getEffectiveStatus(t, tasks);
     if (filter === "all") return true;
     if (filter === "active")
-      return (
-        status === "todo" || status === "in_progress" || status === "locked"
-      );
+      return status === "todo" || status === "in_progress" || status === "locked";
     return status === filter;
   });
 
@@ -133,13 +126,9 @@ export default function TasksScreen({
                   flexShrink: 0,
                   padding: "7px 14px",
                   borderRadius: 999,
-                  border: active
-                    ? "none"
-                    : "1px solid rgba(254,210,52,0.35)",
-                  background: active
-                    ? "linear-gradient(135deg, #fec701, #cb9f01)"
-                    : cardBg,
-                  color: active ? ("#fff") : fg,
+                  border: active ? "none" : "1px solid rgba(254,210,52,0.35)",
+                  background: active ? "linear-gradient(135deg, #fec701, #cb9f01)" : cardBg,
+                  color: active ? "#fff" : fg,
                   fontSize: 12.5,
                   fontWeight: 700,
                   cursor: "pointer",
@@ -159,10 +148,8 @@ export default function TasksScreen({
                     fontWeight: 700,
                     padding: "1px 6px",
                     borderRadius: 999,
-                    background: active
-                      ? "rgba(255,255,255,0.25)"
-                      : "rgba(120,110,150,0.12)",
-                    color: active ? ("#fff") : muted,
+                    background: active ? "rgba(255,255,255,0.25)" : "rgba(120,110,150,0.12)",
+                    color: active ? "#fff" : muted,
                   }}
                 >
                   {tab.n}
@@ -242,9 +229,7 @@ export default function TasksScreen({
                           marginLeft: 4,
                         }}
                       />
-                      <div
-                        style={{ fontSize: 10, color: muted, fontWeight: 600 }}
-                      >
+                      <div style={{ fontSize: 10, color: muted, fontWeight: 600 }}>
                         {inSec.length}
                       </div>
                     </div>
@@ -286,11 +271,7 @@ export default function TasksScreen({
         </div>
       </div>
 
-      <BottomNav
-        current="tasks"
-        muted={muted}
-        onNavigate={onNavigate}
-      />
+      <BottomNav current="tasks" muted={muted} onNavigate={onNavigate} />
     </div>
   );
 }

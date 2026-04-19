@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import RenameTeamSheet from './RenameTeamSheet';
-import ShareSheet from './ShareSheet';
-import type { Team } from '../types';
+import { useState } from "react";
+import RenameTeamSheet from "./RenameTeamSheet";
+import ShareSheet from "./ShareSheet";
+import type { Team } from "../types";
 
 type Props = {
   team: Team;
@@ -36,43 +36,41 @@ export default function TeamCard({
   // Role-specific color palette threaded through the card
   const rc = isMemberCard
     ? {
-      primary: "#4d8a37",
-      primaryDeep: "#3d6b2e",
-      bg: "#F3FBEA",
-      bannerGrad: "linear-gradient(135deg, #CDEAB0, #A8D680 60%, #CDEAB0)",
-      border: "1px solid rgba(110,170,80,0.3)",
-      borderSoft: "1px solid rgba(110,170,80,0.2)",
-      borderStrong: "1px solid rgba(80,140,60,0.4)",
-      divider: "1px solid rgba(80,140,60,0.12)",
-      shadow: "0 4px 16px rgba(80,140,60,0.1)",
-      starIcon: "#6aa840",
-      chipBg: "rgba(168,214,128,0.35)",
-      chipBgSoft: "rgba(180,220,160,0.4)",
-      leaderRowBg: "linear-gradient(135deg, rgba(168,214,128,0.4), rgba(200,232,168,0.25))",
-      leaderRowBorder: "1px solid rgba(110,170,80,0.35)",
-      shareGrad:
-        "linear-gradient(135deg, #6dae4a 0%, #538a37 50%, #6dae4a 100%)",
-      shareFallback: "rgba(168,214,128,0.22)",
-    }
+        primary: "#4d8a37",
+        primaryDeep: "#3d6b2e",
+        bg: "#F3FBEA",
+        bannerGrad: "linear-gradient(135deg, #CDEAB0, #A8D680 60%, #CDEAB0)",
+        border: "1px solid rgba(110,170,80,0.3)",
+        borderSoft: "1px solid rgba(110,170,80,0.2)",
+        borderStrong: "1px solid rgba(80,140,60,0.4)",
+        divider: "1px solid rgba(80,140,60,0.12)",
+        shadow: "0 4px 16px rgba(80,140,60,0.1)",
+        starIcon: "#6aa840",
+        chipBg: "rgba(168,214,128,0.35)",
+        chipBgSoft: "rgba(180,220,160,0.4)",
+        leaderRowBg: "linear-gradient(135deg, rgba(168,214,128,0.4), rgba(200,232,168,0.25))",
+        leaderRowBorder: "1px solid rgba(110,170,80,0.35)",
+        shareGrad: "linear-gradient(135deg, #6dae4a 0%, #538a37 50%, #6dae4a 100%)",
+        shareFallback: "rgba(168,214,128,0.22)",
+      }
     : {
-      primary: "#987701",
-      primaryDeep: "#655001",
-      bg: "#FFF4C4",
-      bannerGrad: "linear-gradient(135deg, #FFE892, #FFDB5E 60%, #FFE892)",
-      border: "1px solid rgba(254,199,1,0.28)",
-      borderSoft: "1px solid rgba(254,210,52,0.18)",
-      borderStrong: "1px solid rgba(254,199,1,0.4)",
-      divider: "1px solid rgba(120,90,0,0.08)",
-      shadow: "0 4px 16px rgba(200,160,0,0.08)",
-      starIcon: "#fec701",
-      chipBg: "rgba(254,210,52,0.25)",
-      chipBgSoft: "rgba(254,210,52,0.12)",
-      leaderRowBg: "linear-gradient(135deg, rgba(254,221,103,0.28), rgba(254,210,52,0.16))",
-      leaderRowBorder: "1px solid rgba(254,199,1,0.4)",
-      shareGrad:
-        "linear-gradient(135deg, #e8a900 0%, #c48c00 50%, #e8a900 100%)",
-      shareFallback: "rgba(254,210,52,0.12)",
-    };
+        primary: "#987701",
+        primaryDeep: "#655001",
+        bg: "#FFF4C4",
+        bannerGrad: "linear-gradient(135deg, #FFE892, #FFDB5E 60%, #FFE892)",
+        border: "1px solid rgba(254,199,1,0.28)",
+        borderSoft: "1px solid rgba(254,210,52,0.18)",
+        borderStrong: "1px solid rgba(254,199,1,0.4)",
+        divider: "1px solid rgba(120,90,0,0.08)",
+        shadow: "0 4px 16px rgba(200,160,0,0.08)",
+        starIcon: "#fec701",
+        chipBg: "rgba(254,210,52,0.25)",
+        chipBgSoft: "rgba(254,210,52,0.12)",
+        leaderRowBg: "linear-gradient(135deg, rgba(254,221,103,0.28), rgba(254,210,52,0.16))",
+        leaderRowBorder: "1px solid rgba(254,199,1,0.4)",
+        shareGrad: "linear-gradient(135deg, #e8a900 0%, #c48c00 50%, #e8a900 100%)",
+        shareFallback: "rgba(254,210,52,0.12)",
+      };
   const [shareOpen, setShareOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -81,7 +79,7 @@ export default function TeamCard({
   const copyId = () => {
     try {
       navigator.clipboard && navigator.clipboard.writeText(team.id);
-    } catch (e) { }
+    } catch (e) {}
     setIdCopied(true);
     setTimeout(() => setIdCopied(false), 1800);
   };
@@ -90,7 +88,7 @@ export default function TeamCard({
   const copyShare = () => {
     try {
       navigator.clipboard && navigator.clipboard.writeText(shareMessage);
-    } catch (e) { }
+    } catch (e) {}
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 1800);
   };
@@ -170,9 +168,7 @@ export default function TeamCard({
             {team.leader.name[0]}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: fg }}>
-              {team.leader.name}
-            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: fg }}>{team.leader.name}</div>
             <button
               type="button"
               onClick={copyId}
@@ -183,7 +179,7 @@ export default function TeamCard({
                 border: "none",
                 cursor: "pointer",
                 fontSize: 11,
-                color: idCopied ? ("#2E9B65") : muted,
+                color: idCopied ? "#2E9B65" : muted,
                 marginTop: 2,
                 display: "inline-flex",
                 alignItems: "center",
@@ -263,14 +259,13 @@ export default function TeamCard({
     ...team.members.map((m) => ({ ...m, isLeader: false })),
   ];
 
-  const requests = team.role === "leader" ? (team.requests || []) : [];
+  const requests = team.role === "leader" ? team.requests || [] : [];
 
   // Unified approved-team view (leader & member share same layout)
   const isLeader = team.role === "leader";
   const teamPoints = team.points != null ? team.points : total * 180 + 240;
   const teamRank = team.rank || 3;
-  const weekPoints =
-    team.weekPoints != null ? team.weekPoints : Math.round(teamPoints * 0.18);
+  const weekPoints = team.weekPoints != null ? team.weekPoints : Math.round(teamPoints * 0.18);
 
   return (
     <>
@@ -280,7 +275,8 @@ export default function TeamCard({
           overflow: "hidden",
           background: rc.bg,
           border: rc.border,
-          boxShadow: "0 8px 24px rgba(80,140,60,0.08), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)",
+          boxShadow:
+            "0 8px 24px rgba(80,140,60,0.08), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)",
           display: "flex",
           flexDirection: "column",
         }}
@@ -317,20 +313,14 @@ export default function TeamCard({
               [378, 92, 0.9],
             ].map(([x, y, r], i) => (
               <g key={i} transform={`translate(${x},${y})`}>
-                <circle
-                  r={r + 0.4}
-                  fill={
-                    isMemberCard ? ("#6dae4a") : "#fec701"
-                  }
-                  opacity="0.6"
-                />
+                <circle r={r + 0.4} fill={isMemberCard ? "#6dae4a" : "#fec701"} opacity="0.6" />
                 <circle r={r * 0.3} fill="#fff" />
               </g>
             ))}
             {/* thin constellation line */}
             <path
               d={`M 300 58 L 345 75 L 378 92 L 352 42 L 328 22`}
-              stroke={isMemberCard ? ("#6dae4a") : "#fec701"}
+              stroke={isMemberCard ? "#6dae4a" : "#fec701"}
               strokeWidth="0.6"
               fill="none"
               opacity="0.35"
@@ -381,9 +371,7 @@ export default function TeamCard({
                   flexWrap: "wrap",
                 }}
               >
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {team.name}
-                </span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{team.name}</span>
                 {isLeader && onRenameTeam && (
                   <button
                     onClick={() => setRenameOpen(true)}
@@ -463,12 +451,8 @@ export default function TeamCard({
               style={{
                 padding: "6px 10px",
                 borderRadius: 10,
-                background: idCopied
-                  ? "rgba(80,200,140,0.18)"
-                  : "rgba(255,255,255,0.85)",
-                border: idCopied
-                  ? "1px solid rgba(80,200,140,0.45)"
-                  : rc.borderStrong,
+                background: idCopied ? "rgba(80,200,140,0.18)" : "rgba(255,255,255,0.85)",
+                border: idCopied ? "1px solid rgba(80,200,140,0.45)" : rc.borderStrong,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "flex-end",
@@ -494,7 +478,7 @@ export default function TeamCard({
                 style={{
                   fontSize: 13,
                   fontWeight: 800,
-                  color: idCopied ? ("#2E9B65") : fg,
+                  color: idCopied ? "#2E9B65" : fg,
                   marginTop: 3,
                   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
                   letterSpacing: 1,
@@ -548,8 +532,7 @@ export default function TeamCard({
               cursor: "pointer",
               position: "relative",
               overflow: "hidden",
-              background:
-                "linear-gradient(135deg, #fff3c8 0%, #ffe48a 40%, #fec701 100%)",
+              background: "linear-gradient(135deg, #fff3c8 0%, #ffe48a 40%, #fec701 100%)",
               color: "#5a4500",
               fontFamily: "inherit",
               display: "flex",
@@ -600,15 +583,12 @@ export default function TeamCard({
                 flexShrink: 0,
                 position: "relative",
                 zIndex: 1,
-                boxShadow:
-                  "0 4px 12px rgba(200,160,0,0.25), inset 0 0 0 1.5px rgba(254,199,1,0.4)",
+                boxShadow: "0 4px 12px rgba(200,160,0,0.25), inset 0 0 0 1.5px rgba(254,199,1,0.4)",
               }}
             >
               📨
             </div>
-            <div
-              style={{ flex: 1, minWidth: 0, position: "relative", zIndex: 1 }}
-            >
+            <div style={{ flex: 1, minWidth: 0, position: "relative", zIndex: 1 }}>
               <div
                 style={{
                   fontSize: 10,
@@ -833,11 +813,7 @@ export default function TeamCard({
                 marginTop: 2,
               }}
             >
-              {teamRank <= 3
-                ? "🏆 進入前三"
-                : teamRank <= 10
-                  ? "進入前十"
-                  : "持續努力中"}
+              {teamRank <= 3 ? "🏆 進入前三" : teamRank <= 10 ? "進入前十" : "持續努力中"}
             </div>
           </div>
         </div>
@@ -897,9 +873,7 @@ export default function TeamCard({
                     gap: 10,
                     padding: "10px 14px 10px 10px",
                     borderRadius: 14,
-                    background: m.isLeader
-                      ? rc.leaderRowBg
-                      : "rgba(255,255,255,0.7)",
+                    background: m.isLeader ? rc.leaderRowBg : "rgba(255,255,255,0.7)",
                     border: m.isLeader ? rc.leaderRowBorder : rc.borderSoft,
                     boxShadow: m.isLeader
                       ? `0 2px 6px ${isMemberCard ? "rgba(109,174,74,0.12)" : "rgba(200,160,0,0.1)"}`
@@ -926,16 +900,8 @@ export default function TeamCard({
                             : i === 2
                               ? "rgba(210,170,130,0.55)"
                               : "transparent",
-                      color:
-                        i === 0
-                          ? "#fff"
-                          : i <= 2
-                            ? "#fff"
-                            : muted,
-                      border:
-                        i > 2
-                          ? "1px solid rgba(120,90,0,0.2)"
-                          : "none",
+                      color: i === 0 ? "#fff" : i <= 2 ? "#fff" : muted,
+                      border: i > 2 ? "1px solid rgba(120,90,0,0.2)" : "none",
                       fontFamily: '"Noto Serif SC", serif',
                     }}
                   >
@@ -1026,8 +992,7 @@ export default function TeamCard({
             style={{
               padding: "12px 16px 14px",
               borderTop: "1px solid rgba(120,90,0,0.08)",
-              background:
-                "linear-gradient(180deg, rgba(255,214,168,0.1), transparent)",
+              background: "linear-gradient(180deg, rgba(255,214,168,0.1), transparent)",
             }}
           >
             <div

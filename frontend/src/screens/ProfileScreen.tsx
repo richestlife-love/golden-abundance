@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { User } from '../types';
+import { useState } from "react";
+import type { User } from "../types";
 
 type Props = {
   user: User | null;
@@ -20,7 +20,7 @@ export default function ProfileScreen({ user, onBack, onEdit }: Props) {
     if (!user?.id) return;
     try {
       navigator.clipboard && navigator.clipboard.writeText(user.id);
-    } catch (err) { }
+    } catch (err) {}
     setIdCopied(true);
     setTimeout(() => setIdCopied(false), 1800);
   };
@@ -43,18 +43,14 @@ export default function ProfileScreen({ user, onBack, onEdit }: Props) {
     { label: "Email", value: user?.email, icon: "@" },
     {
       label: "聯絡電話",
-      value: user?.phone
-        ? `${user.phoneCode || ""} ${user.phone}`.trim()
-        : null,
+      value: user?.phone ? `${user.phoneCode || ""} ${user.phone}`.trim() : null,
       icon: "☎",
     },
     { label: "LINE ID", value: user?.lineId, icon: "L" },
     { label: "Telegram ID", value: user?.telegramId, icon: "T" },
     {
       label: "所在國家/地區",
-      value: user?.country
-        ? `${COUNTRY_FLAG[user.country] || ""} ${user.country}`.trim()
-        : null,
+      value: user?.country ? `${COUNTRY_FLAG[user.country] || ""} ${user.country}`.trim() : null,
       icon: "◎",
     },
     { label: "所在城市/地區", value: user?.location, icon: "◉" },
@@ -104,9 +100,7 @@ export default function ProfileScreen({ user, onBack, onEdit }: Props) {
         >
           ‹
         </button>
-        <div style={{ fontSize: 16, fontWeight: 700, color: fg, flex: 1 }}>
-          個人資料
-        </div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: fg, flex: 1 }}>個人資料</div>
         <button
           onClick={onEdit}
           style={{
@@ -202,12 +196,8 @@ export default function ProfileScreen({ user, onBack, onEdit }: Props) {
                     fontWeight: 700,
                     fontFamily: 'ui-monospace, "SF Mono", monospace',
                     letterSpacing: 0.3,
-                    background: idCopied
-                      ? "rgba(80,180,120,0.18)"
-                      : "rgba(255,255,255,0.55)",
-                    color: idCopied
-                      ? "#2d8050"
-                      : "rgba(90,70,0,0.85)",
+                    background: idCopied ? "rgba(80,180,120,0.18)" : "rgba(255,255,255,0.55)",
+                    color: idCopied ? "#2d8050" : "rgba(90,70,0,0.85)",
                     border: "1px solid rgba(120,90,0,0.12)",
                     cursor: "pointer",
                     transition: "all 0.18s ease",
@@ -246,9 +236,7 @@ export default function ProfileScreen({ user, onBack, onEdit }: Props) {
               )}
             </div>
             {user?.enName && (
-              <div style={{ fontSize: 12, color: muted, marginTop: 3 }}>
-                {user.enName}
-              </div>
+              <div style={{ fontSize: 12, color: muted, marginTop: 3 }}>{user.enName}</div>
             )}
           </div>
         </div>
@@ -270,10 +258,7 @@ export default function ProfileScreen({ user, onBack, onEdit }: Props) {
                 alignItems: "center",
                 gap: 12,
                 padding: "14px 14px",
-                borderTop:
-                  i === 0
-                    ? "none"
-                    : "1px solid rgba(254,199,1,0.12)",
+                borderTop: i === 0 ? "none" : "1px solid rgba(254,199,1,0.12)",
               }}
             >
               <div
@@ -294,9 +279,7 @@ export default function ProfileScreen({ user, onBack, onEdit }: Props) {
                 {r.icon}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, color: muted, fontWeight: 500 }}>
-                  {r.label}
-                </div>
+                <div style={{ fontSize: 11, color: muted, fontWeight: 500 }}>{r.label}</div>
                 <div
                   style={{
                     fontSize: 14,

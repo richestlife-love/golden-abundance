@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import FormShell from '../ui/FormShell';
-import FieldLabel from '../ui/FieldLabel';
-import TextInput from '../ui/TextInput';
-import ChipGroup from '../ui/ChipGroup';
-import SubmitButton from '../ui/SubmitButton';
-import type { User } from '../types';
+import { useState } from "react";
+import FormShell from "../ui/FormShell";
+import FieldLabel from "../ui/FieldLabel";
+import TextInput from "../ui/TextInput";
+import ChipGroup from "../ui/ChipGroup";
+import SubmitButton from "../ui/SubmitButton";
+import type { User } from "../types";
 
 type Props = {
   user: User | null;
@@ -32,11 +32,9 @@ export default function ProfileSetupForm({
   const fg = "#241c00";
 
   const initEn =
-    initial?.enName ||
-    ((user?.name || "").match(/[A-Za-z\s]/) ? user?.name || "" : "");
+    initial?.enName || ((user?.name || "").match(/[A-Za-z\s]/) ? user?.name || "" : "");
   const initZh =
-    initial?.zhName ||
-    ((user?.name || "").match(/[\u4e00-\u9fa5]/) ? user?.name || "" : "");
+    initial?.zhName || ((user?.name || "").match(/[\u4e00-\u9fa5]/) ? user?.name || "" : "");
   const [zhName, setZhName] = useState(initZh);
   const [enName, setEnName] = useState(initEn);
   const [nickname, setNickname] = useState(initial?.nickname || "");
@@ -234,9 +232,7 @@ export default function ProfileSetupForm({
           {(user?.name || "U").slice(0, 1).toUpperCase()}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: fg }}>
-            {user?.name || "新志工"}
-          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: fg }}>{user?.name || "新志工"}</div>
           <div
             style={{
               fontSize: 11,
@@ -252,14 +248,8 @@ export default function ProfileSetupForm({
       </div>
 
       <div style={card}>
-        <FieldLabel required>
-          中文姓名
-        </FieldLabel>
-        <TextInput
-          value={zhName}
-          onChange={setZhName}
-          placeholder="請輸入你的中文姓名"
-        />
+        <FieldLabel required>中文姓名</FieldLabel>
+        <TextInput value={zhName} onChange={setZhName} placeholder="請輸入你的中文姓名" />
       </div>
 
       <div style={card}>
@@ -274,11 +264,7 @@ export default function ProfileSetupForm({
         >
           如證件上之拼音 As per NRIC（選填）
         </div>
-        <TextInput
-          value={enName}
-          onChange={setEnName}
-          placeholder="e.g. Chia-Yi Lin"
-        />
+        <TextInput value={enName} onChange={setEnName} placeholder="e.g. Chia-Yi Lin" />
       </div>
 
       <div style={card}>
@@ -293,17 +279,11 @@ export default function ProfileSetupForm({
         >
           朋友們會這樣稱呼你（選填）
         </div>
-        <TextInput
-          value={nickname}
-          onChange={setNickname}
-          placeholder="e.g. 小佳 / Alice Ng"
-        />
+        <TextInput value={nickname} onChange={setNickname} placeholder="e.g. 小佳 / Alice Ng" />
       </div>
 
       <div style={card}>
-        <FieldLabel required>
-          聯絡電話
-        </FieldLabel>
+        <FieldLabel required>聯絡電話</FieldLabel>
         <div style={{ display: "flex", gap: 8 }}>
           <div style={{ position: "relative", flexShrink: 0 }}>
             <select
@@ -345,11 +325,7 @@ export default function ProfileSetupForm({
             </span>
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <TextInput
-              value={phone}
-              onChange={setPhone}
-              placeholder="912-345-678"
-            />
+            <TextInput value={phone} onChange={setPhone} placeholder="912-345-678" />
           </div>
         </div>
       </div>
@@ -366,11 +342,7 @@ export default function ProfileSetupForm({
         >
           方便活動聯繫（選填）
         </div>
-        <TextInput
-          value={lineId}
-          onChange={setLineId}
-          placeholder="@your-line-id"
-        />
+        <TextInput value={lineId} onChange={setLineId} placeholder="@your-line-id" />
       </div>
 
       <div style={card}>
@@ -385,17 +357,11 @@ export default function ProfileSetupForm({
         >
           方便活動聯繫（選填）
         </div>
-        <TextInput
-          value={telegramId}
-          onChange={setTelegramId}
-          placeholder="@your-telegram-id"
-        />
+        <TextInput value={telegramId} onChange={setTelegramId} placeholder="@your-telegram-id" />
       </div>
 
       <div style={card}>
-        <FieldLabel required>
-          所在國家/地區
-        </FieldLabel>
+        <FieldLabel required>所在國家/地區</FieldLabel>
         <ChipGroup
           options={COUNTRIES}
           value={country as unknown as string[]}
@@ -406,9 +372,7 @@ export default function ProfileSetupForm({
 
       {country && (
         <div style={card}>
-          <FieldLabel required>
-            所在城市/地區
-          </FieldLabel>
+          <FieldLabel required>所在城市/地區</FieldLabel>
           <div
             style={{
               fontSize: 11,

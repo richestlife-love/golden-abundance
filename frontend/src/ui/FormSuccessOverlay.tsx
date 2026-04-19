@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import type { SuccessData } from '../types';
+import { useEffect } from "react";
+import type { SuccessData } from "../types";
 
 type Props = SuccessData & { onDone: () => void };
 

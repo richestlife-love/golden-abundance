@@ -1,4 +1,4 @@
-import type { Task, MockMember, MockTeam } from './types';
+import type { Task, MockMember, MockTeam } from "./types";
 
 export const TASKS: Task[] = [
   {

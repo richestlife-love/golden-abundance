@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react';
-import FormShell from '../ui/FormShell';
-import FieldLabel from '../ui/FieldLabel';
-import SubmitButton from '../ui/SubmitButton';
-import { MOCK_TEAMS } from '../data';
-import type { Team } from '../types';
+import { useState, useMemo } from "react";
+import FormShell from "../ui/FormShell";
+import FieldLabel from "../ui/FieldLabel";
+import SubmitButton from "../ui/SubmitButton";
+import { MOCK_TEAMS } from "../data";
+import type { Team } from "../types";
 
 type Props = {
   onCancel: () => void;
-  onSubmit: (teamData: Omit<Team, 'role'>) => void;
+  onSubmit: (teamData: Omit<Team, "role">) => void;
 };
 
 export default function TeamForm({ onCancel, onSubmit }: Props) {
@@ -71,10 +71,7 @@ export default function TeamForm({ onCancel, onSubmit }: Props) {
       },
     ];
 
-    const mockMembers = mockMemberPool.slice(
-      0,
-      Math.max(0, (t.members || 1) - 1),
-    );
+    const mockMembers = mockMemberPool.slice(0, Math.max(0, (t.members || 1) - 1));
     onSubmit({
       id: t.id,
       status: "pending",
@@ -106,9 +103,7 @@ export default function TeamForm({ onCancel, onSubmit }: Props) {
       }
     >
       <div style={card}>
-        <FieldLabel required>
-          團隊編號 / 名稱
-        </FieldLabel>
+        <FieldLabel required>團隊編號 / 名稱</FieldLabel>
         <div
           style={{
             fontSize: 11,
@@ -221,9 +216,7 @@ export default function TeamForm({ onCancel, onSubmit }: Props) {
                         flexWrap: "wrap",
                       }}
                     >
-                      <div style={{ fontSize: 14, fontWeight: 700, color: fg }}>
-                        {team.name}
-                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: fg }}>{team.name}</div>
                       <div
                         style={{
                           fontSize: 9,

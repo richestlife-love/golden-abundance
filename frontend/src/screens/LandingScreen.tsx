@@ -1,17 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
-import PaperBackground from '../ui/PaperBackground';
-import MascotHero from '../ui/MascotHero';
-import Headline from '../ui/Headline';
-import GradientButton from '../ui/GradientButton';
+import { useState, useEffect, useRef } from "react";
+import PaperBackground from "../ui/PaperBackground";
+import MascotHero from "../ui/MascotHero";
+import Headline from "../ui/Headline";
+import GradientButton from "../ui/GradientButton";
 
-type Props = { onStart: () => void; };
+type Props = { onStart: () => void };
 
 export default function LandingScreen({ onStart }: Props) {
   const getInitial = () => {
-    const w = Math.min(
-      typeof window !== "undefined" ? window.innerWidth : 390,
-      440,
-    );
+    const w = Math.min(typeof window !== "undefined" ? window.innerWidth : 390, 440);
     const h = typeof window !== "undefined" ? window.innerHeight : 800;
     return { w: w || 390, h: h || 800 };
   };
@@ -178,7 +175,6 @@ export default function LandingScreen({ onStart }: Props) {
           <GradientButton label="开启" onClick={onStart} />
         </div>
       </div>
-
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 type Props = {
   bg: string;
@@ -9,13 +9,7 @@ type Props = {
   footer?: ReactNode;
 };
 
-export default function FormShell({ bg,
-  title,
-  subtitle,
-  onCancel,
-  children,
-  footer,
-}: Props) {
+export default function FormShell({ bg, title, subtitle, onCancel, children, footer }: Props) {
   const fg = "#241c00";
   const muted = "rgba(50,40,0,0.6)";
   return (
@@ -113,9 +107,7 @@ export default function FormShell({ bg,
             padding: "16px 16px 20px",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {children}
-          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>{children}</div>
         </div>
 
         {/* Sticky footer */}

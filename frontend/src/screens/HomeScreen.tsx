@@ -1,8 +1,8 @@
-import { TASKS } from '../data';
-import { getEffectiveStatus } from '../utils';
-import BottomNav from '../ui/BottomNav';
-import TaskCard from './TaskCard';
-import type { User, Task, ScreenId } from '../types';
+import { TASKS } from "../data";
+import { getEffectiveStatus } from "../utils";
+import BottomNav from "../ui/BottomNav";
+import TaskCard from "./TaskCard";
+import type { User, Task, ScreenId } from "../types";
 
 type Props = {
   user: User | null;
@@ -58,13 +58,7 @@ export default function HomeScreen({
         : homeTiers[homeTierIdx - 1].required;
   const homeNextReq = homeNextTier ? homeNextTier.required : totalPoints;
   const homeProgressPct = homeNextTier
-    ? Math.min(
-      1,
-      Math.max(
-        0,
-        (totalPoints - homePrevReq) / Math.max(1, homeNextReq - homePrevReq),
-      ),
-    )
+    ? Math.min(1, Math.max(0, (totalPoints - homePrevReq) / Math.max(1, homeNextReq - homePrevReq)))
     : 1;
 
   return (
@@ -101,9 +95,7 @@ export default function HomeScreen({
           }}
         >
           <div>
-            <div style={{ fontSize: 13, color: muted, marginBottom: 2 }}>
-              欢迎回来
-            </div>
+            <div style={{ fontSize: 13, color: muted, marginBottom: 2 }}>欢迎回来</div>
             <div
               style={{
                 fontSize: 16,
@@ -207,9 +199,7 @@ export default function HomeScreen({
                 const tierName = homeCurrentTier?.name || "志工寶寶";
                 const tierColor = homeCurrentTier?.color || "#b8a4e3";
                 const isBaby = !homeCurrentTier;
-                const tierTextColor = isBaby
-                  ? "#8c4a9a"
-                  : tierColor;
+                const tierTextColor = isBaby ? "#8c4a9a" : tierColor;
                 return (
                   <div
                     style={{
@@ -223,9 +213,7 @@ export default function HomeScreen({
                       whiteSpace: "nowrap",
                     }}
                   >
-                    <span style={{ fontSize: 15, lineHeight: 1 }}>
-                      {isBaby ? "🍼" : "🏅"}
-                    </span>
+                    <span style={{ fontSize: 15, lineHeight: 1 }}>{isBaby ? "🍼" : "🏅"}</span>
                     {tierName}
                   </div>
                 );
@@ -288,8 +276,7 @@ export default function HomeScreen({
                     fontSize: 48,
                     fontWeight: 900,
                     letterSpacing: -1.5,
-                    background:
-                      "linear-gradient(135deg, #cb9f01 0%, #fec701 45%, #cb9f01 100%)",
+                    background: "linear-gradient(135deg, #cb9f01 0%, #fec701 45%, #cb9f01 100%)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                     fontFamily: '"Noto Serif SC", serif',
@@ -371,9 +358,7 @@ export default function HomeScreen({
                               background: reached
                                 ? "linear-gradient(135deg, #ffe066, #fec701)"
                                 : "#fff",
-                              border: reached
-                                ? "2px solid #fff"
-                                : "2px solid rgba(203,159,1,0.35)",
+                              border: reached ? "2px solid #fff" : "2px solid rgba(203,159,1,0.35)",
                               boxShadow: reached
                                 ? "0 2px 5px rgba(203,159,1,0.45)"
                                 : "0 1px 2px rgba(0,0,0,0.08)",
@@ -384,12 +369,7 @@ export default function HomeScreen({
                             }}
                           >
                             {reached && (
-                              <svg
-                                width="7"
-                                height="7"
-                                viewBox="0 0 10 10"
-                                fill="none"
-                              >
+                              <svg width="7" height="7" viewBox="0 0 10 10" fill="none">
                                 <path
                                   d="M2 5.5L4 7.5L8 3"
                                   stroke="#fff"
@@ -420,10 +400,7 @@ export default function HomeScreen({
                             transform: "translateX(-50%)",
                             fontSize: 9.5,
                             fontWeight: 700,
-                            color:
-                              totalPoints >= t.value
-                                ? "#8c6d00"
-                                : muted,
+                            color: totalPoints >= t.value ? "#8c6d00" : muted,
                             letterSpacing: 0.2,
                           }}
                         >
@@ -467,9 +444,7 @@ export default function HomeScreen({
             animation: "fadeInUp 0.5s 0.1s ease backwards",
           }}
         >
-          <div style={{ fontSize: 16, fontWeight: 700, color: fg }}>
-            探索任务
-          </div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: fg }}>探索任务</div>
           <div
             onClick={() => onNavigate("tasks")}
             style={{ fontSize: 12, color: muted, cursor: "pointer" }}
@@ -522,11 +497,7 @@ export default function HomeScreen({
       </div>
 
       {/* Bottom nav */}
-      <BottomNav
-        current="home"
-        muted={muted}
-        onNavigate={onNavigate}
-      />
+      <BottomNav current="home" muted={muted} onNavigate={onNavigate} />
     </div>
   );
 }

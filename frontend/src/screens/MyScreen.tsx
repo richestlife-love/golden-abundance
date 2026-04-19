@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import type { MouseEvent, KeyboardEvent } from 'react';
-import BottomNav from '../ui/BottomNav';
-import TeamCard from './TeamCard';
-import type { User, Team, Task, ScreenId } from '../types';
+import { useState } from "react";
+import type { MouseEvent, KeyboardEvent } from "react";
+import BottomNav from "../ui/BottomNav";
+import TeamCard from "./TeamCard";
+import type { User, Team, Task, ScreenId } from "../types";
 
 type Props = {
   user: User | null;
@@ -53,12 +53,9 @@ export default function MyScreen({
   const teamCap = (teamTask && teamTask.cap) || 6;
   const ledTotal = ledTeam ? ledTeam.members.length + 1 : 0;
   const joinedTotal = joinedTeam
-    ? (joinedTeam.currentCount || 0) +
-    (joinedTeam.status === "approved" ? 1 : 0)
+    ? (joinedTeam.currentCount || 0) + (joinedTeam.status === "approved" ? 1 : 0)
     : 0;
-  const [teamTab, setTeamTab] = useState(
-    ledTeam && !joinedTeam ? "leader" : "member",
-  );
+  const [teamTab, setTeamTab] = useState(ledTeam && !joinedTeam ? "leader" : "member");
   const [userIdCopied, setUserIdCopied] = useState(false);
   const copyUserId = (e: MouseEvent | KeyboardEvent) => {
     e.stopPropagation();
@@ -66,7 +63,7 @@ export default function MyScreen({
     if (!user?.id) return;
     try {
       navigator.clipboard && navigator.clipboard.writeText(user.id);
-    } catch (err) { }
+    } catch (err) {}
     setUserIdCopied(true);
     setTimeout(() => setUserIdCopied(false), 1800);
   };
@@ -190,7 +187,8 @@ export default function MyScreen({
             position: "relative",
             background: "linear-gradient(155deg, #FFE48C 0%, #FFE9B8 45%, #F4EBFF 100%)",
             border: "1px solid rgba(254,199,1,0.28)",
-            boxShadow: "0 10px 30px rgba(200,160,0,0.14), 0 2px 6px rgba(184,164,227,0.12), inset 0 1px 0 rgba(255,255,255,0.7)",
+            boxShadow:
+              "0 10px 30px rgba(200,160,0,0.14), 0 2px 6px rgba(184,164,227,0.12), inset 0 1px 0 rgba(255,255,255,0.7)",
           }}
         >
           {/* Decorative starfield + mountain silhouette */}
@@ -208,16 +206,8 @@ export default function MyScreen({
           >
             <defs>
               <linearGradient id="my-mtn" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="0%"
-                  stopColor={"#d9c8f5"}
-                  stopOpacity="0.3"
-                />
-                <stop
-                  offset="100%"
-                  stopColor={"#d9c8f5"}
-                  stopOpacity="0"
-                />
+                <stop offset="0%" stopColor={"#d9c8f5"} stopOpacity="0.3" />
+                <stop offset="100%" stopColor={"#d9c8f5"} stopOpacity="0" />
               </linearGradient>
             </defs>
             {/* distant mountains */}
@@ -239,26 +229,14 @@ export default function MyScreen({
               [180, 105, 0.7],
             ].map(([x, y, r], i) => (
               <g key={i} transform={`translate(${x},${y})`}>
-                <circle
-                  r={r + 0.4}
-                  fill={"#fec701"}
-                  opacity="0.7"
-                />
+                <circle r={r + 0.4} fill={"#fec701"} opacity="0.7" />
                 <circle r={r * 0.3} fill="#fff" />
               </g>
             ))}
             {/* crescent moon */}
             <g transform="translate(340,52)">
-              <circle
-                r="14"
-                fill={"rgba(254,199,1,0.35)"}
-              />
-              <circle
-                r="14"
-                cx="5"
-                cy="-2"
-                fill={"#FFE48C"}
-              />
+              <circle r="14" fill={"rgba(254,199,1,0.35)"} />
+              <circle r="14" cx="5" cy="-2" fill={"#FFE48C"} />
             </g>
           </svg>
 
@@ -281,12 +259,8 @@ export default function MyScreen({
               textAlign: "left",
               transition: "background 0.15s",
             }}
-            onMouseOver={(e) =>
-            (e.currentTarget.style.background = "rgba(255,255,255,0.25)")
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.background = "transparent")
-            }
+            onMouseOver={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
+            onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
           >
             {/* Avatar with halo ring */}
             <div style={{ position: "relative", flexShrink: 0 }}>
@@ -295,8 +269,7 @@ export default function MyScreen({
                   position: "absolute",
                   inset: -5,
                   borderRadius: 999,
-                  background:
-                    "conic-gradient(from 180deg, #fed234, #b8a4e3, #fed234)",
+                  background: "conic-gradient(from 180deg, #fed234, #b8a4e3, #fed234)",
                   opacity: 0.6,
                   filter: "blur(2px)",
                 }}
@@ -314,8 +287,7 @@ export default function MyScreen({
                   fontSize: 28,
                   fontWeight: 800,
                   color: "#fff",
-                  boxShadow:
-                    "0 8px 22px rgba(254,199,1,0.4), inset 0 2px 0 rgba(255,255,255,0.4)",
+                  boxShadow: "0 8px 22px rgba(254,199,1,0.4), inset 0 2px 0 rgba(255,255,255,0.4)",
                   fontFamily: '"Noto Serif SC", serif',
                   border: "2px solid rgba(255,255,255,0.9)",
                 }}
@@ -362,12 +334,8 @@ export default function MyScreen({
                       fontWeight: 700,
                       fontFamily: 'ui-monospace, "SF Mono", monospace',
                       letterSpacing: 0.3,
-                      background: userIdCopied
-                        ? "rgba(80,180,120,0.18)"
-                        : "rgba(255,255,255,0.55)",
-                      color: userIdCopied
-                        ? "#2d8050"
-                        : "rgba(90,70,0,0.85)",
+                      background: userIdCopied ? "rgba(80,180,120,0.18)" : "rgba(255,255,255,0.55)",
+                      color: userIdCopied ? "#2d8050" : "rgba(90,70,0,0.85)",
                       border: "1px solid rgba(120,90,0,0.12)",
                       cursor: "pointer",
                       transition: "all 0.18s ease",
@@ -398,14 +366,7 @@ export default function MyScreen({
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <rect
-                          x="9"
-                          y="9"
-                          width="13"
-                          height="13"
-                          rx="2"
-                          ry="2"
-                        />
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                       </svg>
                     )}
@@ -464,12 +425,8 @@ export default function MyScreen({
                 transition: "background 0.15s",
                 textAlign: "left",
               }}
-              onMouseOver={(e) =>
-              (e.currentTarget.style.background = "rgba(255,255,255,0.35)")
-              }
-              onMouseOut={(e) =>
-                (e.currentTarget.style.background = "transparent")
-              }
+              onMouseOver={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.35)")}
+              onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
             >
               <div
                 style={{
@@ -588,9 +545,7 @@ export default function MyScreen({
                     cursor: "pointer",
                     fontFamily: "inherit",
                     background: active ? t.softBg : "transparent",
-                    color: active
-                      ? t.color
-                      : "rgba(120,90,0,0.45)",
+                    color: active ? t.color : "rgba(120,90,0,0.45)",
                     fontSize: 14,
                     fontWeight: 800,
                     letterSpacing: 0.5,
@@ -827,11 +782,7 @@ export default function MyScreen({
         {/* Account menu list removed — logout moved to top bar */}
       </div>
 
-      <BottomNav
-        current="me"
-        muted={muted}
-        onNavigate={onNavigate}
-      />
+      <BottomNav current="me" muted={muted} onNavigate={onNavigate} />
     </div>
   );
 }

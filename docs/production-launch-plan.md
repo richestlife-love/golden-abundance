@@ -49,7 +49,7 @@ See the [design spec](superpowers/specs/2026-04-19-api-contract-design.md).
 
 ## Tech debt / review findings (pre-Phase-4)
 
-Items surfaced in a 2026-04-20 code review. Address before or during Phase 4 (wire to backend) — once fetch/loading state is threaded through the tree, each of these becomes significantly more painful to refactor. Phase 3 (routing) resolved the `tasksProp || TASKS` fallbacks and the `onSimulateJoinApproved` prop-threading; the state-architecture items below moved from `App.tsx` to `AppStateContext.tsx` verbatim when `App.tsx` was deleted.
+Items surfaced in a 2026-04-20 code review. Address before or during Phase 4 (wire to backend) — once fetch/loading state is threaded through the tree, each of these becomes significantly more painful to refactor. Phase 3 status updates noted per item.
 
 ### State architecture
 - **`AppStateContext.tsx` holds the whole domain** — all state (`tasks`, `ledTeam`, `joinedTeam`, `successData`) and every handler live in one provider at [`../frontend/src/state/AppStateContext.tsx`](../frontend/src/state/AppStateContext.tsx). Phase 3 replaced `App.tsx` with this provider but didn't split it; every `useAppState()` consumer re-renders on any state change. Split into focused reducers (tasks vs. teams) or a small Zustand store before Phase 4 so per-resource fetch/loading/error slots slot in cleanly instead of bloating this file further.
@@ -58,10 +58,27 @@ Items surfaced in a 2026-04-20 code review. Address before or during Phase 4 (wi
 
 ### Mock-data boundaries
 - **Hardcoded mock join requests** — the 林詠瑜 / 陳志豪 / 王美玲 pending-request seed lives inside `handleProfileComplete` at [`AppStateContext.tsx:125-127`](../frontend/src/state/AppStateContext.tsx#L125). Move to `data.ts` as a `DEMO_REQUESTS` export, or gate behind `import.meta.env.DEV` so the demo seed doesn't ship to prod.
+- **`simulateJoinApproved` is demo-only, runtime-visible** — Phase 3 replaced the `onSimulateJoinApproved` prop with a context method. The call site in `MyScreen` carries an inline `// demo-only` comment. Still needs a build-flag gate (`import.meta.env.DEV`) so the demo button can't fire in prod builds.
 - **`RankScreen.tsx` is ~43KB** — almost entirely mock leaderboard + challenge data at roughly [lines 136-870](../frontend/src/screens/RankScreen.tsx#L136). Extract to `src/data/mock-rankings.ts` now; Phase 4 replaces this with fetch calls anyway, and doing the split first makes that diff legible instead of tangled with the fetch migration.
+- ~~**`tasksProp || TASKS` fallbacks**~~ — **resolved in Phase 3.** Screens now read `tasks` from `useAppState()`; the prop-drilled fallback is gone.
 
 ### Identity
 - **`userIdFromEmail`** — [`AppStateContext.tsx:35-45`](../frontend/src/state/AppStateContext.tsx#L35) derives a user id from the email local part (first 4–6 chars uppercased). Collision-prone (e.g. `jet.a@…` and `jet.b@…` collapse to the same id), and that id is then used as the root of the team id (`T-${idSuffix}`), so the collision propagates. Replace with server-issued UUIDs at Phase 4.
+
+## Tech debt / review findings (Phase 3)
+
+Surfaced during Phase 3 (TanStack Router migration). Most items are design trade-offs to revisit in Phase 4 or Phase 6, not bugs.
+
+### Route architecture
+- **Flat route tree, not nested layouts** — `/me/profile`, `/me/profile/edit`, `/tasks/:id`, `/tasks/:id/start` are all direct children of `_authed` with full paths, rather than nested children whose parents render an `<Outlet />`. Nested-layout attempts during Phase 3 caused screen-stacking bugs (parent + child rendered simultaneously in the same viewport) and got flattened — see commits `5e93f67` (`/me`), `56f486a` (`/tasks/:id`), and `b8edb22` (`/tasks/:id/start`). If Phase 4 wants shared "me section chrome" or shared loading state across task routes, revisit by giving the parent screens explicit layout responsibilities and an `<Outlet />`.
+- **`/me/profile/edit` sentinel is shadowed by the `_authed` guard** — the edit route's `beforeLoad` checks `location.state.fromProfile` and redirects if missing, but for incomplete-profile users the `_authed` guard catches first (→ `/welcome`). Only reachable branch is "complete user, direct URL". Not a bug; worth noting if someone simplifies the guard chain later.
+- **`router.invalidate()` on every auth-state change** — [`../frontend/src/main.tsx`](../frontend/src/main.tsx)'s `AppShell` re-evaluates all route guards whenever `user` or `profileComplete` changes. Fine today; Phase 6 (real auth with token refresh) should audit whether invalidation should be more targeted (e.g., invalidate only routes under `_authed`).
+
+### Lint
+- **`react-refresh/only-export-components` warnings on route + context modules** — 11 warnings on `src/routes/*.tsx`, `src/state/AppStateContext.tsx`, and `src/test/renderRoute.tsx`, caused by modules exporting both a component and a route object (or a provider + a hook). Low priority. Either disable the rule for `src/routes/**` + `src/state/**` in ESLint config, or split the route object into a sibling `*.route.ts` file and the hook into a sibling `*.hooks.ts`.
+
+### Mixed-script source text
+- **Traditional / Simplified Chinese mismatch across UI copy** — `LandingScreen`, `BottomNav`, `RewardsScreen` render Simplified (开启, 首页, 任务, 排行, 我的); `GoogleAuthScreen`, `data.ts` task titles, `ProfileSetupForm` labels render Traditional (選擇帳號, 組隊挑戰, 編輯個人資料). Test assertions had to grep the source per call to know which variant to match. Pick one script for the Chinese UI (likely Simplified given `LandingScreen`/`BottomNav` lead) and sweep the remaining files.
 
 ## Tech debt / review findings (Phase 5a)
 

@@ -1,0 +1,176 @@
+"""Team service: creation, caller-scoped mapping, and search.
+
+``create_led_team`` is called from the profile-completion flow in the
+same transaction that flips ``profile_complete`` to True. The default
+name is ``"{user_name}的團隊"``; the user can override via ``alias``
+later. Initial topic is the literal ``"尚未指定主題"`` — matches the
+frontend prototype's placeholder (see contract design §1.4).
+"""
+
+from uuid import UUID
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.contract import JoinRequest as ContractJoinRequest
+from backend.contract import Paginated
+from backend.contract import Team as ContractTeam
+from backend.contract import TeamRef as ContractTeamRef
+from backend.contract import UserRef as ContractUserRef
+from backend.db.models import (
+    JoinRequestRow,
+    TeamMembershipRow,
+    TeamRow,
+    UserRow,
+)
+from backend.services.display_id import generate_team_display_id
+from backend.services.pagination import SortCol, paginate_keyset
+
+
+def user_to_ref(row: UserRow) -> ContractUserRef:
+    name = row.zh_name or row.nickname or row.email.split("@", 1)[0]
+    return ContractUserRef(
+        id=row.id, display_id=row.display_id, name=name, avatar_url=row.avatar_url
+    )
+
+
+async def create_led_team(session: AsyncSession, user: UserRow) -> TeamRow:
+    result = await session.execute(select(TeamRow.display_id))
+    taken = {row[0] for row in result.all()}
+    display_id = generate_team_display_id(user_display_id=user.display_id, used=taken)
+    leader_name = user.zh_name or user.nickname or user.email.split("@", 1)[0]
+    team = TeamRow(
+        display_id=display_id,
+        name=f"{leader_name}的團隊",
+        leader_id=user.id,
+    )
+    session.add(team)
+    await session.flush()
+    return team
+
+
+async def row_to_contract_team(
+    session: AsyncSession, team: TeamRow, *, caller_id: UUID
+) -> ContractTeam:
+    leader = await session.get(UserRow, team.leader_id)
+    if leader is None:
+        raise RuntimeError(
+            f"Data integrity: team {team.id} references missing leader {team.leader_id}"
+        )
+
+    memberships = (
+        await session.execute(
+            select(TeamMembershipRow).where(TeamMembershipRow.team_id == team.id)
+        )
+    ).scalars().all()
+    member_user_ids = [m.user_id for m in memberships]
+    members: list[ContractUserRef] = []
+    if member_user_ids:
+        member_rows = (
+            await session.execute(
+                select(UserRow).where(UserRow.id.in_(member_user_ids))
+            )
+        ).scalars().all()
+        members = [user_to_ref(u) for u in member_rows]
+
+    if caller_id == team.leader_id:
+        role: str | None = "leader"
+    elif caller_id in member_user_ids:
+        role = "member"
+    else:
+        role = None
+
+    requests: list[ContractJoinRequest] | None
+    if role == "leader":
+        join_rows = (
+            await session.execute(
+                select(JoinRequestRow)
+                .where(JoinRequestRow.team_id == team.id)
+                .where(JoinRequestRow.status == "pending")
+                .order_by(JoinRequestRow.requested_at.asc())
+            )
+        ).scalars().all()
+        requests = []
+        for jr in join_rows:
+            requester = await session.get(UserRow, jr.user_id)
+            if requester is None:
+                raise RuntimeError(
+                    f"Data integrity: join_request {jr.id} references missing user {jr.user_id}"
+                )
+            requests.append(
+                ContractJoinRequest(
+                    id=jr.id,
+                    team_id=jr.team_id,
+                    user=user_to_ref(requester),
+                    status=jr.status,
+                    requested_at=jr.requested_at,
+                )
+            )
+    else:
+        requests = None
+
+    return ContractTeam(
+        id=team.id,
+        display_id=team.display_id,
+        name=team.name,
+        alias=team.alias,
+        topic=team.topic,
+        leader=user_to_ref(leader),
+        members=members,
+        cap=team.cap,
+        points=team.points,
+        week_points=team.week_points,
+        rank=None,
+        role=role,  # type: ignore[arg-type]
+        requests=requests,
+        created_at=team.created_at,
+    )
+
+
+async def search_team_refs(
+    session: AsyncSession,
+    *,
+    q: str | None,
+    topic: str | None,
+    leader_display_id: str | None,
+    cursor: str | None,
+    limit: int,
+) -> Paginated[ContractTeamRef]:
+    from datetime import datetime
+
+    stmt = select(TeamRow, UserRow).join(UserRow, TeamRow.leader_id == UserRow.id)
+    if q:
+        like = f"%{q}%"
+        stmt = stmt.where(TeamRow.name.ilike(like) | TeamRow.alias.ilike(like))
+    if topic:
+        stmt = stmt.where(TeamRow.topic == topic)
+    if leader_display_id:
+        stmt = stmt.where(UserRow.display_id == leader_display_id)
+
+    page, next_cursor = await paginate_keyset(
+        session,
+        stmt,
+        sort=[
+            SortCol(
+                TeamRow.created_at,
+                to_json=lambda d: d.isoformat(),
+                from_json=datetime.fromisoformat,
+            ),
+            SortCol(TeamRow.id, to_json=str, from_json=UUID),
+        ],
+        cursor=cursor,
+        limit=limit,
+        extract=lambda r: (r[0].created_at, r[0].id),
+    )
+
+    items = [
+        ContractTeamRef(
+            id=team.id,
+            display_id=team.display_id,
+            name=team.name,
+            topic=team.topic,
+            leader=user_to_ref(leader),
+        )
+        for team, leader in page
+    ]
+    return Paginated[ContractTeamRef](items=items, next_cursor=next_cursor)

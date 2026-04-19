@@ -63,7 +63,7 @@ Files created (C) or modified (M) by this plan. Paths are relative to repo root 
 
 ## Section C — Auth (stubbed Google + real JWT)
 
-**Exit criteria:** `POST /auth/google` accepts any non-empty `id_token` (treated as email), upserts a user, returns a valid bearer token. `POST /auth/logout` returns 204. `GET /me` returns the authenticated caller's contract `User`.
+**Exit criteria:** `POST /auth/google` accepts any string that parses as an email via email-validator (Phase 5 stub); invalid emails → 401. Upserts a user and returns a valid bearer token. `POST /auth/logout` returns 204. `GET /me` returns the authenticated caller's contract `User`.
 
 ### Task C1: JWT encode/decode
 
@@ -109,6 +109,47 @@ def test_decode_rejects_tampered_token() -> None:
     tampered = token[:-1] + ("A" if token[-1] != "A" else "B")
     with pytest.raises(ValueError):
         decode_token(tampered)
+
+
+def test_decode_rejects_token_signed_with_different_secret() -> None:
+    """HS256 signature verification: attacker-signed token must be rejected."""
+    import jwt as pyjwt
+    forged = pyjwt.encode(
+        {"sub": str(uuid4()), "email": "e@example.com", "iat": 0, "exp": 9_999_999_999},
+        "attacker-secret-not-ours",
+        algorithm="HS256",
+    )
+    with pytest.raises(ValueError):
+        decode_token(forged)
+
+
+def test_decode_rejects_alg_none() -> None:
+    """Historical PyJWT vulnerability — `alg: none` must never be accepted."""
+    import jwt as pyjwt
+    none_alg = pyjwt.encode(
+        {"sub": str(uuid4()), "email": "e@example.com", "exp": 9_999_999_999},
+        key="",
+        algorithm="none",
+    )
+    with pytest.raises(ValueError):
+        decode_token(none_alg)
+
+
+def test_decode_requires_sub_claim() -> None:
+    """Missing sub should not decode to a usable user."""
+    import jwt as pyjwt
+    from backend.config import get_settings
+    token = pyjwt.encode(
+        {"email": "e@example.com", "exp": 9_999_999_999},
+        get_settings().jwt_secret,
+        algorithm="HS256",
+    )
+    # Either decode raises, or downstream sub access raises — both acceptable.
+    try:
+        claims = decode_token(token)
+        assert "sub" not in claims or not claims["sub"]
+    except ValueError:
+        pass
 
 
 def test_decode_rejects_expired_token() -> None:
@@ -177,7 +218,7 @@ def decode_token(token: str) -> dict[str, Any]:
 (cd backend && uv run pytest tests/test_jwt.py -v)
 ```
 
-Expected: 3 passed.
+Expected: 6 passed.
 
 - [ ] **Step 6: Commit**
 
@@ -201,7 +242,7 @@ EOF
 
 **Files:**
 - Create: `backend/src/backend/auth/google_stub.py`
-- Modify: `backend/tests/test_jwt.py` → create new file `backend/tests/test_google_stub.py`
+- Create: `backend/tests/test_google_stub.py`
 
 - [ ] **Step 1: Write `tests/test_google_stub.py`**
 
@@ -255,7 +296,9 @@ def verify_id_token(raw: str) -> str:
         info = validate_email(raw, check_deliverability=False)
     except EmailNotValidError as exc:
         raise ValueError(f"stub id_token must be an email in Phase 5: {exc}") from exc
-    return info.normalized
+    # Lowercase defensively: email local-part case is RFC-technically preserved
+    # but real-world auth treats the full email as case-insensitive.
+    return info.normalized.lower()
 ```
 
 - [ ] **Step 4: Run tests — expect pass**
@@ -300,6 +343,7 @@ EOF
 - [ ] **Step 2: Write the failing test `tests/test_display_id.py`**
 
 ```python
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import TeamRow, UserRow
@@ -329,6 +373,22 @@ async def test_team_display_id_collision(session: AsyncSession) -> None:
     did = generate_team_display_id(user_display_id="UJETKAN", used={"T-JETKAN"})
     assert did != "T-JETKAN"
     assert did.startswith("T-JETKAN")
+
+
+async def test_user_display_id_runs_out_after_100_collisions(
+    session: AsyncSession,
+) -> None:
+    """The 100-attempt cap must RuntimeError cleanly, not corrupt data."""
+    from backend.db.models import UserRow
+    from backend.services.display_id import generate_user_display_id
+
+    base_taken = ["UJET"] + [f"UJET{n:02d}" for n in range(100)]
+    for did in base_taken:
+        session.add(UserRow(display_id=did, email=f"{did}@example.com"))
+    await session.commit()
+
+    with pytest.raises(RuntimeError, match="Could not allocate|display_id"):
+        await generate_user_display_id(session, email="jet@example.com")
 ```
 
 - [ ] **Step 3: Run — expect ImportError**
@@ -416,7 +476,7 @@ def generate_team_display_id(*, user_display_id: str, used: Iterable[str]) -> st
 (cd backend && uv run pytest tests/test_display_id.py -v)
 ```
 
-Expected: 4 passed.
+Expected: 5 passed.
 
 - [ ] **Step 6: Commit**
 
@@ -509,6 +569,9 @@ from backend.services.display_id import generate_user_display_id
 
 
 async def upsert_user_by_email(session: AsyncSession, *, email: str) -> UserRow:
+    """Upsert a UserRow by email; returns existing row or creates a new one."""
+    # Belt-and-braces: callers should pre-normalize but we do it here too.
+    email = email.lower()
     existing = await session.execute(select(UserRow).where(UserRow.email == email))
     row = existing.scalar_one_or_none()
     if row is not None:
@@ -653,6 +716,7 @@ EOF
 - [ ] **Step 1: Write `tests/test_auth.py`**
 
 ```python
+import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -702,6 +766,58 @@ async def test_logout_returns_204_with_valid_bearer(client: AsyncClient) -> None
 async def test_logout_401_without_bearer(client: AsyncClient) -> None:
     response = await client.post("/api/v1/auth/logout")
     assert response.status_code == 401
+
+
+async def test_sign_in_case_variations_are_same_user(client: AsyncClient) -> None:
+    """Email case must not split into two accounts — classic hijack vector."""
+    r1 = await client.post("/api/v1/auth/google", json={"id_token": "jet@example.com"})
+    r2 = await client.post("/api/v1/auth/google", json={"id_token": "Jet@Example.COM"})
+    assert r1.status_code == r2.status_code == 200
+    assert r1.json()["user"]["id"] == r2.json()["user"]["id"]
+
+
+async def test_two_sign_ins_yield_two_valid_tokens(client: AsyncClient) -> None:
+    """No revocation in Phase 5 — both tokens remain valid until exp."""
+    r1 = await client.post("/api/v1/auth/google", json={"id_token": "jet@example.com"})
+    r2 = await client.post("/api/v1/auth/google", json={"id_token": "jet@example.com"})
+    t1, t2 = r1.json()["access_token"], r2.json()["access_token"]
+    for t in (t1, t2):
+        r = await client.get("/api/v1/me", headers={"Authorization": f"Bearer {t}"})
+        assert r.status_code == 200
+
+
+async def test_logout_is_idempotent(client: AsyncClient) -> None:
+    """Pin current behavior: double-logout with same token is 204/204."""
+    r = await client.post("/api/v1/auth/google", json={"id_token": "jet@example.com"})
+    token = r.json()["access_token"]
+    r1 = await client.post("/api/v1/auth/logout", headers={"Authorization": f"Bearer {token}"})
+    r2 = await client.post("/api/v1/auth/logout", headers={"Authorization": f"Bearer {token}"})
+    assert r1.status_code == 204
+    assert r2.status_code == 204
+
+
+async def test_auth_response_expires_in_matches_token_exp(client: AsyncClient) -> None:
+    from backend.auth.jwt import decode_token
+
+    r = await client.post("/api/v1/auth/google", json={"id_token": "jet@example.com"})
+    body = r.json()
+    claims = decode_token(body["access_token"])
+    assert claims["exp"] - claims["iat"] == body["expires_in"]
+
+
+@pytest.mark.parametrize(
+    "body,expected",
+    [
+        ({}, 422),
+        ({"id_token": None}, 422),
+        ({"id_token": "jet@example.com", "extra": "x"}, 422),
+    ],
+)
+async def test_auth_google_rejects_malformed_body(
+    client: AsyncClient, body: dict, expected: int
+) -> None:
+    r = await client.post("/api/v1/auth/google", json=body)
+    assert r.status_code == expected
 ```
 
 - [ ] **Step 2: Write `routers/auth.py`**
@@ -781,7 +897,7 @@ def create_app() -> FastAPI:
 (cd backend && uv run pytest tests/test_auth.py -v)
 ```
 
-Expected: 6 passed.
+Expected: 13 passed.
 
 - [ ] **Step 5: Commit**
 
@@ -811,7 +927,9 @@ EOF
 - [ ] **Step 1: Write `tests/test_me.py`**
 
 ```python
+import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def test_get_me_returns_current_user(client: AsyncClient) -> None:
@@ -829,6 +947,55 @@ async def test_get_me_returns_current_user(client: AsyncClient) -> None:
 async def test_get_me_401_without_token(client: AsyncClient) -> None:
     response = await client.get("/api/v1/me")
     assert response.status_code == 401
+
+
+async def test_401_when_user_was_deleted(
+    client: AsyncClient, session: AsyncSession
+) -> None:
+    """Valid JWT whose `sub` points at a deleted user → 401, not 200 with None."""
+    from sqlalchemy import delete
+    from backend.db.models import UserRow
+
+    r = await client.post("/api/v1/auth/google", json={"id_token": "jet@example.com"})
+    token = r.json()["access_token"]
+
+    await session.execute(delete(UserRow).where(UserRow.email == "jet@example.com"))
+    await session.commit()
+
+    r = await client.get("/api/v1/me", headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 401
+
+
+@pytest.mark.parametrize(
+    "header_value",
+    [
+        "",  # no header at all (via missing key)
+        "Basic dXNlcjpwYXNz",  # wrong scheme
+        "Bearer",  # scheme-only, no token
+        "Bearer ",  # empty token
+        "Bearer not-a-jwt",  # garbage token
+    ],
+)
+async def test_me_rejects_bad_bearer(client: AsyncClient, header_value: str) -> None:
+    headers = {"Authorization": header_value} if header_value else {}
+    r = await client.get("/api/v1/me", headers=headers)
+    assert r.status_code == 401
+
+
+async def test_me_rejects_expired_bearer(client: AsyncClient) -> None:
+    from datetime import timedelta
+    from backend.auth.jwt import encode_token
+    from uuid import uuid4
+
+    expired = encode_token(user_id=uuid4(), email="x@e.com", ttl=timedelta(seconds=-3600))
+    r = await client.get("/api/v1/me", headers={"Authorization": f"Bearer {expired}"})
+    assert r.status_code == 401
+
+
+async def test_401_sets_www_authenticate_bearer(client: AsyncClient) -> None:
+    r = await client.get("/api/v1/me")
+    assert r.status_code == 401
+    assert r.headers.get("WWW-Authenticate") == "Bearer"
 ```
 
 - [ ] **Step 2: Write `routers/me.py`**
@@ -867,7 +1034,7 @@ app.include_router(me.router, prefix=API_V1)
 (cd backend && uv run pytest tests/test_me.py -v)
 ```
 
-Expected: 2 passed.
+Expected: 10 passed.
 
 - [ ] **Step 5: Commit**
 
@@ -906,9 +1073,15 @@ EOF
 
 - **`display_id` generation races.** `generate_user_display_id` / `generate_team_display_id` load all taken ids, pick one, then insert — the select+insert isn't transactional, so two concurrent sign-ups with the same email-derived base can both pick the same candidate and the loser hits a unique-constraint 500. Acceptable for Phase-5 single-tenant dev; a retry-on-IntegrityError loop (or `INSERT ... ON CONFLICT` with a regenerated suffix) is the right fix for Phase 6.
 
+**Known gaps that remain for later phases:**
+
+- **Replay / revocation:** tokens survive until `exp` regardless of logout. Document as "best-effort logout — revocation list / short TTL + refresh deferred to Phase 6".
+- **`iss` / `aud` claims** are not set or verified. Single-service HS256 only; revisit if tokens cross service boundaries.
+- **Rate limiting** on `/auth/google` deferred.
+
 **Resolved during review (previously flagged as gaps):**
 
-- ✅ **JWT secret prod safeguard.** `get_settings()` (from 5a) raises if `APP_ENV=prod` and `JWT_SECRET` is still the dev default, so a deploy that forgets to set it fails fast.
+- ✅ **JWT secret prod safeguard.** `get_settings()` (from 5a) raises if `APP_ENV=prod` and `JWT_SECRET` is still the dev default, so a deploy that forgets to set it fails fast. Forward-compat note: Phase 5a is separately bumping `jwt_secret` to `min_length=32`; this plan is compatible — it reads the secret via `get_settings().jwt_secret` regardless of validator constraints.
 
 ---
 

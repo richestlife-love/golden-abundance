@@ -67,9 +67,11 @@ Files created (C) or modified (M) by this plan. Paths are relative to repo root 
 | Path | Action | Contents |
 |---|---|---|
 | `backend/tests/__init__.py` | C | (empty) |
-| `backend/tests/conftest.py` | C | `postgres_container`, `engine`, `session`, `client` fixtures |
+| `backend/tests/conftest.py` | C | `postgres_container`, `engine`, `session`, `client`, `no_db_client` fixtures |
 | `backend/tests/test_health.py` | C | `/health` smoke |
+| `backend/tests/test_config.py` | C | `Settings` validation: prod-env guard, `min_length=32`, CORS comma parsing |
 | `backend/tests/test_db_roundtrip.py` | C | Insert/read a `UserRow` through the testcontainer engine |
+| `backend/tests/test_schema.py` | C | Schema-drift regression: every model has a table, Literal columns stay VARCHAR(16) |
 
 ---
 
@@ -197,7 +199,7 @@ EOF
 ```dotenv
 # Copy to backend/.env and edit. backend/.env is gitignored.
 DATABASE_URL=postgresql+psycopg://app:app@localhost:5432/app
-JWT_SECRET=dev-only-change-me
+JWT_SECRET=dev-only-change-me-please-in-prod
 JWT_TTL_SECONDS=86400
 CORS_ORIGINS=http://localhost:5173,http://localhost:8000
 APP_ENV=dev
@@ -221,10 +223,10 @@ silently issuing tokens signed with a public secret.
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-_DEV_JWT_SECRET = "dev-only-change-me"
+_DEV_JWT_SECRET = "dev-only-change-me-please-in-prod"
 
 
 class Settings(BaseSettings):
@@ -238,11 +240,20 @@ class Settings(BaseSettings):
         default="postgresql+psycopg://app:app@localhost:5432/app",
         description="SQLAlchemy URL (psycopg3 driver).",
     )
-    jwt_secret: str = Field(default=_DEV_JWT_SECRET, min_length=8)
+    jwt_secret: str = Field(default=_DEV_JWT_SECRET, min_length=32)
     jwt_ttl_seconds: int = Field(default=86400, ge=60)
     cors_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:5173", "http://localhost:8000"]
     )
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _parse_cors_origins(cls, v: object) -> object:
+        """Accept either JSON array or comma-separated env-var form."""
+        if isinstance(v, str):
+            return [s.strip() for s in v.split(",") if s.strip()]
+        return v
+
     app_env: Literal["dev", "test", "prod"] = "dev"
 
 
@@ -409,6 +420,13 @@ from backend.server import create_app
 
 
 @pytest.fixture
+def no_db_client() -> Iterator[TestClient]:
+    """Sync TestClient without DB — for routes that don't touch the database."""
+    with TestClient(create_app()) as c:
+        yield c
+
+
+@pytest.fixture
 def client() -> Iterator[TestClient]:
     app = create_app()
     with TestClient(app) as c:
@@ -417,14 +435,17 @@ def client() -> Iterator[TestClient]:
 
 - [ ] **Step 3: Write `tests/test_health.py`**
 
+Use the `no_db_client` fixture so `/health` tests do not drag in the testcontainer dependency that Section B adds to the `client` fixture (saves ~30s per run).
+
 ```python
 from fastapi.testclient import TestClient
 
 
-def test_health_ok(client: TestClient) -> None:
-    response = client.get("/health")
+def test_health_ok(no_db_client: TestClient) -> None:
+    response = no_db_client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    body = response.json()
+    assert body.get("status") == "ok"
 ```
 
 - [ ] **Step 4: Run it**
@@ -445,6 +466,86 @@ phase5: add first test — /health via TestClient
 
 Minimal conftest with a TestClient fixture over create_app(). DB and
 container fixtures land in Section B.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+EOF
+)"
+```
+
+---
+
+### Task A5b: `Settings` validation tests
+
+**Files:**
+- Create: `backend/tests/test_config.py`
+
+Covers the three `config.py` safeguards: the prod-env JWT secret check, the `min_length=32` field constraint, and the comma-separated `CORS_ORIGINS` parser. Each test clears `get_settings.cache_clear()` so later tests never observe mutated env.
+
+- [ ] **Step 1: Write `backend/tests/test_config.py`**
+
+```python
+"""Tests for backend.config — the `Settings` class and its safeguards."""
+
+from __future__ import annotations
+
+import pytest
+
+from backend.config import _DEV_JWT_SECRET, Settings, get_settings
+
+
+def test_prod_with_default_secret_refuses_to_load(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_ENV", "prod")
+    monkeypatch.setenv("JWT_SECRET", _DEV_JWT_SECRET)
+    get_settings.cache_clear()
+    with pytest.raises(RuntimeError, match="JWT_SECRET"):
+        get_settings()
+    get_settings.cache_clear()
+
+
+def test_prod_with_real_secret_loads(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_ENV", "prod")
+    monkeypatch.setenv("JWT_SECRET", "a-real-long-secret-from-a-vault-32-plus")
+    get_settings.cache_clear()
+    s = get_settings()
+    assert s.app_env == "prod"
+    get_settings.cache_clear()
+
+
+def test_short_secret_rejected_by_pydantic(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("JWT_SECRET", "short")
+    get_settings.cache_clear()
+    with pytest.raises(Exception):  # pydantic ValidationError
+        Settings()
+    get_settings.cache_clear()
+
+
+def test_cors_origins_parses_comma_separated(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CORS_ORIGINS", "http://a.example,http://b.example")
+    get_settings.cache_clear()
+    s = get_settings()
+    assert s.cors_origins == ["http://a.example", "http://b.example"]
+    get_settings.cache_clear()
+```
+
+- [ ] **Step 2: Run the new test file**
+
+```bash
+(cd backend && uv run pytest tests/test_config.py -v)
+```
+
+Expected: 4 passed.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add backend/tests/test_config.py
+git commit -m "$(cat <<'EOF'
+phase5: add Settings validation tests
+
+Covers the prod-env JWT secret guard, the min_length=32 field
+constraint, and the comma-separated CORS_ORIGINS parser. Each test
+clears get_settings.cache_clear() so later tests never observe
+mutated env state.
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 EOF
@@ -1108,7 +1209,7 @@ just -f backend/justfile db-up
 (cd backend && uv run alembic revision --autogenerate -m "initial schema" --rev-id 0001)
 ```
 
-Expected: creates `backend/alembic/versions/0001_initial_schema.py` with `op.create_table(...)` calls for all 10 tables.
+Expected: creates `backend/alembic/versions/0001_initial_schema.py` with `op.create_table(...)` calls for all 11 tables.
 
 - [ ] **Step 6: Rename to a stable filename**
 
@@ -1153,7 +1254,7 @@ git commit -m "$(cat <<'EOF'
 phase5: add Alembic async env and initial schema migration
 
 alembic/env.py reads DATABASE_URL from Settings and runs migrations
-against the async engine. 0001_initial.py creates all 10 tables.
+against the async engine. 0001_initial.py creates all 11 tables.
 Literal columns persist as VARCHAR (not PG enums) for easier future
 value additions.
 
@@ -1261,7 +1362,21 @@ def _alembic_upgrade_head(url: str) -> None:
 
 @pytest_asyncio.fixture(scope="session")
 async def engine(postgres_container: PostgresContainer) -> AsyncIterator:
+    from backend.config import get_settings
+
     url = postgres_container.get_connection_url()  # postgresql+psycopg://...
+
+    # Save any pre-existing env values so we can restore them at teardown —
+    # this fixture mutates DATABASE_URL / JWT_SECRET / APP_ENV to point the
+    # backend at the testcontainer and test-only secrets.
+    prev_db_url = os.environ.get("DATABASE_URL")
+    prev_jwt_secret = os.environ.get("JWT_SECRET")
+    prev_app_env = os.environ.get("APP_ENV")
+
+    os.environ["DATABASE_URL"] = url
+    os.environ.setdefault("JWT_SECRET", "test-only-secret-32-chars-minimum")
+    os.environ["APP_ENV"] = "test"
+    get_settings.cache_clear()
 
     # Apply Alembic head to the container BEFORE building the async engine.
     # Runs in a worker thread because alembic.command.upgrade is sync and
@@ -1277,6 +1392,28 @@ async def engine(postgres_container: PostgresContainer) -> AsyncIterator:
         yield eng
     finally:
         await eng.dispose()
+        if prev_db_url is None:
+            os.environ.pop("DATABASE_URL", None)
+        else:
+            os.environ["DATABASE_URL"] = prev_db_url
+        if prev_jwt_secret is None:
+            os.environ.pop("JWT_SECRET", None)
+        else:
+            os.environ["JWT_SECRET"] = prev_jwt_secret
+        if prev_app_env is None:
+            os.environ.pop("APP_ENV", None)
+        else:
+            os.environ["APP_ENV"] = prev_app_env
+        get_settings.cache_clear()
+
+
+@pytest.fixture
+def no_db_client() -> Iterator:
+    """Sync TestClient without DB — for routes that don't touch the database."""
+    from fastapi.testclient import TestClient
+
+    with TestClient(create_app()) as c:
+        yield c
 
 
 @pytest_asyncio.fixture
@@ -1304,19 +1441,22 @@ async def client(session: AsyncSession) -> AsyncIterator[AsyncClient]:
         yield c
 ```
 
-Note: the Section A `client` fixture (sync `TestClient` over fresh `create_app`) is replaced. The only Section A test (`test_health.py`) does not need the DB, but now runs through `AsyncClient` — update it in the next step.
+Note: the Section A `client` fixture (sync `TestClient` over fresh `create_app`) is replaced for DB-backed tests. The only Section A test (`test_health.py`) does not need the DB, so it keeps using the `no_db_client` fixture introduced in A5 — which is now also defined in the expanded `conftest.py` above (Step 1). Confirm the current `test_health.py` still looks like:
 
-- [ ] **Step 2: Update `backend/tests/test_health.py` for async client**
+- [ ] **Step 2: Confirm `backend/tests/test_health.py` uses `no_db_client`**
 
 ```python
-from httpx import AsyncClient
+from fastapi.testclient import TestClient
 
 
-async def test_health_ok(client: AsyncClient) -> None:
-    response = await client.get("/health")
+def test_health_ok(no_db_client: TestClient) -> None:
+    response = no_db_client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    body = response.json()
+    assert body.get("status") == "ok"
 ```
+
+This avoids the ~30s testcontainer startup for a route that never touches the database.
 
 - [ ] **Step 3: Write a DB round-trip test — `backend/tests/test_db_roundtrip.py`**
 
@@ -1375,6 +1515,114 @@ EOF
 
 ---
 
+### Task B5: Schema-drift regression tests
+
+**Files:**
+- Create: `backend/tests/test_schema.py`
+
+Two tests guard against two distinct drift modes:
+1. The set of tables that Alembic produces matches the set of tables `db/models.py` declares.
+2. `Literal[...]` columns persist as `VARCHAR(16)`, not PG enums — a future `alembic revision --autogenerate` that silently emits `sa.Enum(...)` would make subsequent migrations that add new Literal values break (PG enums cannot be altered in-place without surgery).
+
+- [ ] **Step 1: Write `backend/tests/test_schema.py`**
+
+```python
+"""Schema-drift regression tests — ensure Alembic migration output matches models.
+
+Phase 5a uses SQLAlchemy `String(16)` (not PG enums) for all `Literal[...]`
+fields. A future `alembic revision --autogenerate` must preserve this to avoid
+breaking migrations that try to alter a VARCHAR into a PG enum in-place.
+"""
+
+from __future__ import annotations
+
+import pytest
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlmodel import SQLModel
+
+
+async def test_migration_produces_every_model_table(engine: AsyncEngine) -> None:
+    expected = {t.name for t in SQLModel.metadata.sorted_tables}
+    async with engine.connect() as c:
+        rows = await c.execute(
+            text("SELECT tablename FROM pg_tables WHERE schemaname='public'")
+        )
+        actual = {r[0] for r in rows}
+    missing = expected - actual
+    assert not missing, f"Migration missing tables: {missing}"
+
+
+async def test_literal_columns_persist_as_varchar_16(engine: AsyncEngine) -> None:
+    """Guard against a future autogenerate emitting `sa.Enum` for Literal fields."""
+    async with engine.connect() as c:
+        rows = (await c.execute(text(
+            """
+            SELECT table_name, column_name, data_type, character_maximum_length
+            FROM information_schema.columns
+            WHERE table_schema='public'
+              AND column_name IN ('status', 'tag', 'form_type', 'category')
+            ORDER BY table_name, column_name
+            """
+        ))).all()
+    assert rows, "Expected at least one Literal-backed column"
+    for tbl, col, dtype, maxlen in rows:
+        assert dtype == "character varying", f"{tbl}.{col} is {dtype}, want varchar"
+        assert maxlen == 16, f"{tbl}.{col} maxlen={maxlen}, want 16"
+
+
+def test_migration_is_downgrade_safe() -> None:
+    """`upgrade head → downgrade base → upgrade head` must round-trip cleanly.
+
+    Catches asymmetric migrations where a column/table was added to `upgrade()`
+    but the corresponding `drop` was forgotten in `downgrade()`. Runs in an
+    isolated short-lived container so it can't disturb the session-scoped
+    fixture that other tests share.
+    """
+    import os
+    from alembic import command
+    from alembic.config import Config
+    from testcontainers.postgres import PostgresContainer
+
+    alembic_ini = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "alembic.ini")
+    )
+    with PostgresContainer("postgres:17-alpine") as pg:
+        cfg = Config(alembic_ini)
+        cfg.set_main_option("sqlalchemy.url", pg.get_connection_url())
+        command.upgrade(cfg, "head")
+        command.downgrade(cfg, "base")
+        command.upgrade(cfg, "head")
+```
+
+- [ ] **Step 2: Run the new test file**
+
+```bash
+(cd backend && uv run pytest tests/test_schema.py -v)
+```
+
+Expected: 3 passed. (The downgrade-safety test spins its own container — ~15s extra on first run.)
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add backend/tests/test_schema.py
+git commit -m "$(cat <<'EOF'
+phase5: add schema-drift regression tests
+
+Two guards against the most likely drift modes between db/models.py
+and the migration history: missing tables after autogenerate, and
+Literal[...] columns silently flipping from VARCHAR to sa.Enum — the
+latter would make any future Literal-value additions require PG enum
+surgery.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+EOF
+)"
+```
+
+---
+
 ## Self-review checklist
 
 **Spec coverage — this plan lays the foundation; no contract endpoints ship here yet. `/health` is the only route live after this plan merges (internal, not part of the contract).**
@@ -1387,7 +1635,9 @@ EOF
 
 **Known gaps surfaced during plan writing (documented, not blocking):**
 
-- Alembic autogenerate occasionally renders `Literal` columns as `sa.Enum(...)` under some SQLModel/SQLAlchemy version combinations. Task B3 Step 7 calls this out — hand-edit the generated file to `sa.String(length=16)` if you see it.
+- Alembic autogenerate occasionally renders `Literal` columns as `sa.Enum(...)` under some SQLModel/SQLAlchemy version combinations. Task B3 Step 7 calls this out — hand-edit the generated file to `sa.String(length=16)` if you see it. Task B5's `test_literal_columns_persist_as_varchar_16` catches any regression on subsequent autogenerate runs.
+- The `client` fixture rebuilds `create_app()` per test, which means any test that mutates settings via `monkeypatch.setenv(...)` MUST also call `get_settings.cache_clear()` before asserting — otherwise the app it builds will still observe the pre-mutation cached `Settings`. `tests/test_config.py` follows this pattern and resets the cache at the end of each test so it never bleeds into a sibling test.
+- `alembic/env.py` runs `asyncio.run(run_migrations_online())` at import time. `conftest.py` hops to a worker thread (`asyncio.to_thread(_alembic_upgrade_head, ...)`) so this doesn't collide with pytest-asyncio's own loop — but a cleaner long-term fix is to switch `env.py` to a sync Alembic invocation that borrows a sync connection from the async engine (`engine.sync_engine`). TODO tracked for Phase 5b+ when auth work starts layering additional startup code.
 
 **Resolved during review (previously flagged as gaps):**
 

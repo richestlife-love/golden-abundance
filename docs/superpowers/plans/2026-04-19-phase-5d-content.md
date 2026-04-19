@@ -84,7 +84,7 @@ Hoist `datetime, timezone` to the top-level imports of `conftest.py` (they weren
 
 ```python
 # Add to the top-level imports (top of conftest.py):
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -150,7 +150,7 @@ async def seeded_task_defs(session: AsyncSession) -> dict[str, TaskDefRow]:
         est_minutes=60,
         is_challenge=False,
         form_type=None,
-        due_at=datetime(2026, 3, 1, tzinfo=timezone.utc),
+        due_at=datetime.now(timezone.utc) - timedelta(days=30),
     )
     for t in (t1, t2, t3, t4):
         session.add(t)
@@ -271,6 +271,68 @@ async def test_challenge_task_computes_team_progress(
     assert task.team_progress.led_total == 3
     assert task.team_progress.total == 3
     assert task.status == "in_progress"
+
+
+async def test_challenge_at_cap_is_completed(
+    session: AsyncSession, seeded_task_defs
+) -> None:
+    """When total == cap, status must flip to 'completed' (reward trigger edge)."""
+    from backend.db.models import TeamMembershipRow
+    from backend.services.team import create_led_team
+
+    user = await upsert_user_by_email(session, email="jet@example.com")
+    await session.flush()
+    team = await create_led_team(session, user)
+    # Leader + 5 members = 6 members = T3's cap.
+    for i in range(5):
+        m = await upsert_user_by_email(session, email=f"m{i}@example.com")
+        await session.flush()
+        session.add(TeamMembershipRow(team_id=team.id, user_id=m.id))
+    await session.commit()
+
+    task = await row_to_contract_task(session, seeded_task_defs["T3"], caller=user)
+    assert task.team_progress is not None
+    assert task.team_progress.total == 6
+    assert task.team_progress.cap == 6
+    assert task.status == "completed"
+
+
+async def test_challenge_joined_total_wins_when_higher(
+    session: AsyncSession, seeded_task_defs
+) -> None:
+    """Spec §1.3: total = max(led_total, joined_total).
+
+    A caller leading a 2-person team but joined to a 5-person team should
+    see total=5. Regression that drops the max() and uses led_total alone
+    would silently misreport challenge progress.
+    """
+    from backend.db.models import TeamMembershipRow
+    from backend.services.team import create_led_team
+
+    caller = await upsert_user_by_email(session, email="caller@example.com")
+    other_leader = await upsert_user_by_email(session, email="leader@example.com")
+    await session.flush()
+    own_team = await create_led_team(session, caller)
+    other_team = await create_led_team(session, other_leader)
+
+    # Caller's led team has 2 members total (caller + 1).
+    extra = await upsert_user_by_email(session, email="own@example.com")
+    await session.flush()
+    session.add(TeamMembershipRow(team_id=own_team.id, user_id=extra.id))
+
+    # Other team has 5 members, and caller is one of them.
+    session.add(TeamMembershipRow(team_id=other_team.id, user_id=caller.id))
+    for i in range(3):
+        m = await upsert_user_by_email(session, email=f"other{i}@example.com")
+        await session.flush()
+        session.add(TeamMembershipRow(team_id=other_team.id, user_id=m.id))
+    await session.commit()
+
+    task = await row_to_contract_task(session, seeded_task_defs["T3"], caller=caller)
+    assert task.team_progress is not None
+    assert task.team_progress.led_total == 2
+    assert task.team_progress.joined_total == 5
+    assert task.team_progress.total == 5
 
 
 async def test_list_caller_tasks_returns_all(
@@ -503,7 +565,7 @@ async def list_caller_tasks(
 (cd backend && uv run pytest tests/test_task_service.py -v)
 ```
 
-Expected: 6 passed.
+Expected: 8 passed.
 
 - [ ] **Step 5: Commit**
 
@@ -545,7 +607,14 @@ async def test_get_task_by_id(client: AsyncClient, seeded_task_defs) -> None:
 
     response = await client.get(f"/api/v1/tasks/{t1_id}", headers=h)
     assert response.status_code == 200
-    assert response.json()["display_id"] == "T1"
+    data = response.json()
+    assert data["display_id"] == "T1"
+    # T1 has at least one step from the seed fixture.
+    assert "steps" in data
+    assert isinstance(data["steps"], list)
+    for step in data["steps"]:
+        assert "label" in step
+        assert "done" in step
 
 
 async def test_get_task_404(client: AsyncClient, seeded_task_defs) -> None:
@@ -669,7 +738,11 @@ EOF
 - [ ] **Step 1: Write `tests/test_task_submit.py`**
 
 ```python
+from uuid import uuid4
+
+import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.helpers import sign_in_and_complete
 
@@ -756,6 +829,79 @@ async def test_submit_to_formless_task_400(
     t3 = seeded_task_defs["T3"].id  # challenge, no form
     response = await client.post(f"/api/v1/tasks/{t3}/submit", json=_INTEREST, headers=h)
     assert response.status_code == 400
+    assert "does not accept submissions" in response.json()["detail"].lower()
+
+
+async def test_submit_to_nonexistent_task_404(
+    client: AsyncClient, seeded_task_defs
+) -> None:
+    from uuid import uuid4
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    r = await client.post(
+        f"/api/v1/tasks/{uuid4()}/submit",
+        json=_INTEREST,
+        headers=jet.headers,
+    )
+    assert r.status_code == 404
+
+
+async def test_submit_interest_with_empty_list_is_422(
+    client: AsyncClient, seeded_task_defs
+) -> None:
+    """Contract declares `interests: list[str] = Field(min_length=1)`.
+
+    A regression that drops the min_length would silently accept empty
+    submissions. Pydantic catches this before reaching the service.
+    """
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    r = await client.post(
+        f"/api/v1/tasks/{seeded_task_defs['T1'].id}/submit",
+        json={"form_type": "interest", "interests": []},
+        headers=jet.headers,
+    )
+    assert r.status_code == 422
+
+
+async def test_submit_t2_twice_does_not_create_second_reward(
+    client: AsyncClient, session: AsyncSession, seeded_task_defs
+) -> None:
+    """Bonus-carrying tasks must not double-issue rewards on resubmit."""
+    from sqlalchemy import func, select
+    from backend.db.models import RewardRow
+
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    # Unlock T2 by completing T1.
+    await client.post(f"/api/v1/tasks/{seeded_task_defs['T1'].id}/submit",
+                      json=_INTEREST, headers=jet.headers)
+    await client.post(f"/api/v1/tasks/{seeded_task_defs['T2'].id}/submit",
+                      json=_TICKET, headers=jet.headers)
+    r2 = await client.post(f"/api/v1/tasks/{seeded_task_defs['T2'].id}/submit",
+                           json=_TICKET, headers=jet.headers)
+    assert r2.status_code == 409
+
+    count = (await session.execute(
+        select(func.count()).select_from(RewardRow).where(RewardRow.user_id == jet.user_id)
+    )).scalar_one()
+    assert count == 1
+
+
+@pytest.mark.parametrize(
+    "method,path",
+    [
+        ("GET", f"/api/v1/tasks/{uuid4()}"),
+        ("POST", f"/api/v1/tasks/{uuid4()}/submit"),
+        ("GET", "/api/v1/me/tasks"),
+        ("GET", "/api/v1/me/rewards"),
+        ("GET", "/api/v1/rank/users"),
+        ("GET", "/api/v1/rank/teams"),
+        ("GET", "/api/v1/news"),
+    ],
+)
+async def test_phase_5d_endpoint_requires_auth(
+    client: AsyncClient, method: str, path: str
+) -> None:
+    r = await client.request(method, path)
+    assert r.status_code == 401, f"{method} {path} should require auth"
 ```
 
 - [ ] **Step 2: Write `services/reward.py`**
@@ -908,7 +1054,7 @@ async def submit(
 (cd backend && uv run pytest tests/test_task_submit.py -v)
 ```
 
-Expected: 6 passed.
+Expected: 17 passed.
 
 - [ ] **Step 6: Commit**
 
@@ -980,6 +1126,27 @@ async def test_reward_appears_after_bonus_task(
     rewards = response.json()
     assert len(rewards) == 1
     assert rewards[0]["bonus"] == "限定紀念徽章"
+
+
+async def test_me_rewards_is_scoped_to_caller(
+    client: AsyncClient, seeded_task_defs
+) -> None:
+    """A missing `WHERE user_id = :caller` would leak rewards across users."""
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    out = await sign_in_and_complete(client, "out@example.com", "外人")
+
+    # Jet completes T1 then T2 (T2 has a bonus → earns a reward).
+    await client.post(f"/api/v1/tasks/{seeded_task_defs['T1'].id}/submit",
+                      json=_INTEREST, headers=jet.headers)
+    await client.post(f"/api/v1/tasks/{seeded_task_defs['T2'].id}/submit",
+                      json=_TICKET, headers=jet.headers)
+
+    jet_rewards = (await client.get("/api/v1/me/rewards", headers=jet.headers)).json()
+    out_rewards = (await client.get("/api/v1/me/rewards", headers=out.headers)).json()
+
+    # /me/rewards returns a bare list (response_model=list[ContractReward]).
+    assert len(jet_rewards) == 1
+    assert len(out_rewards) == 0
 ```
 
 - [ ] **Step 2: Append to `routers/me.py`**
@@ -1003,7 +1170,7 @@ async def get_me_rewards(
 (cd backend && uv run pytest tests/test_rewards_read.py -v)
 ```
 
-Expected: 2 passed.
+Expected: 3 passed.
 
 - [ ] **Step 4: Commit**
 
@@ -1044,6 +1211,7 @@ EOF
 
 ```python
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.helpers import sign_in_and_complete
 
@@ -1070,8 +1238,11 @@ async def test_rank_users_sorts_by_points_desc(
     items = response.json()["items"]
     assert items[0]["user"]["display_id"]  # shape check
     # Jet ranks first with 50 points
+    assert len(items) == 2
     assert items[0]["points"] == 50
     assert items[0]["rank"] == 1
+    assert items[1]["points"] == 0
+    assert items[1]["rank"] == 2
 
 
 async def test_rank_users_over_max_limit_422(client: AsyncClient, seeded_task_defs) -> None:
@@ -1117,6 +1288,77 @@ async def test_rank_users_cursor_walks_to_end(
     assert cursor is None
     assert len(seen_ids) == 3
     assert len(set(seen_ids)) == 3  # no dups
+
+
+async def test_rank_users_week_filters_out_old_completions(
+    session: AsyncSession, client: AsyncClient, seeded_task_defs
+) -> None:
+    """Completion >7 days old must appear in all_time but NOT in week.
+
+    The plan's `_user_points_map` branches on period via `_since()`. Without this
+    test, the period filter could be silently deleted.
+    """
+    from datetime import datetime, timedelta, timezone
+    from backend.db.models import TaskProgressRow
+
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    session.add(TaskProgressRow(
+        user_id=jet.user_id,
+        task_def_id=seeded_task_defs["T1"].id,
+        status="completed",
+        progress=1.0,
+        completed_at=datetime.now(timezone.utc) - timedelta(days=10),
+    ))
+    await session.commit()
+
+    week = (await client.get(
+        "/api/v1/rank/users?period=week", headers=jet.headers
+    )).json()
+    all_time = (await client.get(
+        "/api/v1/rank/users?period=all_time", headers=jet.headers
+    )).json()
+
+    jet_week = next(i for i in week["items"] if i["user"]["id"] == str(jet.user_id))
+    jet_all = next(i for i in all_time["items"] if i["user"]["id"] == str(jet.user_id))
+    assert jet_week["points"] == 0
+    assert jet_all["points"] == 50
+    # week_points must reflect 7-day window even under period=all_time.
+    assert jet_all["week_points"] == 0
+
+
+async def test_rank_users_garbage_cursor_returns_400(client: AsyncClient) -> None:
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    r = await client.get(
+        "/api/v1/rank/users?cursor=not-a-real-cursor", headers=jet.headers
+    )
+    assert r.status_code == 400
+
+
+async def test_rank_users_wrong_shape_cursor_returns_400(client: AsyncClient) -> None:
+    """A cursor whose payload shape is wrong must 400, not 500."""
+    from backend.services.pagination import encode_cursor
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    # A news-shaped cursor (list payload) used on rank (which expects dict).
+    wrong = encode_cursor([True, "2026-04-18T00:00:00+00:00", "not-a-uuid"])
+    r = await client.get(
+        f"/api/v1/rank/users?cursor={wrong}", headers=jet.headers
+    )
+    assert r.status_code == 400
+
+
+async def test_rank_users_ties_break_by_user_id(
+    session: AsyncSession, client: AsyncClient, seeded_task_defs
+) -> None:
+    """Users with equal points must sort deterministically by str(id) ascending."""
+    # Both users complete T1 (same points). Verify rank 1 is the lower UUID.
+    a = await sign_in_and_complete(client, "a@example.com", "A")
+    b = await sign_in_and_complete(client, "b@example.com", "B")
+    for u in (a, b):
+        await client.post(f"/api/v1/tasks/{seeded_task_defs['T1'].id}/submit",
+                          json=_INTEREST, headers=u.headers)
+    data = (await client.get("/api/v1/rank/users?period=all_time", headers=a.headers)).json()
+    ids = [i["user"]["id"] for i in data["items"]]
+    assert ids == sorted(ids)
 ```
 
 - [ ] **Step 2: Write `services/rank.py`**
@@ -1212,11 +1454,18 @@ def _slice_after_cursor(
     the cursor" iff ``pts < cursor_pts`` OR
     ``pts == cursor_pts AND str(id) > str(cursor_id)``.
     """
+    from backend.services.pagination import InvalidCursor
+
     start_idx = 0
     if cursor is not None:
         payload = decode_cursor(cursor)
-        cursor_pts = int(payload["pts"])
-        cursor_id_str = str(payload["id"])
+        try:
+            cursor_pts = int(payload["pts"])
+            cursor_id_str = str(payload["id"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise InvalidCursor(
+                f"rank cursor missing/invalid pts/id: {exc}"
+            ) from exc
         for idx, (pts, eid) in enumerate(sorted_entries):
             if pts < cursor_pts or (pts == cursor_pts and str(eid) > cursor_id_str):
                 start_idx = idx
@@ -1399,7 +1648,7 @@ app.include_router(rank.router, prefix=API_V1)
 (cd backend && uv run pytest tests/test_rank.py -v)
 ```
 
-Expected: 3 passed.
+Expected: 7 passed.
 
 - [ ] **Step 6: Commit**
 
@@ -1438,7 +1687,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import NewsItemRow
-from tests.helpers import sign_in
+from tests.helpers import sign_in, sign_in_and_complete
 
 
 async def _seed(session: AsyncSession) -> list[NewsItemRow]:
@@ -1506,6 +1755,51 @@ async def test_news_over_max_limit_422(client: AsyncClient) -> None:
     h = await sign_in(client, "jet@example.com")
     response = await client.get("/api/v1/news?limit=101", headers=h)
     assert response.status_code == 422
+
+
+async def test_news_garbage_cursor_returns_400(client: AsyncClient) -> None:
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    r = await client.get("/api/v1/news?cursor=not-a-real-cursor", headers=jet.headers)
+    assert r.status_code == 400
+
+
+async def test_news_empty_returns_empty_items(client: AsyncClient) -> None:
+    """Empty news table: 200 with items=[] and next_cursor=null."""
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    r = await client.get("/api/v1/news", headers=jet.headers)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["items"] == []
+    assert data["next_cursor"] is None
+
+
+async def test_news_cursor_terminal_page_next_cursor_is_none(
+    client: AsyncClient, session: AsyncSession
+) -> None:
+    """On the last page, next_cursor must be null."""
+    from backend.db.models import NewsItemRow
+    from datetime import datetime, timezone
+
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    for i in range(3):
+        session.add(NewsItemRow(
+            title=f"News {i}",
+            body=f"body {i}",
+            pinned=False,
+            category="events",
+            published_at=datetime(2026, 4, 10 + i, tzinfo=timezone.utc),
+        ))
+    await session.commit()
+
+    first = (await client.get("/api/v1/news?limit=2", headers=jet.headers)).json()
+    assert len(first["items"]) == 2
+    assert first["next_cursor"] is not None
+
+    second = (await client.get(
+        f"/api/v1/news?limit=2&cursor={first['next_cursor']}", headers=jet.headers
+    )).json()
+    assert len(second["items"]) == 1
+    assert second["next_cursor"] is None
 ```
 
 - [ ] **Step 2: Write `services/news.py`**
@@ -1609,7 +1903,7 @@ app.include_router(news.router, prefix=API_V1)
 (cd backend && uv run pytest tests/test_news.py -v)
 ```
 
-Expected: 3 passed.
+Expected: 6 passed.
 
 - [ ] **Step 6: Commit**
 
@@ -1652,6 +1946,9 @@ EOF
 **Known gaps surfaced during plan writing (documented, not blocking):**
 
 - `Reward.status == "claimed"` has no endpoint to transition into it yet — the frontend has no claim flow in the prototype. Leaving the column in place for Phase 6+ to consume.
+- Period-filter branch coverage: week/all_time covered; `month` is covered transitively by the `_since()` helper but has no dedicated test — acceptable.
+- Cursor-shape drift across endpoints (rank uses dict; news uses list) is now explicitly rejected via `InvalidCursor` on shape mismatch.
+- Reward user-scope isolation is covered by `test_me_rewards_is_scoped_to_caller`.
 
 **Resolved during review (previously flagged as gaps):**
 

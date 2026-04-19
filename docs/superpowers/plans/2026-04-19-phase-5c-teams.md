@@ -55,6 +55,7 @@ Files created (C) or modified (M) by this plan. Paths are relative to repo root 
 | `backend/tests/test_team_join_endpoints.py` | C | POST create + DELETE cancel endpoints |
 | `backend/tests/test_team_approve_reject.py` | C | Approve/reject endpoints + challenge-reward positive branch |
 | `backend/tests/test_team_leave.py` | C | Leader-can't-leave, member-can-leave |
+| `backend/tests/test_team_auth.py` | C | Parametrized 401 smoke across all team endpoints |
 
 ---
 
@@ -148,6 +149,26 @@ async def test_search_team_refs_filters_by_leader_display_id(session: AsyncSessi
     )
     assert len(page.items) == 1
     assert page.items[0].leader.id == jet.id
+
+
+async def test_user_to_ref_does_not_leak_pii(session: AsyncSession) -> None:
+    """UserRef must not expose email/phone/line_id/etc. to other team members."""
+    from backend.db.models import UserRow
+    from backend.services.user import upsert_user_by_email
+    from backend.services.team import user_to_ref
+
+    user = await upsert_user_by_email(session, email="jet@example.com")
+    user.phone = "0912345678"
+    user.line_id = "private-line-id"
+    user.zh_name = "簡傑特"
+    await session.flush()
+
+    ref = user_to_ref(user)
+    dumped = ref.model_dump()
+    assert set(dumped.keys()) == {"id", "display_id", "name", "avatar_url"}
+    assert "email" not in dumped
+    assert "phone" not in dumped
+    assert "line_id" not in dumped
 ```
 
 - [ ] **Step 2: Run — expect ImportError**
@@ -870,11 +891,30 @@ async def test_team_detail_outsider_sees_null_requests(client: AsyncClient) -> N
 
 
 async def test_team_detail_404(client: AsyncClient) -> None:
+    from uuid import uuid4
     jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
-    response = await client.get(
-        "/api/v1/teams/00000000-0000-0000-0000-000000000000", headers=jet.headers
-    )
+    response = await client.get(f"/api/v1/teams/{uuid4()}", headers=jet.headers)
     assert response.status_code == 404
+
+
+async def test_team_detail_member_sees_null_requests(client: AsyncClient) -> None:
+    """Non-leader members must see `requests = null`, not the pending-request list."""
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    out = await sign_in_and_complete(client, "out@example.com", "外人")
+
+    req = (await client.post(
+        f"/api/v1/teams/{jet.led_team_id}/join-requests", headers=out.headers
+    )).json()
+    await client.post(
+        f"/api/v1/teams/{jet.led_team_id}/join-requests/{req['id']}/approve",
+        headers=jet.headers,
+    )
+    response = await client.get(
+        f"/api/v1/teams/{jet.led_team_id}", headers=out.headers
+    )
+    data = response.json()
+    assert data["role"] == "member"
+    assert data["requests"] is None
 
 
 async def test_list_teams_cursor_walks_to_end(client: AsyncClient) -> None:
@@ -994,7 +1034,7 @@ app.add_exception_handler(InvalidCursor, _invalid_cursor_handler)
 (cd backend && uv run pytest tests/test_teams_read.py -v)
 ```
 
-Expected: 6 passed (the five read cases plus the new cursor walk).
+Expected: 7 passed (the five read cases plus the cursor walk and the member-sees-null-requests case).
 
 - [ ] **Step 5: Commit**
 
@@ -1031,14 +1071,19 @@ from tests.helpers import sign_in_and_complete
 async def test_leader_can_update_topic_and_alias(client: AsyncClient) -> None:
     jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
 
+    original = (await client.get(f"/api/v1/teams/{jet.led_team_id}", headers=jet.headers)).json()
+    original_name = original["name"]
+
     response = await client.patch(
         f"/api/v1/teams/{jet.led_team_id}",
         json={"topic": "長者陪伴", "alias": "金富有小隊"},
         headers=jet.headers,
     )
     assert response.status_code == 200
-    assert response.json()["topic"] == "長者陪伴"
-    assert response.json()["alias"] == "金富有小隊"
+    data = response.json()
+    assert data["topic"] == "長者陪伴"
+    assert data["alias"] == "金富有小隊"
+    assert data["name"] == original_name, "PATCH with only topic/alias must not wipe name"
 
 
 async def test_non_leader_cannot_update(client: AsyncClient) -> None:
@@ -1048,6 +1093,16 @@ async def test_non_leader_cannot_update(client: AsyncClient) -> None:
         f"/api/v1/teams/{jet.led_team_id}", json={"topic": "hack"}, headers=out.headers
     )
     assert response.status_code == 403
+
+
+async def test_patch_team_rejects_unknown_field(client: AsyncClient) -> None:
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    r = await client.patch(
+        f"/api/v1/teams/{jet.led_team_id}",
+        json={"foo": "bar"},
+        headers=jet.headers,
+    )
+    assert r.status_code == 422
 ```
 
 - [ ] **Step 2: Append to `routers/teams.py`**
@@ -1086,7 +1141,7 @@ async def update_team(
 (cd backend && uv run pytest tests/test_teams_update.py -v)
 ```
 
-Expected: 2 passed.
+Expected: 3 passed.
 
 - [ ] **Step 4: Commit**
 
@@ -1481,9 +1536,10 @@ async def test_create_join_request_duplicate_pending_409(client: AsyncClient) ->
 
 
 async def test_create_join_request_404_for_unknown_team(client: AsyncClient) -> None:
+    from uuid import uuid4
     out = await sign_in_and_complete(client, "out@example.com", "外人")
     response = await client.post(
-        "/api/v1/teams/00000000-0000-0000-0000-000000000000/join-requests",
+        f"/api/v1/teams/{uuid4()}/join-requests",
         headers=out.headers,
     )
     assert response.status_code == 404
@@ -1516,6 +1572,66 @@ async def test_cancel_join_request_403_for_non_requester(client: AsyncClient) ->
         f"/api/v1/teams/{jet.led_team_id}/join-requests/{req_id}", headers=third.headers
     )
     assert response.status_code == 403
+
+
+async def test_create_join_request_rejects_if_pending_elsewhere(
+    client: AsyncClient,
+) -> None:
+    """The at-most-one-outstanding-request-per-user invariant spans all teams."""
+    leader_a = await sign_in_and_complete(client, "a@example.com", "A")
+    leader_b = await sign_in_and_complete(client, "b@example.com", "B")
+    out = await sign_in_and_complete(client, "out@example.com", "O")
+
+    r1 = await client.post(
+        f"/api/v1/teams/{leader_a.led_team_id}/join-requests",
+        headers=out.headers,
+    )
+    assert r1.status_code == 201
+
+    r2 = await client.post(
+        f"/api/v1/teams/{leader_b.led_team_id}/join-requests",
+        headers=out.headers,
+    )
+    assert r2.status_code == 409
+
+
+async def test_requester_can_reapply_after_rejection(client: AsyncClient) -> None:
+    """Rejected requests don't lock out re-applications (status != 'pending' path)."""
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    out = await sign_in_and_complete(client, "out@example.com", "外人")
+
+    r1 = (await client.post(
+        f"/api/v1/teams/{jet.led_team_id}/join-requests", headers=out.headers
+    )).json()
+    await client.post(
+        f"/api/v1/teams/{jet.led_team_id}/join-requests/{r1['id']}/reject",
+        headers=jet.headers,
+    )
+    r2 = await client.post(
+        f"/api/v1/teams/{jet.led_team_id}/join-requests", headers=out.headers
+    )
+    assert r2.status_code == 201
+
+
+async def test_requester_can_rejoin_after_leave(client: AsyncClient) -> None:
+    """After leaving a team, a user may re-request to join it."""
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    out = await sign_in_and_complete(client, "out@example.com", "外人")
+
+    r = (await client.post(
+        f"/api/v1/teams/{jet.led_team_id}/join-requests", headers=out.headers
+    )).json()
+    await client.post(
+        f"/api/v1/teams/{jet.led_team_id}/join-requests/{r['id']}/approve",
+        headers=jet.headers,
+    )
+    await client.post(
+        f"/api/v1/teams/{jet.led_team_id}/leave", headers=out.headers
+    )
+    r2 = await client.post(
+        f"/api/v1/teams/{jet.led_team_id}/join-requests", headers=out.headers
+    )
+    assert r2.status_code == 201
 ```
 
 - [ ] **Step 2: Append to `routers/teams.py`**
@@ -1588,7 +1704,7 @@ async def cancel_join_request(
 (cd backend && uv run pytest tests/test_team_join_endpoints.py -v)
 ```
 
-Expected: 6 passed.
+Expected: 9 passed.
 
 - [ ] **Step 4: Commit**
 
@@ -1640,6 +1756,29 @@ async def test_approve_adds_member(client: AsyncClient) -> None:
     assert response.status_code == 200
     data = response.json()
     assert any(m["id"] == req["user"]["id"] for m in data["members"])
+
+
+async def test_team_can_grow_past_cap(client: AsyncClient) -> None:
+    """Spec §2.4: teams can grow past cap. Pin current behavior so a future
+    cap-enforcement change is a conscious, tested decision."""
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    # Leader + 6 approved members = 7 > cap (default 6).
+    for i in range(6):
+        out = await sign_in_and_complete(client, f"m{i}@example.com", f"M{i}")
+        req = (await client.post(
+            f"/api/v1/teams/{jet.led_team_id}/join-requests", headers=out.headers
+        )).json()
+        r = await client.post(
+            f"/api/v1/teams/{jet.led_team_id}/join-requests/{req['id']}/approve",
+            headers=jet.headers,
+        )
+        assert r.status_code == 200, f"approve #{i} failed: {r.text}"
+
+    detail = (await client.get(
+        f"/api/v1/teams/{jet.led_team_id}", headers=jet.headers
+    )).json()
+    # 6 members in `members` (leader excluded from the members list).
+    assert len(detail["members"]) == 6
 
 
 async def test_approve_non_leader_403(client: AsyncClient) -> None:
@@ -1715,10 +1854,88 @@ async def test_approve_grants_challenge_reward_at_cap(
     )
     assert approve.status_code == 200
 
-    jet_rewards = (await client.get("/api/v1/me/rewards", headers=jet.headers)).json()
-    out_rewards = (await client.get("/api/v1/me/rewards", headers=out.headers)).json()
-    assert any(r["bonus"] == "挑戰紀念章" for r in jet_rewards), jet_rewards
-    assert any(r["bonus"] == "挑戰紀念章" for r in out_rewards), out_rewards
+    # Query rewards directly via the DB — GET /me/rewards lands in Phase 5d.
+    from sqlalchemy import select
+    from backend.db.models import RewardRow
+
+    jet_rewards = (
+        await session.execute(select(RewardRow).where(RewardRow.user_id == jet.user_id))
+    ).scalars().all()
+    out_rewards = (
+        await session.execute(select(RewardRow).where(RewardRow.user_id == out.user_id))
+    ).scalars().all()
+    assert any(r.bonus == "挑戰紀念章" for r in jet_rewards), jet_rewards
+    assert any(r.bonus == "挑戰紀念章" for r in out_rewards), out_rewards
+
+
+async def test_leader_cannot_approve_request_from_different_team(
+    client: AsyncClient,
+) -> None:
+    """Confused-deputy guard: leader A must not approve a request targeting team B
+    by routing it through A's team path.
+
+    This catches the case where `approve_join_request` forgets to verify
+    `req.team_id == team_id` and becomes a cross-team privilege escalation.
+    """
+    leader_a = await sign_in_and_complete(client, "a@example.com", "A")
+    leader_b = await sign_in_and_complete(client, "b@example.com", "B")
+    out = await sign_in_and_complete(client, "out@example.com", "O")
+
+    req = (
+        await client.post(
+            f"/api/v1/teams/{leader_b.led_team_id}/join-requests",
+            headers=out.headers,
+        )
+    ).json()
+
+    response = await client.post(
+        f"/api/v1/teams/{leader_a.led_team_id}/join-requests/{req['id']}/approve",
+        headers=leader_a.headers,
+    )
+    assert response.status_code == 404
+
+
+async def test_approve_unknown_team_404(client: AsyncClient) -> None:
+    from uuid import uuid4
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    unknown_team = uuid4()
+    unknown_req = uuid4()
+    r = await client.post(
+        f"/api/v1/teams/{unknown_team}/join-requests/{unknown_req}/approve",
+        headers=jet.headers,
+    )
+    assert r.status_code == 404
+
+
+async def test_approve_unknown_req_404(client: AsyncClient) -> None:
+    from uuid import uuid4
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    r = await client.post(
+        f"/api/v1/teams/{jet.led_team_id}/join-requests/{uuid4()}/approve",
+        headers=jet.headers,
+    )
+    assert r.status_code == 404
+
+
+async def test_reject_unknown_req_404(client: AsyncClient) -> None:
+    from uuid import uuid4
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    r = await client.post(
+        f"/api/v1/teams/{jet.led_team_id}/join-requests/{uuid4()}/reject",
+        headers=jet.headers,
+    )
+    assert r.status_code == 404
+
+
+async def test_cancel_unknown_req_404(client: AsyncClient) -> None:
+    """DELETE /join-requests/{unknown} → 404."""
+    from uuid import uuid4
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    r = await client.delete(
+        f"/api/v1/teams/{jet.led_team_id}/join-requests/{uuid4()}",
+        headers=jet.headers,
+    )
+    assert r.status_code == 404
 ```
 
 - [ ] **Step 2: Append to `routers/teams.py`**
@@ -1782,7 +1999,7 @@ async def reject_request(
 (cd backend && uv run pytest tests/test_team_approve_reject.py -v)
 ```
 
-Expected: 4 passed.
+Expected: 10 passed.
 
 - [ ] **Step 4: Commit**
 
@@ -1899,6 +2116,71 @@ EOF
 
 ---
 
+### Task E5: 401-smoke across team endpoints
+
+**Files:**
+- Create: `backend/tests/test_team_auth.py`
+
+Defence-in-depth: every team endpoint is wired to `Depends(current_user)`,
+but a single missing dependency is silent until a caller triggers it. A
+parametrized smoke test over every route eliminates that blind spot.
+
+- [ ] **Step 1: Write `tests/test_team_auth.py`**
+
+```python
+import pytest
+from uuid import uuid4
+
+from httpx import AsyncClient
+
+
+@pytest.mark.parametrize(
+    "method,path",
+    [
+        ("POST", "/api/v1/me/profile"),
+        ("PATCH", "/api/v1/me"),
+        ("GET", "/api/v1/me/teams"),
+        ("GET", "/api/v1/teams"),
+        ("GET", f"/api/v1/teams/{uuid4()}"),
+        ("PATCH", f"/api/v1/teams/{uuid4()}"),
+        ("POST", f"/api/v1/teams/{uuid4()}/join-requests"),
+        ("POST", f"/api/v1/teams/{uuid4()}/join-requests/{uuid4()}/approve"),
+        ("POST", f"/api/v1/teams/{uuid4()}/join-requests/{uuid4()}/reject"),
+        ("DELETE", f"/api/v1/teams/{uuid4()}/join-requests/{uuid4()}"),
+        ("POST", f"/api/v1/teams/{uuid4()}/leave"),
+    ],
+)
+async def test_endpoint_requires_auth(client: AsyncClient, method: str, path: str) -> None:
+    r = await client.request(method, path)
+    assert r.status_code == 401, f"{method} {path} should require auth"
+```
+
+- [ ] **Step 2: Run tests**
+
+```bash
+(cd backend && uv run pytest tests/test_team_auth.py -v)
+```
+
+Expected: 11 passed.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add backend/tests/test_team_auth.py
+git commit -m "$(cat <<'EOF'
+phase5: add parametrized 401-smoke across team endpoints
+
+Guards against a silent regression where a router forgets
+Depends(current_user) and quietly becomes anonymous. Covers every
+endpoint added in phase 5c.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+EOF
+)"
+```
+
+---
+
 ## Self-review checklist
 
 **Spec coverage — endpoints shipped by this plan:**
@@ -1929,6 +2211,9 @@ EOF
 
 - `Team.points` / `Team.week_points` / `Team.rank` are exposed in the `Team` response but Phase 5 always writes 0 / 0 / null — live values come from the leaderboard computation in `rank.py` (in Phase 5d). If a team detail screen needs live totals, thread `leaderboard_teams` totals through `row_to_contract_team`. Not in scope for this plan.
 - **N+1 query load in `row_to_contract_team`.** Each call iterates members and join-requests with separate `session.get(UserRow, ...)` lookups. Fine for teams ≤ 10 members; if `GET /teams/{id}` ever becomes hot, batch the member/requester user loads with one `select(UserRow).where(UserRow.id.in_(...))`. Not measured; flagged here so no one re-discovers it.
+- **`test_approve_grants_challenge_reward_at_cap` asserts on `RewardRow` directly, not via `GET /me/rewards`.** The endpoint lands in Phase 5d; the test is phase-appropriate because reward-row creation is 5c's responsibility, and a direct DB read isolates the 5c behaviour without a cross-phase dependency.
+- **Phase 5c intentionally does not enforce `cap` on team size.** Per spec §2.4, "teams can grow past cap" — `cap` bounds the *challenge-reward trigger*, not team membership. A test that approves past `cap` is fine and should succeed.
+- **`client` fixture shares a single session across test + all its requests** (inherited from 5a conftest). Combined with `expire_on_commit=False`, an in-memory row attached to the test's session can hold stale field values after an API call mutates the underlying row through the same session. Tests that post an API call and then read a field must issue a fresh query (e.g. via `select(...)` or `session.refresh(row)`) rather than rely on the pre-call Python object.
 
 **Resolved during review (previously flagged as gaps):**
 

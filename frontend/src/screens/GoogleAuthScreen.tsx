@@ -95,7 +95,7 @@ export default function GoogleAuthScreen({ onCancel, onSuccess }: Props) {
                 lineHeight: 1.3,
               }}
             >
-              选择账号
+              選擇帳號
             </h1>
             <p
               style={{
@@ -105,7 +105,7 @@ export default function GoogleAuthScreen({ onCancel, onSuccess }: Props) {
                 fontFamily: '"Google Sans", "Noto Sans SC", sans-serif',
               }}
             >
-              继续前往 <span style={{ color: "#1A73E8" }}>金富有志工</span>
+              繼續前往 <span style={{ color: "#1A73E8" }}>金富有志工</span>
             </p>
           </div>
         )}
@@ -181,7 +181,7 @@ export default function GoogleAuthScreen({ onCancel, onSuccess }: Props) {
             ))}
             <button
               type="button"
-              aria-label="使用其他账号登入"
+              aria-label="使用其他帳號登入"
               onClick={useAnother}
               style={{
                 color: "inherit",
@@ -222,7 +222,7 @@ export default function GoogleAuthScreen({ onCancel, onSuccess }: Props) {
                   />
                 </svg>
               </div>
-              <div style={{ fontSize: fs(14), color: "#202124" }}>使用其他账号</div>
+              <div style={{ fontSize: fs(14), color: "#202124" }}>使用其他帳號</div>
             </button>
           </div>
         )}

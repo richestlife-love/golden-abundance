@@ -20,9 +20,7 @@ async def test_get_me_401_without_token(client: AsyncClient) -> None:
     assert response.status_code == 401
 
 
-async def test_401_when_user_was_deleted(
-    client: AsyncClient, session: AsyncSession
-) -> None:
+async def test_401_when_user_was_deleted(client: AsyncClient, session: AsyncSession) -> None:
     """Valid JWT whose `sub` points at a deleted user → 401, not 200 with None."""
     from sqlalchemy import delete
     from backend.db.models import UserRow
@@ -97,7 +95,5 @@ async def test_me_rejects_alg_none_jwt(client: AsyncClient) -> None:
 
 async def test_me_rejects_very_long_garbage_token(client: AsyncClient) -> None:
     """No crash / DoS on pathologically long input — clean 401."""
-    r = await client.get(
-        "/api/v1/me", headers={"Authorization": "Bearer " + "a" * 10_000}
-    )
+    r = await client.get("/api/v1/me", headers={"Authorization": "Bearer " + "a" * 10_000})
     assert r.status_code == 401

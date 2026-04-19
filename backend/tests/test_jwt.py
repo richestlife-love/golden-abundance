@@ -27,6 +27,7 @@ def test_decode_rejects_tampered_token() -> None:
 def test_decode_rejects_token_signed_with_different_secret() -> None:
     """HS256 signature verification: attacker-signed token must be rejected."""
     import jwt as pyjwt
+
     forged = pyjwt.encode(
         {"sub": str(uuid4()), "email": "e@example.com", "iat": 0, "exp": 9_999_999_999},
         "attacker-secret-not-ours",
@@ -39,6 +40,7 @@ def test_decode_rejects_token_signed_with_different_secret() -> None:
 def test_decode_rejects_alg_none() -> None:
     """Historical PyJWT vulnerability — `alg: none` must never be accepted."""
     import jwt as pyjwt
+
     none_alg = pyjwt.encode(
         {"sub": str(uuid4()), "email": "e@example.com", "exp": 9_999_999_999},
         key="",
@@ -52,6 +54,7 @@ def test_decode_requires_sub_claim() -> None:
     """Missing sub should not decode to a usable user."""
     import jwt as pyjwt
     from backend.config import get_settings
+
     token = pyjwt.encode(
         {"email": "e@example.com", "exp": 9_999_999_999},
         get_settings().jwt_secret,
@@ -66,8 +69,6 @@ def test_decode_requires_sub_claim() -> None:
 
 
 def test_decode_rejects_expired_token() -> None:
-    token = encode_token(
-        user_id=uuid4(), email="x@example.com", ttl=timedelta(seconds=-10)
-    )
+    token = encode_token(user_id=uuid4(), email="x@example.com", ttl=timedelta(seconds=-10))
     with pytest.raises(ValueError):
         decode_token(token)

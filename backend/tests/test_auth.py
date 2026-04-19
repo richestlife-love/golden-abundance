@@ -39,9 +39,7 @@ async def test_google_sign_in_rejects_bad_token_shape(client: AsyncClient) -> No
 async def test_logout_returns_204_with_valid_bearer(client: AsyncClient) -> None:
     sign_in = await client.post("/api/v1/auth/google", json={"id_token": "jet@example.com"})
     token = sign_in.json()["access_token"]
-    response = await client.post(
-        "/api/v1/auth/logout", headers={"Authorization": f"Bearer {token}"}
-    )
+    response = await client.post("/api/v1/auth/logout", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 204
 
 
@@ -95,8 +93,6 @@ async def test_auth_response_expires_in_matches_token_exp(client: AsyncClient) -
         ({"id_token": "jet@example.com", "extra": "x"}, 422),
     ],
 )
-async def test_auth_google_rejects_malformed_body(
-    client: AsyncClient, body: dict, expected: int
-) -> None:
+async def test_auth_google_rejects_malformed_body(client: AsyncClient, body: dict, expected: int) -> None:
     r = await client.post("/api/v1/auth/google", json=body)
     assert r.status_code == expected

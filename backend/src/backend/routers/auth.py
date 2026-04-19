@@ -24,9 +24,7 @@ async def sign_in_with_google(
     try:
         email = verify_id_token(body.id_token)
     except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)
-        ) from exc
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
     user = await upsert_user_by_email(session, email=email)
     await session.commit()
     # No refresh needed: the sessionmaker is bound with expire_on_commit=False

@@ -15,9 +15,7 @@ from backend.config import get_settings
 _ALGORITHM = "HS256"
 
 
-def encode_token(
-    *, user_id: UUID, email: str, ttl: timedelta | None = None
-) -> str:
+def encode_token(*, user_id: UUID, email: str, ttl: timedelta | None = None) -> str:
     settings = get_settings()
     if ttl is None:
         ttl = timedelta(seconds=settings.jwt_ttl_seconds)

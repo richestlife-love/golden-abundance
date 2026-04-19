@@ -37,6 +37,48 @@ def user_to_ref(row: UserRow) -> ContractUserRef:
     )
 
 
+async def caller_team_totals(
+    session: AsyncSession, user: UserRow
+) -> tuple[int, int]:
+    """Return ``(led_total, joined_total)`` for ``user``.
+
+    ``led_total`` is the headcount of the team the user leads (1 leader +
+    N members), or 0 if they don't lead a team. ``joined_total`` is the
+    headcount of the team they joined via membership, or 0. The caller
+    decides what to do with the pair — spec §1.3 challenge progress uses
+    ``max(led_total, joined_total)``.
+    """
+    led = (
+        await session.execute(select(TeamRow).where(TeamRow.leader_id == user.id))  # ty: ignore[invalid-argument-type]
+    ).scalar_one_or_none()
+    led_total = 0
+    if led is not None:
+        led_mems = (
+            await session.execute(
+                select(TeamMembershipRow).where(TeamMembershipRow.team_id == led.id)  # ty: ignore[invalid-argument-type]
+            )
+        ).scalars().all()
+        led_total = 1 + len(led_mems)
+
+    joined_link = (
+        await session.execute(
+            select(TeamMembershipRow).where(TeamMembershipRow.user_id == user.id)  # ty: ignore[invalid-argument-type]
+        )
+    ).scalar_one_or_none()
+    joined_total = 0
+    if joined_link is not None:
+        joined_mems = (
+            await session.execute(
+                select(TeamMembershipRow).where(
+                    TeamMembershipRow.team_id == joined_link.team_id  # ty: ignore[invalid-argument-type]
+                )
+            )
+        ).scalars().all()
+        joined_total = 1 + len(joined_mems)
+
+    return led_total, joined_total
+
+
 async def create_led_team(session: AsyncSession, user: UserRow) -> TeamRow:
     result = await session.execute(select(TeamRow.display_id))  # ty: ignore[no-matching-overload]
     taken = {row[0] for row in result.all()}
@@ -289,34 +331,7 @@ async def maybe_grant_challenge_rewards(
     if not challenge_defs:
         return
 
-    # Compute user's current team totals (leader + members of led team,
-    # leader + members of joined team; take max).
-    led_team = (
-        await session.execute(select(TeamRow).where(TeamRow.leader_id == user.id))  # ty: ignore[invalid-argument-type]
-    ).scalar_one_or_none()
-    led_total = 0
-    if led_team is not None:
-        led_mems = (
-            await session.execute(
-                select(TeamMembershipRow).where(TeamMembershipRow.team_id == led_team.id)  # ty: ignore[invalid-argument-type]
-            )
-        ).scalars().all()
-        led_total = 1 + len(led_mems)
-    joined_link = (
-        await session.execute(
-            select(TeamMembershipRow).where(TeamMembershipRow.user_id == user.id)  # ty: ignore[invalid-argument-type]
-        )
-    ).scalar_one_or_none()
-    joined_total = 0
-    if joined_link is not None:
-        joined_mems = (
-            await session.execute(
-                select(TeamMembershipRow).where(
-                    TeamMembershipRow.team_id == joined_link.team_id  # ty: ignore[invalid-argument-type]
-                )
-            )
-        ).scalars().all()
-        joined_total = 1 + len(joined_mems)
+    led_total, joined_total = await caller_team_totals(session, user)
     total = max(led_total, joined_total)
 
     for td in challenge_defs:

@@ -18,11 +18,10 @@ from backend.db.models import (
     TaskProgressRow,
     TaskStepDefRow,
     TaskStepProgressRow,
-    TeamMembershipRow,
-    TeamRow,
     UserRow,
 )
 from backend.services.reward import create_reward_if_bonus, row_to_contract_reward
+from backend.services.team import caller_team_totals
 
 
 async def _completed_task_def_ids(session: AsyncSession, user_id: UUID) -> set[UUID]:
@@ -50,37 +49,7 @@ async def _required_ids(session: AsyncSession, task_def_id: UUID) -> list[UUID]:
 async def _team_totals(
     session: AsyncSession, caller: UserRow, *, cap: int
 ) -> TeamChallengeProgress:
-    led = (
-        await session.execute(select(TeamRow).where(TeamRow.leader_id == caller.id))  # ty: ignore[invalid-argument-type]
-    ).scalar_one_or_none()
-    joined_link = (
-        await session.execute(
-            select(TeamMembershipRow).where(TeamMembershipRow.user_id == caller.id)  # ty: ignore[invalid-argument-type]
-        )
-    ).scalar_one_or_none()
-
-    led_total = 0
-    if led is not None:
-        led_members = (
-            await session.execute(
-                select(TeamMembershipRow).where(TeamMembershipRow.team_id == led.id)  # ty: ignore[invalid-argument-type]
-            )
-        ).scalars().all()
-        led_total = 1 + len(led_members)
-
-    joined_total = 0
-    if joined_link is not None:
-        joined_team = await session.get(TeamRow, joined_link.team_id)
-        if joined_team is not None:
-            mems = (
-                await session.execute(
-                    select(TeamMembershipRow).where(
-                        TeamMembershipRow.team_id == joined_team.id  # ty: ignore[invalid-argument-type]
-                    )
-                )
-            ).scalars().all()
-            joined_total = 1 + len(mems)
-
+    led_total, joined_total = await caller_team_totals(session, caller)
     return TeamChallengeProgress(
         total=max(led_total, joined_total),
         cap=cap,

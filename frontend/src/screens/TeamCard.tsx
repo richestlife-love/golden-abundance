@@ -1,5 +1,5 @@
 import { fs } from "../utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import RenameTeamSheet from "./RenameTeamSheet";
 import ShareSheet from "./ShareSheet";
 import type { Team } from "../types";
@@ -75,6 +75,14 @@ export default function TeamCard({
   const [renameOpen, setRenameOpen] = useState(false);
   const [idCopied, setIdCopied] = useState(false);
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+  useEffect(() => {
+    if (!leaveConfirmOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLeaveConfirmOpen(false);
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [leaveConfirmOpen]);
   const copyId = async () => {
     if (!navigator.clipboard) return;
     try {
@@ -1237,6 +1245,7 @@ export default function TeamCard({
             <div style={{ display: "flex", gap: 10 }}>
               <button
                 type="button"
+                autoFocus
                 onClick={() => setLeaveConfirmOpen(false)}
                 style={{
                   flex: 1,

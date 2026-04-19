@@ -7,10 +7,22 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth.dependencies import current_user
-from backend.contract import Paginated, Team as ContractTeam, TeamRef, TeamUpdate
-from backend.db.models import TeamRow, UserRow
+from backend.contract import (
+    JoinRequest as ContractJoinRequest,
+    Paginated,
+    Team as ContractTeam,
+    TeamRef,
+    TeamUpdate,
+)
+from backend.db.models import JoinRequestRow, TeamRow, UserRow
 from backend.db.session import get_session
-from backend.services.team import row_to_contract_team, search_team_refs
+from backend.services.team import (
+    JoinConflict,
+    create_join_request,
+    row_to_contract_team,
+    search_team_refs,
+    user_to_ref,
+)
 
 router = APIRouter(prefix="/teams", tags=["teams"])
 
@@ -67,3 +79,53 @@ async def update_team(
     await session.commit()
     await session.refresh(team)
     return await row_to_contract_team(session, team, caller_id=me.id)
+
+
+@router.post(
+    "/{team_id}/join-requests",
+    response_model=ContractJoinRequest,
+    status_code=status.HTTP_201_CREATED,
+)
+async def request_to_join(
+    team_id: UUID,
+    me: UserRow = Depends(current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ContractJoinRequest:
+    team = await session.get(TeamRow, team_id)
+    if team is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
+    try:
+        req = await create_join_request(session, team=team, requester=me)
+    except JoinConflict as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    await session.commit()
+    await session.refresh(req)
+    return ContractJoinRequest(
+        id=req.id,
+        team_id=req.team_id,
+        user=user_to_ref(me),
+        status=req.status,
+        requested_at=req.requested_at,
+    )
+
+
+@router.delete(
+    "/{team_id}/join-requests/{req_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def cancel_join_request(
+    team_id: UUID,
+    req_id: UUID,
+    me: UserRow = Depends(current_user),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    req = await session.get(JoinRequestRow, req_id)
+    if req is None or req.team_id != team_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Request not found")
+    if req.user_id != me.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the requester can cancel a join request",
+        )
+    await session.delete(req)
+    await session.commit()

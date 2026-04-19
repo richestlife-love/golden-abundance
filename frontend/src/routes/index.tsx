@@ -7,9 +7,9 @@ function LandingRoute() {
   const navigate = useNavigate();
   const { user, profileComplete } = useAppState();
   const handleStart = () => {
-    // Routes /sign-in, /welcome, /home are added in Tasks 5–6; cast until then.
-    if (!user) navigate({ to: "/sign-in" as never });
-    else if (!profileComplete) navigate({ to: "/welcome" as never });
+    // /home is added in Task 6; cast until then.
+    if (!user) navigate({ to: "/sign-in" });
+    else if (!profileComplete) navigate({ to: "/welcome" });
     else navigate({ to: "/home" as never });
   };
   return <LandingScreen onStart={handleStart} />;

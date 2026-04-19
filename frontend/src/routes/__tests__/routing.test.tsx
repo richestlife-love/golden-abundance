@@ -17,3 +17,20 @@ describe("_authed layout", () => {
     expect(authedRoute.id).toContain("_authed");
   });
 });
+
+describe("public routes", () => {
+  it("renders sign-in at /sign-in", async () => {
+    renderRoute("/sign-in");
+    // GoogleAuthScreen.tsx:98 renders "選擇帳號" (Traditional — present in source).
+    await waitFor(() => {
+      expect(screen.getByText("選擇帳號")).toBeInTheDocument();
+    });
+  });
+
+  it("guest visiting /welcome is redirected to /sign-in", async () => {
+    const { router } = renderRoute("/welcome");
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/sign-in");
+    });
+  });
+});

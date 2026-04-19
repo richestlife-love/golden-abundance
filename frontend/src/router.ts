@@ -7,8 +7,15 @@ import {
 import { rootRoute, type RouterContext } from "./routes/__root";
 import { indexRoute } from "./routes/index";
 import { authedRoute } from "./routes/_authed";
+import { signInRoute } from "./routes/sign-in";
+import { welcomeRoute } from "./routes/welcome";
 
-const routeTree = rootRoute.addChildren([indexRoute, authedRoute.addChildren([])]);
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  signInRoute,
+  welcomeRoute,
+  authedRoute.addChildren([]),
+]);
 
 export function createAppRouter(opts?: {
   history?: RouterHistory;

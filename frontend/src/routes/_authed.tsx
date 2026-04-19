@@ -9,7 +9,7 @@ export const authedRoute = createRoute({
       throw redirect({ to: "/" });
     }
     if (!context.auth.profileComplete) {
-      throw redirect({ to: "/welcome" as never });
+      throw redirect({ to: "/welcome" });
     }
   },
   component: Outlet,

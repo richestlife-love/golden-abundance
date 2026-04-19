@@ -1,5 +1,16 @@
 import type { Task } from "../types";
 import { getEffectiveStatus, fs } from "../utils";
+import {
+  CheckIcon,
+  CircleIcon,
+  ClockIcon,
+  CrossIcon,
+  FlowerIcon,
+  GiftIcon,
+  LockIcon,
+  SparkleIcon,
+  StarIcon,
+} from "../ui/Icon";
 
 type Props = {
   t: Task;
@@ -24,7 +35,7 @@ export default function TaskCard({
 }: Props) {
   const { status, unmet } = getEffectiveStatus(t, allTasks);
   const urgent = status === "todo" && t.daysLeft != null && t.daysLeft > 0 && t.daysLeft <= 7;
-  const icon = t.tag === "探索" ? "✦" : t.tag === "社区" ? "◉" : "❋";
+  const TagIcon = t.tag === "探索" ? SparkleIcon : t.tag === "社区" ? CircleIcon : FlowerIcon;
 
   const statusChip =
     status === "completed"
@@ -60,8 +71,14 @@ export default function TaskCard({
         ? "rgba(120,110,150,0.2)"
         : `linear-gradient(135deg, ${t.color}, ${t.color}BB)`;
 
-  const logoGlyph =
-    status === "completed" ? "✓" : status === "expired" ? "✕" : status === "locked" ? "🔒" : icon;
+  const LogoIcon =
+    status === "completed"
+      ? CheckIcon
+      : status === "expired"
+        ? CrossIcon
+        : status === "locked"
+          ? LockIcon
+          : TagIcon;
   const logoColor = status === "expired" ? "#8a82a8" : "#fff";
 
   return (
@@ -102,12 +119,10 @@ export default function TaskCard({
           alignItems: "center",
           justifyContent: "center",
           color: logoColor,
-          fontSize: fs(status === "locked" ? 18 : 20),
-          fontWeight: 700,
           boxShadow: `0 4px 12px ${t.color}55`,
         }}
       >
-        {logoGlyph}
+        <LogoIcon size={22} />
       </div>
 
       <div
@@ -172,7 +187,7 @@ export default function TaskCard({
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 3,
+                gap: 4,
                 fontSize: fs(10),
                 fontWeight: 600,
                 padding: "1px 6px",
@@ -181,13 +196,22 @@ export default function TaskCard({
                 background: "rgba(120,110,150,0.08)",
               }}
             >
-              <span style={{ fontSize: fs(8) }}>🔒</span>
+              <LockIcon size={9} />
               需完成 {unmet.length} 項前置
             </div>
           </div>
         ) : status === "completed" ? (
-          <div style={{ fontSize: fs(11), color: muted }}>
-            {t.due ? `✓ 已於 ${t.due} 前完成` : "✓ 已完成"}
+          <div
+            style={{
+              fontSize: fs(11),
+              color: muted,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <CheckIcon size={11} />
+            {t.due ? `已於 ${t.due} 前完成` : "已完成"}
           </div>
         ) : status === "expired" ? (
           <div style={{ fontSize: fs(11), color: muted }}>於 {t.due} 過期</div>
@@ -208,7 +232,7 @@ export default function TaskCard({
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 3,
+                  gap: 4,
                   fontSize: fs(10),
                   fontWeight: 600,
                   padding: "1px 6px",
@@ -217,7 +241,7 @@ export default function TaskCard({
                   background: urgent ? "rgba(217,83,79,0.1)" : "transparent",
                 }}
               >
-                <span style={{ fontSize: fs(8) }}>⏱</span>
+                <ClockIcon size={10} />
                 {urgent ? `剩 ${t.daysLeft} 天` : `${t.daysLeft} 天`}
               </div>
             )}
@@ -274,15 +298,13 @@ export default function TaskCard({
             whiteSpace: "nowrap",
             letterSpacing: 0.2,
             display: "inline-flex",
-            alignItems: "baseline",
-            gap: 2,
+            alignItems: "center",
+            gap: 3,
           }}
         >
-          <span>
-            {status === "completed" ? "✓ +" : "+"}
-            {t.points}
-          </span>
-          <span style={{ fontSize: fs(12) }}>★</span>
+          {status === "completed" && <CheckIcon size={12} />}
+          <span>+{t.points}</span>
+          <StarIcon size={12} />
         </div>
         {t.bonus && (
           <div
@@ -302,7 +324,7 @@ export default function TaskCard({
               boxShadow: "0 2px 5px rgba(184,164,227,0.2)",
             }}
           >
-            <span style={{ fontSize: fs(9), flexShrink: 0 }}>🎁</span>
+            <GiftIcon size={10} style={{ flexShrink: 0 }} />
             <span
               style={{
                 overflow: "hidden",

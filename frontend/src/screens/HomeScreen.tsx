@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useAppState } from "../state/AppStateContext";
 import { getEffectiveStatus, fs } from "../utils";
 import BottomNav from "../ui/BottomNav";
+import { BabyIcon, CrownIcon, MedalIcon, StarIcon } from "../ui/Icon";
 import TaskCard from "./TaskCard";
 
 export default function HomeScreen() {
@@ -217,7 +218,7 @@ export default function HomeScreen() {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    <span style={{ fontSize: fs(15), lineHeight: 1 }}>{isBaby ? "🍼" : "🏅"}</span>
+                    {isBaby ? <BabyIcon size={15} /> : <MedalIcon size={15} />}
                     {tierName}
                   </div>
                 );
@@ -250,12 +251,11 @@ export default function HomeScreen() {
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: fs(9),
                     color: "#fff",
                     boxShadow: "0 2px 6px rgba(254,199,1,0.45)",
                   }}
                 >
-                  ★
+                  <StarIcon size={9} />
                 </span>
                 <div
                   style={{
@@ -292,15 +292,13 @@ export default function HomeScreen() {
                 </div>
                 <div
                   style={{
-                    fontSize: fs(30),
-                    fontWeight: 800,
                     color: "#cb9f01",
                     lineHeight: 1,
-                    letterSpacing: -0.5,
-                    textShadow: "0 2px 4px rgba(200,160,0,0.15)",
+                    filter: "drop-shadow(0 2px 4px rgba(200,160,0,0.15))",
+                    display: "inline-flex",
                   }}
                 >
-                  ★
+                  <StarIcon size={28} />
                 </div>
               </div>
             </div>
@@ -431,7 +429,8 @@ export default function HomeScreen() {
                   color: "#6B4FA8",
                 }}
               >
-                👑 已達最高等級·金牌志工
+                <CrownIcon size={15} />
+                已達最高等級·金牌志工
               </div>
             )}
           </div>

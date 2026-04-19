@@ -1,6 +1,7 @@
 import { useRouter } from "@tanstack/react-router";
 import { useAppState } from "../state/AppStateContext";
 import { fs } from "../utils";
+import { ChevronLeftIcon } from "../ui/Icon";
 import MyRewards from "./MyRewards";
 
 export default function RewardsScreen() {
@@ -57,10 +58,9 @@ export default function RewardsScreen() {
             justifyContent: "center",
             cursor: "pointer",
             color: fg,
-            fontSize: fs(20),
           }}
         >
-          ‹
+          <ChevronLeftIcon size={22} />
         </button>
         <div style={{ fontSize: fs(16), fontWeight: 700, color: fg, flex: 1 }}>我的獎勵</div>
         <div style={{ width: 40 }} />

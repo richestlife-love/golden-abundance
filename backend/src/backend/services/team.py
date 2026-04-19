@@ -11,6 +11,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.contract import JoinRequest as ContractJoinRequest
@@ -35,6 +36,48 @@ def user_to_ref(row: UserRow) -> ContractUserRef:
     return ContractUserRef(
         id=row.id, display_id=row.display_id, name=name, avatar_url=row.avatar_url
     )
+
+
+async def caller_team_totals(
+    session: AsyncSession, user: UserRow
+) -> tuple[int, int]:
+    """Return ``(led_total, joined_total)`` for ``user``.
+
+    ``led_total`` is the headcount of the team the user leads (1 leader +
+    N members), or 0 if they don't lead a team. ``joined_total`` is the
+    headcount of the team they joined via membership, or 0. The caller
+    decides what to do with the pair — spec §1.3 challenge progress uses
+    ``max(led_total, joined_total)``.
+    """
+    led = (
+        await session.execute(select(TeamRow).where(TeamRow.leader_id == user.id))  # ty: ignore[invalid-argument-type]
+    ).scalar_one_or_none()
+    led_total = 0
+    if led is not None:
+        led_mems = (
+            await session.execute(
+                select(TeamMembershipRow).where(TeamMembershipRow.team_id == led.id)  # ty: ignore[invalid-argument-type]
+            )
+        ).scalars().all()
+        led_total = 1 + len(led_mems)
+
+    joined_link = (
+        await session.execute(
+            select(TeamMembershipRow).where(TeamMembershipRow.user_id == user.id)  # ty: ignore[invalid-argument-type]
+        )
+    ).scalar_one_or_none()
+    joined_total = 0
+    if joined_link is not None:
+        joined_mems = (
+            await session.execute(
+                select(TeamMembershipRow).where(
+                    TeamMembershipRow.team_id == joined_link.team_id  # ty: ignore[invalid-argument-type]
+                )
+            )
+        ).scalars().all()
+        joined_total = 1 + len(joined_mems)
+
+    return led_total, joined_total
 
 
 async def create_led_team(session: AsyncSession, user: UserRow) -> TeamRow:
@@ -276,8 +319,13 @@ async def maybe_grant_challenge_rewards(
     session: AsyncSession, *, user: UserRow
 ) -> None:
     """Create RewardRows for any bonused challenge TaskDef where the user
-    now meets cap and no reward row already exists. Idempotent. No-op
-    when the user has no team (total == 0) or no bonused challenges exist.
+    now meets cap. Idempotent. No-op when the user has no team
+    (total == 0) or no bonused challenges exist.
+
+    Concurrency: uses Postgres ``ON CONFLICT DO NOTHING`` against the
+    ``uq_reward_user_task`` constraint so two simultaneous
+    approve-join-request calls that both cross the cap produce exactly
+    one reward without rolling back either caller's transaction.
     """
     challenge_defs = (
         await session.execute(
@@ -289,57 +337,24 @@ async def maybe_grant_challenge_rewards(
     if not challenge_defs:
         return
 
-    # Compute user's current team totals (leader + members of led team,
-    # leader + members of joined team; take max).
-    led_team = (
-        await session.execute(select(TeamRow).where(TeamRow.leader_id == user.id))  # ty: ignore[invalid-argument-type]
-    ).scalar_one_or_none()
-    led_total = 0
-    if led_team is not None:
-        led_mems = (
-            await session.execute(
-                select(TeamMembershipRow).where(TeamMembershipRow.team_id == led_team.id)  # ty: ignore[invalid-argument-type]
-            )
-        ).scalars().all()
-        led_total = 1 + len(led_mems)
-    joined_link = (
-        await session.execute(
-            select(TeamMembershipRow).where(TeamMembershipRow.user_id == user.id)  # ty: ignore[invalid-argument-type]
-        )
-    ).scalar_one_or_none()
-    joined_total = 0
-    if joined_link is not None:
-        joined_mems = (
-            await session.execute(
-                select(TeamMembershipRow).where(
-                    TeamMembershipRow.team_id == joined_link.team_id  # ty: ignore[invalid-argument-type]
-                )
-            )
-        ).scalars().all()
-        joined_total = 1 + len(joined_mems)
+    led_total, joined_total = await caller_team_totals(session, user)
     total = max(led_total, joined_total)
 
     for td in challenge_defs:
         assert td.cap is not None  # enforced by row_to_contract_task; re-verify here
         if total < td.cap:
             continue
-        existing = (
-            await session.execute(
-                select(RewardRow)
-                .where(RewardRow.user_id == user.id)  # ty: ignore[invalid-argument-type]
-                .where(RewardRow.task_def_id == td.id)  # ty: ignore[invalid-argument-type]
-            )
-        ).scalar_one_or_none()
-        if existing is not None:
-            continue
         assert td.bonus is not None  # filtered by the query above
-        session.add(
-            RewardRow(  # ty: ignore[missing-argument]
+        stmt = (
+            pg_insert(RewardRow)
+            .values(
                 user_id=user.id,
                 task_def_id=td.id,
                 task_title=td.title,
                 bonus=td.bonus,
                 status="earned",
             )
+            .on_conflict_do_nothing(constraint="uq_reward_user_task")
         )
+        await session.execute(stmt)
     await session.flush()

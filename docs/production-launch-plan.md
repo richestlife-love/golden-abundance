@@ -125,3 +125,18 @@ Surfaced during Phase 5c (profile completion + teams read/update + full join-req
 
 ### Architecture
 - **`services/team.py` is approaching god-module size** — ~347 LOC, 9 public functions across 4 conceptual groups (mapper + search, team lifecycle, join-request workflow, reward cascade). Coherent today but a Phase-6 split candidate: `team/queries.py` (`row_to_contract_team`, `search_team_refs`, `user_to_ref`), `team/lifecycle.py` (`create_led_team`), `team/membership.py` (`JoinConflict` + `create/approve/reject_join_request`, `leave_team`, `maybe_grant_challenge_rewards`).
+
+## Tech debt / review findings (Phase 5d)
+
+Surfaced during Phase 5d (tasks, submissions, rewards, leaderboards, news feed). Address before production traffic or as each route becomes hot; none block Phase 5e (polish).
+
+### Performance
+- **`leaderboard_users` / `leaderboard_teams` load every user/team into Python** — [`backend/src/backend/services/rank.py`](../backend/src/backend/services/rank.py). Both functions run `select(UserRow)` / `select(TeamRow)` unfiltered, sort by `(points DESC, id ASC)` in Python, then slice by cursor. Fine at Phase-5 dev scale; the module docstring has an explicit `TODO(phase-6)` pointing at the rewrite — a single SQL with `ROW_NUMBER() OVER (ORDER BY points DESC, id ASC)` projected as `rank`, keyset-paginated via `services.pagination.paginate_keyset` over `(points DESC, id ASC)`. Scales to 10k+ rows without loading the full roster per request.
+- **`list_caller_tasks` still fans out `_required_ids` / `_steps_for` / per-task progress lookups** — [`backend/src/backend/services/task.py`](../backend/src/backend/services/task.py). Phase 5d hoists the caller's `completed_ids` out of the per-task loop, but the remaining helpers still run once per def. For 4 seed tasks that's roughly 4 × (requires + 2×steps + progress) ≈ 16 SELECTs on `GET /me/tasks`. Batch each helper across the full def list (one `select(...).where(task_def_id.in_(ids))` per helper) when the endpoint becomes hot or the def count grows past a few dozen.
+
+### Concurrency / consistency
+- **`submit_task` has a check-then-insert race** — [`backend/src/backend/services/task.py`](../backend/src/backend/services/task.py). Two concurrent POSTs to the same `(user, task_def)` pair can both see `existing is None` and both attempt to INSERT a `TaskProgressRow`; the `uq_progress_user_task` constraint catches the loser but the raw `IntegrityError` surfaces as HTTP 500 instead of 409. Same pattern as the Phase-5c `create_join_request` item — catch `IntegrityError` on INSERT and retranslate to `TaskSubmitError(409, "Task already completed")`, mirroring what `maybe_grant_challenge_rewards` now does for the reward path via `ON CONFLICT DO NOTHING`.
+
+### Feature gaps
+- **No reward-claim transition** — `Reward.status` declares both `"earned"` and `"claimed"` states, but no endpoint moves rows out of `"earned"`. The frontend prototype has no claim flow; the column is wired so Phase 6+ can add `POST /rewards/{id}/claim` (plus whatever fulfillment integration is real by then) without a schema change.
+- **News has no admin publish path** — [`backend/src/backend/routers/news.py`](../backend/src/backend/routers/news.py) exposes only `GET /news`; rows must be inserted directly via DB or a migration seed. When editorial workflow becomes real, add an admin-guarded `POST /news` + `PATCH /news/{id}` (the role system itself is TBD; whatever Phase 6 auth settles on needs an admin flag).

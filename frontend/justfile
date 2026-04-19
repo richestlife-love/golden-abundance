@@ -11,6 +11,6 @@ ci:
 dev:
     pnpm run dev
 
-# Expose local port 5173 (https) via the ngrok host in .env.local
+# Expose local port 5173 via ngrok (uses NGROK_HOST from .env.local if set)
 tunnel:
-    ngrok http --url=$NGROK_HOST --scheme=https 5173
+    ngrok http ${NGROK_HOST:+--url=$NGROK_HOST} 5173

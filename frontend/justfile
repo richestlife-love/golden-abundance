@@ -1,6 +1,24 @@
-# Serve the design prototype on http://localhost:{{port}}
-serve port="8000":
-    uv run --no-project python -m http.server {{port}}
+default: serve
+
+# Install frontend deps (idempotent; npm ci-style when lockfile present).
+install:
+    npm install
+
+# Run the Vite dev server on http://localhost:8000
+serve: install
+    npm run dev
+
+# Type-check and build the production bundle into frontend/dist
+build: install
+    npm run build
+
+# Format frontend sources with Prettier
+fmt: install
+    npm run format
+
+# Verify formatting (CI-ready; exits non-zero on drift)
+fmt-check: install
+    npm run format:check
 
 # Expose local port 8000 (https) via a reserved ngrok hostname
 tunnel:

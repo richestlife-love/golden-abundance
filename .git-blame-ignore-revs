@@ -1,0 +1,7 @@
+# Revisions to ignore when running `git blame` and in GitHub's blame UI.
+# Add reformat-only commits here so blame points to the original authorship.
+# See https://git-scm.com/docs/git-blame#Documentation/git-blame.txt---ignore-revs-fileltfilegt
+# and https://docs.github.com/en/repositories/working-with-files/using-files/viewing-a-file#ignore-commits-in-the-blame-view
+
+# phase-1/task-17b — Prettier reformat of frontend/
+58bdac85d4abb926397f317ff54595e9d1e0ad2d

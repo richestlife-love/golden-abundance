@@ -1,24 +1,60 @@
 # Golden Abundance Lite 金富有志工
 
-React + Babel standalone, rendered in the browser — no build step.
+Monorepo-style layout:
+
+- `frontend/` — React 18 + TypeScript + Vite (Phase 1 split is complete)
+- `backend/` — Python FastAPI service (Phase 2 contract module; runtime lands in Phase 5)
+- `docs/` — production launch plan and design specs
 
 ## Run
 
-Recipes now live per subtree. From the repo root:
+Recipes live per subtree. `cd` into the subtree first, then run:
 
 ```sh
-just -f frontend/justfile serve    # http://localhost:8000
-just -f frontend/justfile tunnel   # https://subvitalized-occupative-katelyn.ngrok-free.dev
-just -f backend/justfile ci        # ruff + ty
-just -f backend/justfile contract-validate
+cd frontend
+just install        # install npm deps
+just serve          # Vite dev server on http://localhost:8000
+just build          # tsc -b && vite build → frontend/dist
+just tunnel         # https://subvitalized-occupative-katelyn.ngrok-free.dev
+just fmt            # format frontend sources with Prettier
+just fmt-check      # verify no drift (exits non-zero if anything needs formatting)
 ```
 
-Or `cd frontend` / `cd backend` first and run the recipe name directly.
+```sh
+cd backend
+just ci                # ruff + ty
+just contract-validate # validate JSON fixtures against the Pydantic contract
+```
 
-Requires [`just`](https://github.com/casey/just) and [`uv`](https://github.com/astral-sh/uv).
+Requires [`just`](https://github.com/casey/just), Node 20+ (frontend), and [`uv`](https://github.com/astral-sh/uv) (backend).
 
-## Layout
+## Layout (frontend)
 
-- `index.html` — page shell, loads React and Babel from unpkg
-- `app.jsx` — the root React component
-- `assets/` — images
+- `index.html` — Vite entry (loads `/src/main.tsx`)
+- `src/main.tsx` — React root with StrictMode
+- `src/App.tsx` — screen orchestration and app state
+- `src/types.ts` — client-side data types (replaced in Phase 4 by contract-generated types)
+- `src/data.ts` — mock TASKS / MOCK_TEAMS (MOCK_MEMBERS exported for future use)
+- `src/utils.ts` — pure helpers (`getEffectiveStatus`)
+- `src/ui/` — 17 shared presentational primitives
+- `src/screens/` — 18 screen/flow components
+- `src/assets/` — static images (fingerprinted by Vite)
+
+## Blame-friendly commits
+
+Reformat-only commits are listed in `.git-blame-ignore-revs`. Run once per
+clone so local `git blame` skips them:
+
+```sh
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
+GitHub's blame UI honours the file automatically — no configuration needed.
+
+## TypeScript configuration
+
+`frontend/tsconfig.json` runs `strict: true` with these deliberate exceptions:
+
+- `noUnusedParameters: false` — React event handlers often accept more params than they use (the event argument, the map index, etc.); forcing unused-parameter errors would be noisy.
+
+Other flags (`strict`, `noUnusedLocals`, `allowJs: false`) are all strict.

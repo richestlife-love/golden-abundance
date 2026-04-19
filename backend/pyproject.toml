@@ -4,13 +4,24 @@ version = "0.1.0"
 description = "FastAPI backend server for Golden Abundance"
 authors = [{ name = "Jet Kan", email = "jetkan.yk@gmail.com" }]
 requires-python = ">=3.14"
-dependencies = ["pydantic[email]>=2.13.2"]
+dependencies = [
+    "alembic>=1.16",
+    "fastapi[standard]>=0.118",
+    "psycopg[binary]>=3.2",
+    "pydantic-settings>=2.7",
+    "pydantic[email]>=2.13.2",
+    "pyjwt>=2.10",
+    "sqlmodel>=0.0.25",
+]
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28",
     "pytest>=9.0.3",
+    "pytest-asyncio>=0.24",
     "pytest-cov>=7.1.0",
     "ruff>=0.15.11",
+    "testcontainers[postgresql]>=4.9",
     "ty>=0.0.31",
 ]
 

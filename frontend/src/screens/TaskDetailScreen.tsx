@@ -1,14 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useAppState } from "../state/AppStateContext";
-import { taskDetailRoute } from "../routes/_authed.tasks.$taskId";
 import { getEffectiveStatus, fs } from "../utils";
 import type { Task } from "../types";
 
-export default function TaskDetailScreen() {
+export default function TaskDetailScreen({ taskId }: { taskId: string }) {
   const navigate = useNavigate();
   const { tasks } = useAppState();
-  const { taskId: taskIdParam } = taskDetailRoute.useParams();
-  const id = Number(taskIdParam);
+  const id = Number(taskId);
   const onBack = () => navigate({ to: "/tasks" });
   const onOpenTask = (nextId: number) =>
     navigate({ to: "/tasks/$taskId", params: { taskId: String(nextId) } });

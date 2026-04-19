@@ -4,12 +4,15 @@ import type { ReactNode } from "react";
 
 type TabKey = "home" | "tasks" | "rank" | "me";
 
-const TAB_TO_PATH: Record<TabKey, string> = {
+// `as const` gives each entry a literal type ("/home", etc.), which TanStack
+// Router validates at compile time. Typing as `Record<TabKey, string>` would
+// erase the literals and silently accept a bad path.
+const TAB_TO_PATH = {
   home: "/home",
   tasks: "/tasks",
   rank: "/leaderboard",
   me: "/me",
-};
+} as const satisfies Record<TabKey, string>;
 
 const iconProps = {
   width: 20,
@@ -76,14 +79,18 @@ export default function BottomNav({ muted }: { muted: string }) {
     >
       {ITEMS.map((n) => {
         const path = TAB_TO_PATH[n.key];
-        // Active when the current path is the tab's path or a descendant (e.g. /tasks/3 keeps "任务" active).
-        const active = pathname === path || pathname.startsWith(path + "/");
+        // "page" when the URL is exactly this tab; "location" when it's a
+        // descendant (e.g. /tasks/3 under the "任务" tab) — both keep the tab
+        // visually active but only the exact match is the current "page".
+        const exact = pathname === path;
+        const descendant = pathname.startsWith(path + "/");
+        const active = exact || descendant;
         return (
           <button
             key={n.key}
             type="button"
             aria-label={n.label}
-            aria-current={active ? "page" : undefined}
+            aria-current={exact ? "page" : descendant ? "location" : undefined}
             onClick={() => navigate({ to: path })}
             style={{
               display: "flex",

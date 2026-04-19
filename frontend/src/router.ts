@@ -26,7 +26,8 @@ const routeTree = rootRoute.addChildren([
   authedRoute.addChildren([
     homeRoute,
     tasksRoute,
-    taskDetailRoute.addChildren([taskStartRoute]),
+    taskDetailRoute,
+    taskStartRoute,
     leaderboardRoute,
     meRoute,
     profileRoute,
@@ -35,6 +36,15 @@ const routeTree = rootRoute.addChildren([
   ]),
 ]);
 
+/**
+ * Creates the app router.
+ *
+ * `initialContext` exists for tests: they need the first-render guard to see
+ * the correct auth state *before* AppShell hoists it via RouterProvider's
+ * `context` prop. In prod, main.tsx uses the hardcoded guest default here and
+ * hoists the real auth via RouterProvider, which is always correct since the
+ * initial real-app auth is also guest.
+ */
 export function createAppRouter(opts?: {
   history?: RouterHistory;
   initialContext?: RouterContext;

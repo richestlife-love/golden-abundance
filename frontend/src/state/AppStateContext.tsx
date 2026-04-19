@@ -174,63 +174,79 @@ export function AppStateProvider({
   };
 
   const approveRequest = (reqId: string) => {
-    if (!ledTeam) return;
-    const req = (ledTeam.requests || []).find((r) => r.id === reqId);
-    if (!req) return;
-    const updated: Team = {
-      ...ledTeam,
-      members: [...ledTeam.members, { id: req.id, name: req.name, avatar: req.avatar }],
-      requests: (ledTeam.requests || []).filter((r) => r.id !== reqId),
-    };
-    setLedTeam(updated);
-    syncTeamTask(updated, joinedTeam);
-    if (updated.members.length + 1 >= 6) {
-      const t3 = tasks.find((x) => x.id === 3);
-      if (t3) {
-        setSuccessData({
-          color: t3.color,
-          points: t3.points,
-          bonus: t3.bonus,
-          title: "組隊完成！",
-        });
+    // Functional setState so two rapid approvals both see the latest team.
+    let computedUpdate: Team | null = null;
+    setLedTeam((prev) => {
+      if (!prev) return prev;
+      const req = (prev.requests || []).find((r) => r.id === reqId);
+      if (!req) return prev;
+      const updated: Team = {
+        ...prev,
+        members: [...prev.members, { id: req.id, name: req.name, avatar: req.avatar }],
+        requests: (prev.requests || []).filter((r) => r.id !== reqId),
+      };
+      computedUpdate = updated;
+      return updated;
+    });
+    if (computedUpdate) {
+      const fresh: Team = computedUpdate;
+      syncTeamTask(fresh, joinedTeam);
+      if (fresh.members.length + 1 >= 6) {
+        const t3 = tasks.find((x) => x.id === 3);
+        if (t3) {
+          setSuccessData({
+            color: t3.color,
+            points: t3.points,
+            bonus: t3.bonus,
+            title: "組隊完成！",
+          });
+        }
       }
     }
   };
 
   const rejectRequest = (reqId: string) => {
-    if (!ledTeam) return;
-    setLedTeam({
-      ...ledTeam,
-      requests: (ledTeam.requests || []).filter((r) => r.id !== reqId),
-    });
+    setLedTeam((prev) =>
+      prev ? { ...prev, requests: (prev.requests || []).filter((r) => r.id !== reqId) } : prev,
+    );
   };
 
   const renameTeam = (alias: string) => {
-    if (!ledTeam) return;
-    setLedTeam({ ...ledTeam, alias });
+    setLedTeam((prev) => (prev ? { ...prev, alias } : prev));
   };
 
   const simulateJoinApproved = () => {
-    if (!joinedTeam || joinedTeam.status !== "pending") return;
-    const approved: Team = { ...joinedTeam, status: "approved" };
-    setJoinedTeam(approved);
-    syncTeamTask(ledTeam, approved);
+    let approved: Team | null = null;
+    setJoinedTeam((prev) => {
+      if (!prev || prev.status !== "pending") return prev;
+      const next: Team = { ...prev, status: "approved" };
+      approved = next;
+      return next;
+    });
+    if (approved) syncTeamTask(ledTeam, approved);
   };
 
   const completeTask = (id: number) => {
-    const idx = tasks.findIndex((t) => t.id === id);
-    if (idx < 0) return;
-    const t = tasks[idx];
-    const updated: Task = {
-      ...t,
-      status: "completed",
-      steps: (t.steps || []).map((s) => ({ ...s, done: true })),
-      progress: 1,
-    };
-    const newTasks = [...tasks];
-    newTasks[idx] = updated;
-    setTasks(newTasks);
-    setSuccessData({ color: t.color, points: t.points, bonus: t.bonus });
+    let completed: Task | null = null;
+    setTasks((prev) => {
+      const idx = prev.findIndex((t) => t.id === id);
+      if (idx < 0) return prev;
+      const t = prev[idx];
+      const updated: Task = {
+        ...t,
+        status: "completed",
+        steps: (t.steps || []).map((s) => ({ ...s, done: true })),
+        progress: 1,
+      };
+      completed = updated;
+      const n = [...prev];
+      n[idx] = updated;
+      return n;
+    });
+    if (completed) {
+      const t = completed as Task;
+      setSuccessData({ color: t.color, points: t.points, bonus: t.bonus });
+    }
   };
 
   const value: AppState = {

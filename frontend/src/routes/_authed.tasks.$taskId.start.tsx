@@ -3,7 +3,7 @@ import InterestForm from "../screens/InterestForm";
 import TicketForm from "../screens/TicketForm";
 import TeamForm from "../screens/TeamForm";
 import { useAppState } from "../state/AppStateContext";
-import { taskDetailRoute } from "./_authed.tasks.$taskId";
+import { authedRoute } from "./_authed";
 
 const SUPPORTED_TASK_IDS = new Set(["1", "2", "3"]);
 
@@ -49,9 +49,12 @@ function StartRoute() {
   );
 }
 
+// Sibling of taskDetailRoute (not child): taskDetailRoute's component
+// (TaskDetailScreen) has no <Outlet/>, so nesting would cause the start form
+// to never render. Flatten so the router matches this leaf directly.
 export const taskStartRoute = createRoute({
-  getParentRoute: () => taskDetailRoute,
-  path: "/start",
+  getParentRoute: () => authedRoute,
+  path: "/tasks/$taskId/start",
   beforeLoad: ({ location, params }) => {
     if (!SUPPORTED_TASK_IDS.has(params.taskId)) {
       throw redirect({ to: "/tasks/$taskId", params });

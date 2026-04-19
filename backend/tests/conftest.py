@@ -11,13 +11,14 @@ clean.
 
 import asyncio
 import os
+import pathlib
 from collections.abc import AsyncIterator, Iterator
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlmodel import SQLModel
 from testcontainers.postgres import PostgresContainer
 
@@ -25,6 +26,8 @@ from backend.db import models as _models  # noqa: F401 — populates metadata
 from backend.db.engine import get_session_maker, reset_engine
 from backend.db.session import get_session
 from backend.server import create_app
+
+_BACKEND_DIR = pathlib.Path(__file__).parent.parent
 
 
 @pytest.fixture(scope="session")
@@ -48,13 +51,13 @@ def _alembic_upgrade_head(url: str) -> None:
     os.environ["DATABASE_URL"] = url
     get_settings.cache_clear()
 
-    cfg = Config("alembic.ini")
-    cfg.set_main_option("script_location", "alembic")
+    cfg = Config(str(_BACKEND_DIR / "alembic.ini"))
+    cfg.set_main_option("script_location", str(_BACKEND_DIR / "alembic"))
     command.upgrade(cfg, "head")
 
 
 @pytest_asyncio.fixture(scope="session")
-async def engine(postgres_container: PostgresContainer) -> AsyncIterator:
+async def engine(postgres_container: PostgresContainer) -> AsyncIterator[AsyncEngine]:
     from backend.config import get_settings
 
     url = postgres_container.get_connection_url()  # postgresql+psycopg://...

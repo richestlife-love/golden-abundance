@@ -154,6 +154,9 @@ class TaskStepProgressRow(SQLModel, table=True):
 
 class RewardRow(SQLModel, table=True):
     __tablename__ = "rewards"
+    __table_args__ = (
+        UniqueConstraint("user_id", "task_def_id", name="uq_reward_user_task"),
+    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     user_id: UUID = Field(foreign_key="users.id", index=True)

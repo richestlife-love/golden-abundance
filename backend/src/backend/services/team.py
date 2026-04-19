@@ -11,6 +11,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.contract import JoinRequest as ContractJoinRequest
@@ -318,8 +319,13 @@ async def maybe_grant_challenge_rewards(
     session: AsyncSession, *, user: UserRow
 ) -> None:
     """Create RewardRows for any bonused challenge TaskDef where the user
-    now meets cap and no reward row already exists. Idempotent. No-op
-    when the user has no team (total == 0) or no bonused challenges exist.
+    now meets cap. Idempotent. No-op when the user has no team
+    (total == 0) or no bonused challenges exist.
+
+    Concurrency: uses Postgres ``ON CONFLICT DO NOTHING`` against the
+    ``uq_reward_user_task`` constraint so two simultaneous
+    approve-join-request calls that both cross the cap produce exactly
+    one reward without rolling back either caller's transaction.
     """
     challenge_defs = (
         await session.execute(
@@ -338,23 +344,17 @@ async def maybe_grant_challenge_rewards(
         assert td.cap is not None  # enforced by row_to_contract_task; re-verify here
         if total < td.cap:
             continue
-        existing = (
-            await session.execute(
-                select(RewardRow)
-                .where(RewardRow.user_id == user.id)  # ty: ignore[invalid-argument-type]
-                .where(RewardRow.task_def_id == td.id)  # ty: ignore[invalid-argument-type]
-            )
-        ).scalar_one_or_none()
-        if existing is not None:
-            continue
         assert td.bonus is not None  # filtered by the query above
-        session.add(
-            RewardRow(  # ty: ignore[missing-argument]
+        stmt = (
+            pg_insert(RewardRow)
+            .values(
                 user_id=user.id,
                 task_def_id=td.id,
                 task_title=td.title,
                 bonus=td.bonus,
                 status="earned",
             )
+            .on_conflict_do_nothing(constraint="uq_reward_user_task")
         )
+        await session.execute(stmt)
     await session.flush()

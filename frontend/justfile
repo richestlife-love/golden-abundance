@@ -1,5 +1,11 @@
 default: serve
 
+# Run full CI (install, format, typecheck + bundle). Mirrors backend's `ci`.
+ci:
+    pnpm install
+    pnpm run format
+    pnpm run build
+
 # Install frontend deps (idempotent; uses pnpm-lock.yaml when present).
 install:
     pnpm install

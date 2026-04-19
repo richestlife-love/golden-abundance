@@ -16,5 +16,5 @@ Requires [`just`](https://github.com/casey/just) and [`uv`](https://github.com/a
 ## Layout
 
 - `index.html` — page shell, loads React and Babel from unpkg
-- `landing.jsx` — the landing page component
+- `app.jsx` — the root React component
 - `assets/` — images

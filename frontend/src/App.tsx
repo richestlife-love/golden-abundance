@@ -202,6 +202,9 @@ function App() {
     setLedTeam(updated);
     syncTeamTask(updated, joinedTeam);
     if (updated.members.length + 1 >= 6) {
+      // Closure read of `tasks` is fine here: approveRequest is a user-gesture
+      // handler recreated on every render, so the closure binds to the latest
+      // tasks snapshot. No mutation — just looking up task 3's reward metadata.
       const t3 = tasks.find((x) => x.id === 3);
       if (t3) {
         setSuccessData({
@@ -227,7 +230,8 @@ function App() {
     setLedTeam({ ...ledTeam, alias });
   };
 
-  // Demo helper: simulate a member's request being approved externally
+  // demo-only: simulates the remote side approving the caller's join request.
+  // Remove when Phase 4 wires real team-membership events from the backend.
   const simulateJoinApproved = () => {
     if (!joinedTeam || joinedTeam.status !== "pending") return;
     const approved: Team = { ...joinedTeam, status: "approved" };
@@ -347,7 +351,7 @@ function App() {
           onCancelJoinRequest={leaveJoinedTeam}
           onLeaveLedTeam={leaveLedTeam}
           onLeaveJoinedTeam={leaveJoinedTeam}
-          onSimulateJoinApproved={simulateJoinApproved}
+          onSimulateJoinApproved={simulateJoinApproved} // demo-only
           onOpenTask={openTask}
         />
       )}

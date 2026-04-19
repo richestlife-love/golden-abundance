@@ -41,3 +41,11 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 ```
 
 GitHub's blame UI honours the file automatically — no configuration needed.
+
+## TypeScript configuration
+
+`frontend/tsconfig.json` runs `strict: true` with these deliberate exceptions:
+
+- `noUnusedParameters: false` — React event handlers often accept more params than they use (the event argument, the map index, etc.); forcing unused-parameter errors would be noisy.
+
+Other flags (`strict`, `noUnusedLocals`, `allowJs: false`) are all strict.

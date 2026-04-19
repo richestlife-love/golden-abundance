@@ -5,11 +5,13 @@ A module-level `app` is exported for `fastapi-cli` (see
 `[tool.fastapi] entrypoint` in pyproject.toml).
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from backend.config import get_settings
-from backend.routers import auth, health, me
+from backend.routers import auth, health, me, teams
+from backend.services.pagination import InvalidCursor
 
 API_V1 = "/api/v1"
 
@@ -31,6 +33,12 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(auth.router, prefix=API_V1)
     app.include_router(me.router, prefix=API_V1)
+    app.include_router(teams.router, prefix=API_V1)
+
+    async def _invalid_cursor_handler(_: Request, exc: InvalidCursor) -> JSONResponse:
+        return JSONResponse(status_code=400, content={"detail": str(exc) or "Invalid cursor"})
+
+    app.add_exception_handler(InvalidCursor, _invalid_cursor_handler)  # ty: ignore[invalid-argument-type]
     return app
 
 

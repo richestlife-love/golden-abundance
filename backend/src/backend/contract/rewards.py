@@ -3,6 +3,7 @@
 Rewardless tasks (`Task.bonus is None`) do NOT create Reward rows, so
 `Reward.bonus` is always non-null by construction.
 """
+
 from datetime import datetime
 from typing import Literal
 from uuid import UUID
@@ -12,6 +13,7 @@ from pydantic import BaseModel, ConfigDict
 
 class Reward(BaseModel):
     """A user's earned (or claimed) reward."""
+
     model_config = ConfigDict(extra="forbid")
 
     id: UUID

@@ -9,6 +9,7 @@ Derivation rules (server-authoritative; frontend must match):
   * `progress` is authoritative; clients display `steps[].done` for the
     checklist UX but never compute `progress` from it.
 """
+
 from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
@@ -20,6 +21,7 @@ from backend.contract.rewards import Reward
 
 class TaskStep(BaseModel):
     """One step in a task's checklist. `done` reflects the caller's state."""
+
     model_config = ConfigDict(extra="forbid")
 
     id: UUID
@@ -34,6 +36,7 @@ class TeamChallengeProgress(BaseModel):
     `total = max(led_total, joined_total)` — the higher of the caller's
     led-team or joined-team head count (server-computed).
     """
+
     model_config = ConfigDict(extra="forbid")
 
     total: int
@@ -45,6 +48,7 @@ class TeamChallengeProgress(BaseModel):
 class Task(BaseModel):
     """User-facing task view. Server-side merge of the global task
     definition and the caller's per-user state."""
+
     model_config = ConfigDict(extra="forbid")
 
     id: UUID
@@ -72,6 +76,7 @@ class Task(BaseModel):
 class InterestFormBody(BaseModel):
     """POST /tasks/{id}/submit body for tasks with form_type == 'interest'
     (task 1)."""
+
     model_config = ConfigDict(extra="forbid")
 
     form_type: Literal["interest"]
@@ -85,6 +90,7 @@ class InterestFormBody(BaseModel):
 class TicketFormBody(BaseModel):
     """POST /tasks/{id}/submit body for tasks with form_type == 'ticket'
     (task 2)."""
+
     model_config = ConfigDict(extra="forbid")
 
     form_type: Literal["ticket"]
@@ -111,6 +117,7 @@ class TaskSubmissionResponse(BaseModel):
 
     `reward` is null when the task has `bonus is None`.
     """
+
     model_config = ConfigDict(extra="forbid")
 
     task: Task

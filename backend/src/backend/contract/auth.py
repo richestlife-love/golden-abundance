@@ -4,6 +4,7 @@ TokenClaims is intentionally NOT re-exported from backend.contract; it
 describes the JWT payload the backend should encode for documentation
 only, and is never used as a request or response body.
 """
+
 from typing import Literal
 from uuid import UUID
 
@@ -14,6 +15,7 @@ from backend.contract.user import User
 
 class GoogleAuthRequest(BaseModel):
     """Request body for POST /auth/google."""
+
     model_config = ConfigDict(extra="forbid")
 
     id_token: str
@@ -26,6 +28,7 @@ class AuthResponse(BaseModel):
     on the client so the first screen routing decision can be made
     without a second round-trip.
     """
+
     model_config = ConfigDict(extra="forbid")
 
     access_token: str
@@ -42,6 +45,7 @@ class TokenClaims(BaseModel):
     backend.contract — this model exists so backend authors have a
     Pydantic description of what to encode in the access_token.
     """
+
     model_config = ConfigDict(extra="forbid")
 
     sub: UUID

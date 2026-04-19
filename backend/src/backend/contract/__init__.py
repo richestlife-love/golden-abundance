@@ -9,6 +9,7 @@ Usage::
 `TokenClaims` is intentionally not re-exported — it describes the JWT
 payload shape for documentation only and is not a request/response body.
 """
+
 from backend.contract.auth import AuthResponse, GoogleAuthRequest
 from backend.contract.common import Paginated, TeamRef, UserRef
 from backend.contract.news import NewsItem

@@ -4,6 +4,7 @@ Field derivation rules (server-authoritative):
   * `name`: zh_name if set, else nickname, else email-local-part.
   * `profile_complete`: True once POST /me/profile has run.
 """
+
 from datetime import datetime
 from uuid import UUID
 
@@ -13,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 class User(BaseModel):
     """Authenticated caller's profile. Returned by GET /me and embedded
     in AuthResponse.user on sign-in."""
+
     model_config = ConfigDict(extra="forbid")
 
     id: UUID
@@ -37,6 +39,7 @@ class ProfileCreate(BaseModel):
     """Request body for POST /me/profile (first-time profile completion).
     Side effect on the backend: user's led team is created in the same
     transaction."""
+
     model_config = ConfigDict(extra="forbid")
 
     zh_name: str = Field(min_length=1)
@@ -52,6 +55,7 @@ class ProfileCreate(BaseModel):
 
 class ProfileUpdate(BaseModel):
     """Request body for PATCH /me. Partial update; all fields optional."""
+
     model_config = ConfigDict(extra="forbid")
 
     zh_name: str | None = None

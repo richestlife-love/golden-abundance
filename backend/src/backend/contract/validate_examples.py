@@ -5,6 +5,7 @@ rejects as expected, non-zero otherwise.
 
 Wired to `just contract-validate`.
 """
+
 from __future__ import annotations
 
 import json
@@ -76,26 +77,30 @@ _SUBMIT_ADAPTER = TypeAdapter(SubmitBody)
 NEGATIVE_CHECKS: list[tuple[str, Any]] = [
     (
         "User rejects malformed UUID",
-        lambda: User.model_validate({
-            "id": "not-a-uuid",
-            "display_id": "UJETKAN",
-            "email": "jet@example.com",
-            "name": "Jet",
-            "profile_complete": True,
-            "created_at": "2026-04-01T00:00:00Z",
-        }),
+        lambda: User.model_validate(
+            {
+                "id": "not-a-uuid",
+                "display_id": "UJETKAN",
+                "email": "jet@example.com",
+                "name": "Jet",
+                "profile_complete": True,
+                "created_at": "2026-04-01T00:00:00Z",
+            }
+        ),
     ),
     (
         "User rejects extra fields (extra='forbid')",
-        lambda: User.model_validate({
-            "id": "7f7a9b10-1d3a-4c2e-9e81-1b3e8a2d0001",
-            "display_id": "UJETKAN",
-            "email": "jet@example.com",
-            "name": "Jet",
-            "profile_complete": True,
-            "created_at": "2026-04-01T00:00:00Z",
-            "unexpected_field": "nope",
-        }),
+        lambda: User.model_validate(
+            {
+                "id": "7f7a9b10-1d3a-4c2e-9e81-1b3e8a2d0001",
+                "display_id": "UJETKAN",
+                "email": "jet@example.com",
+                "name": "Jet",
+                "profile_complete": True,
+                "created_at": "2026-04-01T00:00:00Z",
+                "unexpected_field": "nope",
+            }
+        ),
     ),
     (
         "SubmitBody rejects unknown form_type discriminator",

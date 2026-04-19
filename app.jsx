@@ -3,79 +3,10 @@
 
 const { useState, useEffect, useRef, useMemo } = React;
 
-// ─── App config ───────────────────────────────────────────────
-const CONFIG = {
-  hero: "mascot",
-  background: "paper",
-  button: "gold",
-  title: "金富有志工",
-  subtitle: "成就屬於自己的光明宇宙",
-  cta: "开启",
-};
-
-// ─── Backgrounds ──────────────────────────────────────────────
-function GoldBackground() {
-  return (
-    <div style={{ position: "absolute", inset: 0, background: "#FFFDF5" }} />
-  );
-}
-
-function AuroraBackground() {
-  return (
-    <div style={{ position: "absolute", inset: 0, background: "#FFFDF5" }} />
-  );
-}
-
+// ─── Background ───────────────────────────────────────────────
 function PaperBackground() {
   return (
     <div style={{ position: "absolute", inset: 0, background: "#FFFDF5" }} />
-  );
-}
-
-function Starfield({ bright = false, opacity = 1 }) {
-  const stars = useMemo(() => {
-    const arr = [];
-    let seed = 1;
-    const rand = () => {
-      seed = (seed * 9301 + 49297) % 233280;
-      return seed / 233280;
-    };
-    for (let i = 0; i < 50; i++) {
-      arr.push({
-        x: rand() * 100,
-        y: rand() * 100,
-        r: rand() * 1.4 + 0.3,
-        d: rand() * 3 + 2,
-        o: rand() * 0.6 + 0.4,
-      });
-    }
-    return arr;
-  }, []);
-  const color = bright ? "#fff" : "#fed234";
-  return (
-    <svg
-      width="100%"
-      height="100%"
-      style={{ position: "absolute", inset: 0, opacity }}
-    >
-      {stars.map((s, i) => (
-        <circle
-          key={i}
-          cx={`${s.x}%`}
-          cy={`${s.y}%`}
-          r={s.r}
-          fill={color}
-          opacity={s.o}
-        >
-          <animate
-            attributeName="opacity"
-            values={`${s.o};${s.o * 0.25};${s.o}`}
-            dur={`${s.d}s`}
-            repeatCount="indefinite"
-          />
-        </circle>
-      ))}
-    </svg>
   );
 }
 
@@ -179,136 +110,6 @@ function MascotHero({ size }) {
         size={s * 0.065}
         color="#fee99a"
         delay={2.2}
-      />
-    </div>
-  );
-}
-
-function PlanetHero({ size }) {
-  const s = size;
-  return (
-    <div
-      style={{
-        position: "relative",
-        width: s,
-        height: s,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <div
-        style={{
-          width: s * 0.7,
-          height: s * 0.7,
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle at 35% 35%, #fff4cc, #fedd67 40%, #fed234 80%, #cb9f01)",
-          boxShadow:
-            "0 20px 60px rgba(254,199,1,0.35), inset -20px -30px 60px rgba(100,80,1,0.35), inset 10px 10px 30px rgba(255,255,255,0.4)",
-          position: "relative",
-          animation: "bobble 5s ease-in-out infinite",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            width: s,
-            height: s * 0.2,
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%) rotateX(72deg) rotate(-12deg)",
-            border: "6px solid",
-            borderColor: "#fee99a transparent #fec701 transparent",
-            borderRadius: "50%",
-          }}
-        />
-      </div>
-      <SparkleGlyph x="12%" y="16%" size={s * 0.08} color="#fedd67" delay={0} />
-      <SparkleGlyph
-        x="85%"
-        y="12%"
-        size={s * 0.1}
-        color="#fed234"
-        delay={0.6}
-      />
-      <SparkleGlyph
-        x="90%"
-        y="75%"
-        size={s * 0.06}
-        color="#fedd67"
-        delay={1.4}
-      />
-      <SparkleGlyph
-        x="6%"
-        y="65%"
-        size={s * 0.07}
-        color="#fee99a"
-        delay={2.0}
-      />
-    </div>
-  );
-}
-
-function GlyphHero({ size }) {
-  const s = size;
-  return (
-    <div
-      style={{
-        position: "relative",
-        width: s,
-        height: s,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <div
-        style={{
-          width: s * 0.77,
-          height: s * 0.77,
-          borderRadius: s * 0.15,
-          background: "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.4))",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          border: "1px solid rgba(255,255,255,0.9)",
-          boxShadow: "0 20px 50px rgba(254,199,1,0.3), inset 0 1px 0 rgba(255,255,255,1)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <span
-          style={{
-            fontSize: s * 0.5,
-            fontWeight: 900,
-            lineHeight: 1,
-            background:
-              "linear-gradient(135deg, #fed234 0%, #fec701 40%, #fec701 75%, #fec701 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-            color: "transparent",
-            fontFamily: '"Noto Serif SC", "Songti SC", serif',
-          }}
-        >
-          志
-        </span>
-      </div>
-      <SparkleGlyph x="8%" y="12%" size={s * 0.08} color="#fedd67" delay={0} />
-      <SparkleGlyph
-        x="88%"
-        y="10%"
-        size={s * 0.07}
-        color="#fed234"
-        delay={0.8}
-      />
-      <SparkleGlyph
-        x="92%"
-        y="80%"
-        size={s * 0.06}
-        color="#fedd67"
-        delay={1.6}
       />
     </div>
   );
@@ -423,87 +224,6 @@ function GradientButton({ label, onClick }) {
   );
 }
 
-function GlassButton({ label, onClick }) {
-  const [pressed, setPressed] = useState(false);
-  return (
-    <button
-      onClick={onClick}
-      onMouseDown={() => setPressed(true)}
-      onMouseUp={() => setPressed(false)}
-      onMouseLeave={() => setPressed(false)}
-      style={{
-        width: "100%",
-        height: 60,
-        borderRadius: 999,
-        border: "1px solid rgba(255,255,255,0.8)",
-        background: "rgba(255,255,255,0.55)",
-        backdropFilter: "blur(20px) saturate(180%)",
-        WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        cursor: "pointer",
-        color: "#655001",
-        fontSize: 20,
-        fontWeight: 700,
-        letterSpacing: 4,
-        fontFamily: '"Noto Sans SC", "PingFang SC", sans-serif',
-        boxShadow: pressed
-          ? "inset 0 2px 4px rgba(0,0,0,0.1)"
-          : "0 8px 30px rgba(120,100,180,0.2), inset 0 1px 0 rgba(255,255,255,1)",
-        transition: "all 0.15s ease",
-        transform: pressed ? "translateY(1px)" : "none",
-      }}
-    >
-      {label}
-    </button>
-  );
-}
-
-function OutlineButton({ label, onClick }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        width: "100%",
-        height: 60,
-        borderRadius: 16,
-        border: "none",
-        cursor: "pointer",
-        padding: 2,
-        background:
-          "linear-gradient(135deg, #fed234 0%, #fec701 45%, #fec701 100%)",
-        boxShadow: hovered
-          ? "0 10px 30px rgba(254,199,1,0.4)"
-          : "0 4px 15px rgba(254,199,1,0.25)",
-        transition: "all 0.2s ease",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          borderRadius: 14,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 20,
-          fontWeight: 700,
-          letterSpacing: 4,
-          fontFamily: '"Noto Sans SC", "PingFang SC", sans-serif',
-          background: hovered
-            ? "linear-gradient(135deg, #fed234 0%, #fec701 45%, #fec701 100%)"
-            : "#fff9e6",
-          color: hovered ? "#fff" : "#987701",
-          transition: "all 0.2s ease",
-        }}
-      >
-        {label}
-      </div>
-    </button>
-  );
-}
-
 // ─── Launch overlay ───────────────────────────────────────────
 function LaunchOverlay({ onDone }) {
   useEffect(() => {
@@ -591,27 +311,6 @@ function LandingScreen({ onStart }) {
     };
   }, []);
 
-  const Bg =
-    CONFIG.background === "paper"
-      ? PaperBackground
-      : CONFIG.background === "gold"
-        ? GoldBackground
-        : AuroraBackground;
-  const Hero =
-    CONFIG.hero === "starfield"
-      ? PlanetHero
-      : CONFIG.hero === "glyph"
-        ? GlyphHero
-        : MascotHero;
-  const Button =
-    CONFIG.button === "glass"
-      ? GlassButton
-      : CONFIG.button === "outline"
-        ? OutlineButton
-        : GradientButton;
-
-  const subtitleColor = "#987701";
-
   // Responsive scaling based on viewport, with sensible floors
   const short = Math.max(Math.min(dims.w || 390, 440), 280);
   const tall = Math.max(dims.h || 800, 520);
@@ -632,7 +331,7 @@ function LandingScreen({ onStart }) {
         color: "#241c00",
       }}
     >
-      <Bg />
+      <PaperBackground />
 
       {/* Main content */}
       <div
@@ -704,7 +403,7 @@ function LandingScreen({ onStart }) {
             animation: "fadeInUp 0.9s 0.1s ease backwards",
           }}
         >
-          <Hero size={heroSize} />
+          <MascotHero size={heroSize} />
         </div>
 
         {/* Headline */}
@@ -714,7 +413,7 @@ function LandingScreen({ onStart }) {
             flexShrink: 0,
           }}
         >
-          <Headline text={CONFIG.title} fontSize={titleSize} />
+          <Headline text="金富有志工" fontSize={titleSize} />
         </div>
 
         {/* Subtitle */}
@@ -726,13 +425,13 @@ function LandingScreen({ onStart }) {
             fontSize: 14,
             fontWeight: 400,
             letterSpacing: 4,
-            color: subtitleColor,
+            color: "#987701",
             fontFamily: '"Noto Sans SC", "PingFang SC", sans-serif',
             animation: "fadeInUp 0.9s 0.4s ease backwards",
             flexShrink: 0,
           }}
         >
-          {CONFIG.subtitle}
+          成就屬於自己的光明宇宙
         </div>
 
         {/* CTA */}
@@ -742,7 +441,7 @@ function LandingScreen({ onStart }) {
             flexShrink: 0,
           }}
         >
-          <Button label={CONFIG.cta} onClick={onStart} />
+          <GradientButton label="开启" onClick={onStart} />
         </div>
       </div>
 

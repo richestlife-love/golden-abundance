@@ -162,7 +162,7 @@ Clients pick the body by reading `Task.form_type` from the task response: `"inte
 | `week_points` | `int` | Rolling 7-day. |
 | `rank` | `int \| None` | Null until leaderboard computes. |
 | `role` | `Literal["leader","member"] \| None` | Per-caller. Null if caller is not in the team. |
-| `requests` | `list[JoinRequest] \| None` | Populated only when `role == "leader"`. Otherwise `None`. |
+| `requests` | `list[JoinRequest] \| None` | Leader sees the list (`[]` when the queue is empty); members and outsiders see `None`. The `null` vs `[]` distinction is load-bearing — clients use it to gate the "pending requests" UI on leader visibility rather than on queue length. |
 | `created_at` | `datetime` | |
 
 **`JoinRequest`**: `{id: UUID, team_id: UUID, user: UserRef, status: Literal["pending","approved","rejected"], requested_at: datetime}`.

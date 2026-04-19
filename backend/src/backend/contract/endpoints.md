@@ -17,7 +17,7 @@ model names re-exported from `backend.contract`.
 ### `POST /auth/logout`
 - Auth: B
 - Body: none
-- 204
+- 204 — best-effort; tokens expire naturally (no server-side revocation list)
 
 ## Me
 

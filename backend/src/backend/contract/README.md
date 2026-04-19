@@ -82,3 +82,19 @@ async def submit_task(task_id: UUID, body: SubmitBody) -> TaskSubmissionResponse
 
 FastAPI emits a tagged `oneOf` into OpenAPI based on the discriminator,
 and generated TypeScript clients get a clean discriminated union.
+
+## Paginated list responses
+
+Any endpoint returning a cursor-paginated list should annotate its
+response as `Paginated[Foo]`, not a bare `list[Foo]`. Pydantic's generic
+caching makes this free at runtime, and FastAPI emits a parameterised
+schema so downstream TS codegen sees `Paginated<Foo>` rather than an
+anonymous envelope per endpoint.
+
+```python
+from backend.contract import NewsItem, Paginated
+
+@router.get("/news")
+async def list_news(cursor: str | None = None) -> Paginated[NewsItem]:
+    ...
+```

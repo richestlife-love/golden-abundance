@@ -3,6 +3,7 @@ import { useAppState } from "../state/AppStateContext";
 import { getEffectiveStatus, fs } from "../utils";
 import BottomNav from "../ui/BottomNav";
 import { BabyIcon, CrownIcon, MedalIcon, StarIcon } from "../ui/Icon";
+import { useCountUp } from "../ui/useCountUp";
 import TaskCard from "./TaskCard";
 
 export default function HomeScreen() {
@@ -30,6 +31,7 @@ export default function HomeScreen() {
   const totalPoints = (tasks || [])
     .filter((t) => t.status === "completed")
     .reduce((s, t) => s + t.points, 0);
+  const displayPoints = useCountUp(totalPoints);
   const homeTiers = [
     { name: "新手志工", required: 100, color: "#8AD4B0", gradEnd: "#4EA886" },
     { name: "熱心志工", required: 500, color: "#fed234", gradEnd: "#fec701" },
@@ -164,6 +166,36 @@ export default function HomeScreen() {
               pointerEvents: "none",
             }}
           />
+          {/* Sheen sweep — the "moment": a diagonal highlight passes across
+              the card on mount and loops every 7s. Gives the card a sense of
+              polished metal catching light. */}
+          <div
+            className="ga-sheen"
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              overflow: "hidden",
+              borderRadius: "inherit",
+              pointerEvents: "none",
+            }}
+          >
+            <div
+              className="ga-sheen"
+              style={{
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                left: 0,
+                width: "45%",
+                background:
+                  "linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.55) 55%, transparent 100%)",
+                animation: "sheenSweep 7s cubic-bezier(0.4, 0, 0.2, 1) 0.6s infinite",
+                filter: "blur(2px)",
+                mixBlendMode: "screen",
+              }}
+            />
+          </div>
 
           {/* Top row: [name + tier stacked] (left)  |  [label + number stacked] (right) */}
           <div
@@ -288,7 +320,7 @@ export default function HomeScreen() {
                     textShadow: "0 2px 4px rgba(200,160,0,0.15)",
                   }}
                 >
-                  {totalPoints.toLocaleString()}
+                  {displayPoints.toLocaleString()}
                 </div>
                 <div
                   style={{

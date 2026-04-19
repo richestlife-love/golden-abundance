@@ -111,6 +111,18 @@ export default function GlobalStyles() {
       @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.95); opacity: 0.85; } }
       @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
       @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+      /* One deliberate "moment" — a sheen that sweeps diagonally across the
+         gold Points card on mount, then loops every 7s. Kept subtle enough
+         that it reads as living material, not a distracting banner. */
+      @keyframes sheenSweep {
+        0%   { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+        8%   { opacity: 1; }
+        40%  { transform: translateX(220%) skewX(-18deg); opacity: 0; }
+        100% { transform: translateX(220%) skewX(-18deg); opacity: 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .ga-sheen { animation: none !important; }
+      }
     `}</style>
   );
 }

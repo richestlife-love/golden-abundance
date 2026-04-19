@@ -64,3 +64,21 @@ Items surfaced in a 2026-04-20 code review. Address before or during Phase 3 (ro
 
 ### Identity
 - **`userIdFromEmail`** — [`App.tsx:47-54`](../frontend/src/App.tsx#L47) derives a user id from the email local part (first 4–6 chars uppercased). Collision-prone (e.g. `jet.a@…` and `jet.b@…` collapse to the same id), and that id is then used as the root of the team id (`T-${idSuffix}`), so the collision propagates. Replace with server-issued UUIDs at Phase 4.
+
+## Tech debt / review findings (Phase 5a)
+
+Surfaced during Phase 5a (backend foundation — FastAPI + SQLModel + Alembic + testcontainers). Address as each becomes actionable in Phase 5b / 5c.
+
+### Async / event-loop plumbing
+- **`alembic/env.py` calls `asyncio.run()` at module-import time** — [`backend/alembic/env.py`](../backend/alembic/env.py). Tests sidestep this via `asyncio.to_thread` in [`conftest._alembic_upgrade_head`](../backend/tests/conftest.py). Any future code that imports alembic from a running event loop (e.g. an admin endpoint that triggers migrations) will raise `RuntimeError: asyncio.run() cannot be called when another event loop is running`. Fix: switch `env.py` to a sync Alembic invocation via `engine.sync_engine`.
+- **`get_session` has no explicit rollback on exception** — [`backend/src/backend/db/session.py`](../backend/src/backend/db/session.py). Currently relies on SQLAlchemy autobegin/auto-rollback at session close. If a service adds explicit `session.begin()` blocks, wrap the yield in `try/except Exception: await session.rollback(); raise`.
+
+### Schema
+- **`TaskProgressRow.form_submission` is `sa.JSON`, not `JSONB`** — [`backend/src/backend/db/models.py`](../backend/src/backend/db/models.py). Store/retrieve works; JSON-path queries (`WHERE form_submission->>'key' = …`) and GIN indexing do not. When a service first needs either, run `ALTER COLUMN form_submission TYPE JSONB USING form_submission::jsonb` in its migration.
+- **Python-side `uuid4` + `_utcnow` defaults** — every table in `db/models.py`. No UUID collision risk; `_utcnow` uses the app-server wallclock, so clock skew across replicas can produce non-monotonic `created_at`. Fix for multi-replica: `server_default=sa.func.gen_random_uuid()` / `sa.func.now()`.
+- **`TaskProgressRow` has `updated_at` but no `created_at`** — once any update fires, the original enrollment time is lost. Add `created_at` if a service needs to query "when did the user start this task".
+
+### Tooling hygiene
+- **Coverage gate temporarily 60%** — [`backend/pyproject.toml`](../backend/pyproject.toml) `[tool.coverage.report]`. Was 90 in the plan; lowered because pytest-cov hard-fails below the gate and Phase 5a's test surface is small (Settings + `/health` + DB round-trip + schema-drift). Restore to 90 once Phase 5b/5c router and service tests land.
+- **`testcontainers[postgresql]>=4.9` extra is obsolete** — [`backend/pyproject.toml`](../backend/pyproject.toml). testcontainers v4 bundles Postgres support unconditionally; `uv sync` warns `package does not have an extra named 'postgresql'` on every run. Rewrite to `testcontainers>=4.9`.
+- **Alembic `path_separator` deprecation warning** — once per pytest run. Fix: add `path_separator = os` under `[alembic]` in [`backend/alembic.ini`](../backend/alembic.ini).

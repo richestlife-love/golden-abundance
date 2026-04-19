@@ -764,7 +764,7 @@ Expected: PASS (2 describe blocks, 4 tests total: the 3 AppStateContext tests + 
 - [ ] **Step 3.9: Dev-server smoke check**
 
 Run: `pnpm dev` (background) → open `http://localhost:5173/` in a browser (or verify with `curl -s http://localhost:5173/ | grep -o '金富有志工'`).
-Expected: landing page renders; "開啟" button navigates to `/sign-in` (which currently renders nothing — acceptable until Task 5).
+Expected: landing page renders; "开启" button navigates to `/sign-in` (which currently renders nothing — acceptable until Task 5).
 
 Kill the dev server.
 
@@ -1871,14 +1871,13 @@ describe("not found", () => {
 });
 
 describe("click-through: start task", () => {
-  it("/tasks/3 → '开始任务' button → /tasks/3/start renders TeamForm", async () => {
+  it("/tasks/3 → '開始任務' button → /tasks/3/start renders TeamForm", async () => {
     const { router } = renderRoute("/tasks/3", { seed: "authed-complete" });
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/tasks/3");
     });
-    // TaskDetailScreen's CTA label is "开始任务" (Simplified — verify in source
-    // before running and swap if different).
-    const startBtn = await screen.findByRole("button", { name: /开始任务/ });
+    // TaskDetailScreen's CTA label is "開始任務" (Traditional — matches source).
+    const startBtn = await screen.findByRole("button", { name: /開始任務/ });
     await userEvent.click(startBtn);
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/tasks/3/start");
@@ -1900,7 +1899,7 @@ describe("history back", () => {
 });
 ```
 
-Before running: `grep -n "开始任务\|開始任務" frontend/src/screens/TaskDetailScreen.tsx` to confirm the CTA label; adjust the regex if the source uses Traditional.
+The codebase has mixed Simplified/Traditional copy (LandingScreen/BottomNav are Simplified; GoogleAuthScreen/data.ts task titles are Traditional). Always grep the source before asserting on Chinese text.
 
 - [ ] **Step 10.4: Run full test suite**
 
@@ -1912,9 +1911,9 @@ Expected: PASS.
 - [ ] **Step 10.5: Manual smoke (completion gate)**
 
 Run `pnpm dev` in one terminal. In a browser:
-1. Open `http://localhost:5173/` — landing renders. Click "開啟" → `/sign-in`.
+1. Open `http://localhost:5173/` — landing renders. Click "开启" → `/sign-in`.
 2. Complete mock sign-in → ends on `/welcome`. Submit profile → `/home`.
-3. Click every bottom-nav button: `首頁`, `任務`, `排行榜`, `我`. Each URL changes (`/home`, `/tasks`, `/leaderboard`, `/me`).
+3. Click every bottom-nav button: `首页`, `任务`, `排行`, `我的`. Each URL changes (`/home`, `/tasks`, `/leaderboard`, `/me`).
 4. From `/home`, click a task card → URL is `/tasks/:id`. Click "開始任務" → URL is `/tasks/:id/start`. Submit or cancel. Back button works.
 5. Reload on each of: `/home`, `/tasks`, `/tasks/1`, `/leaderboard`, `/me`, `/me/profile`, `/rewards`. Each page re-renders with state intact (auth state is still in-memory; you may land back on landing — that's expected until Phase 6).
 6. Paste `/tasks/2/start` into a new tab → redirect to `/tasks/2`.

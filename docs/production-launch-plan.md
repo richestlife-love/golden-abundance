@@ -6,6 +6,7 @@ High-level task list for moving from single-file prototype to production app wit
 - [x] Migrate frontend to Vite
 - [x] Split `app.jsx` into per-component files
 - [x] Add TypeScript; derive types from existing mock data shapes
+- [x] Format with Prettier
 
 ## Phase 2 — API contract first
 See the [design spec](superpowers/specs/2026-04-19-api-contract-design.md).

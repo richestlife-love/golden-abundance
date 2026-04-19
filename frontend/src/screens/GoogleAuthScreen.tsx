@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import PaperBackground from '../ui/PaperBackground';
 import GoogleLogo from '../ui/GoogleLogo';
 import GoogleSpinner from '../ui/GoogleSpinner';
 import type { User } from '../types';

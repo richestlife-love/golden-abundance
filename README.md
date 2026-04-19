@@ -13,6 +13,8 @@ just install        # install npm deps under frontend/
 just serve          # Vite dev server on http://localhost:8000
 just build          # tsc -b && vite build → frontend/dist
 just tunnel         # https://subvitalized-occupative-katelyn.ngrok-free.dev
+just fmt            # format frontend sources with Prettier
+just fmt-check      # verify no drift (exits non-zero if anything needs formatting)
 ```
 
 Requires [`just`](https://github.com/casey/just) and Node 20+.

@@ -246,7 +246,6 @@ export default function TeamCard({
   }
 
   // Full team view (leader OR approved member)
-  const pct = Math.min(1, total / cap);
   const complete = total >= cap;
   // Deterministic pseudo-points per member, based on name
   const memberPoints = (name: string) => {

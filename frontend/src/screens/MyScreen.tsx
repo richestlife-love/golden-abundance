@@ -56,7 +56,6 @@ export default function MyScreen({
     ? (joinedTeam.currentCount || 0) +
     (joinedTeam.status === "approved" ? 1 : 0)
     : 0;
-  const hasAnyTeam = ledTeam || joinedTeam;
   const [teamTab, setTeamTab] = useState(
     ledTeam && !joinedTeam ? "leader" : "member",
   );

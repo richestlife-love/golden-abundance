@@ -16,18 +16,34 @@ from collections.abc import AsyncIterator, Iterator
 
 import pytest
 import pytest_asyncio
+from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlmodel import SQLModel
 from testcontainers.postgres import PostgresContainer
 
+from backend.config import get_settings
 from backend.db import models as _models  # noqa: F401 — populates metadata
-from backend.db.engine import get_session_maker, reset_engine
+from backend.db.engine import get_engine, get_session_maker
 from backend.db.session import get_session
 from backend.server import create_app
 
 _BACKEND_DIR = pathlib.Path(__file__).parent.parent
+
+
+@pytest.fixture(autouse=True)
+def _reset_settings_cache() -> Iterator[None]:
+    """Bracket every test with a fresh ``get_settings()`` cache.
+
+    Tests that mutate env via ``monkeypatch.setenv`` rely on
+    ``get_settings()`` re-reading the environment on its next call.
+    Centralising the reset here removes the need to sprinkle
+    ``get_settings.cache_clear()`` around individual tests.
+    """
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 @pytest.fixture(scope="session")
@@ -36,91 +52,55 @@ def postgres_container() -> Iterator[PostgresContainer]:
         yield pg
 
 
-def _alembic_upgrade_head(url: str) -> None:
-    """Apply migrations against ``url`` synchronously.
-
-    Set ``DATABASE_URL`` in the environment and bust the cached
-    ``get_settings()`` so ``alembic/env.py`` picks up the container
-    URL when it reads ``get_settings().database_url``.
-    """
-    from alembic import command
-    from alembic.config import Config
-
-    from backend.config import get_settings
-
-    os.environ["DATABASE_URL"] = url
-    get_settings.cache_clear()
-
-    cfg = Config(str(_BACKEND_DIR / "alembic.ini"))
-    cfg.set_main_option("script_location", str(_BACKEND_DIR / "alembic"))
-    command.upgrade(cfg, "head")
-
-
 @pytest_asyncio.fixture(scope="session")
 async def engine(postgres_container: PostgresContainer) -> AsyncIterator[AsyncEngine]:
-    from backend.config import get_settings
+    url = postgres_container.get_connection_url()
 
-    url = postgres_container.get_connection_url()  # postgresql+psycopg://...
-
-    # Save any pre-existing env values so we can restore them at teardown —
-    # this fixture mutates DATABASE_URL / JWT_SECRET / APP_ENV to point the
-    # backend at the testcontainer and test-only secrets.
-    prev_db_url = os.environ.get("DATABASE_URL")
-    prev_jwt_secret = os.environ.get("JWT_SECRET")
-    prev_app_env = os.environ.get("APP_ENV")
-
-    os.environ["DATABASE_URL"] = url
-    os.environ.setdefault("JWT_SECRET", "test-only-secret-32-chars-minimum")
-    os.environ["APP_ENV"] = "test"
-    get_settings.cache_clear()
-
-    # Apply Alembic head to the container BEFORE building the async engine.
-    # Runs in a worker thread because alembic.command.upgrade is sync and
-    # internally spins its own event loop via asyncio.run() in env.py.
-    await asyncio.to_thread(_alembic_upgrade_head, url)
-
-    eng = create_async_engine(url, future=True)
-    # Single source of truth: any code path reaching for get_session_maker(),
-    # backend.db.engine.engine, or backend.db.engine.AsyncSessionLocal now
-    # routes through this engine. No second sessionmaker floating around.
-    reset_engine(eng)
-    try:
-        yield eng
-    finally:
-        await eng.dispose()
-        if prev_db_url is None:
-            os.environ.pop("DATABASE_URL", None)
-        else:
-            os.environ["DATABASE_URL"] = prev_db_url
-        if prev_jwt_secret is None:
-            os.environ.pop("JWT_SECRET", None)
-        else:
-            os.environ["JWT_SECRET"] = prev_jwt_secret
-        if prev_app_env is None:
-            os.environ.pop("APP_ENV", None)
-        else:
-            os.environ["APP_ENV"] = prev_app_env
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setenv("DATABASE_URL", url)
+        mp.setenv("APP_ENV", "test")
+        if "JWT_SECRET" not in os.environ:
+            mp.setenv("JWT_SECRET", "test-only-secret-32-chars-minimum")
         get_settings.cache_clear()
+        get_engine.cache_clear()
+
+        # alembic.command.upgrade is sync and spins its own event loop via
+        # asyncio.run() in env.py — off-thread it so we don't deadlock.
+        def _upgrade() -> None:
+            from alembic import command
+            from alembic.config import Config
+
+            cfg = Config(str(_BACKEND_DIR / "alembic.ini"))
+            cfg.set_main_option("script_location", str(_BACKEND_DIR / "alembic"))
+            command.upgrade(cfg, "head")
+
+        await asyncio.to_thread(_upgrade)
+
+        eng = get_engine()
+        try:
+            yield eng
+        finally:
+            await eng.dispose()
+            get_engine.cache_clear()
 
 
 @pytest.fixture
-def no_db_client() -> Iterator:
+def no_db_client() -> Iterator[TestClient]:
     """Sync TestClient without DB — for routes that don't touch the database."""
-    from fastapi.testclient import TestClient
-
     with TestClient(create_app()) as c:
         yield c
 
 
 @pytest_asyncio.fixture
-async def session(engine) -> AsyncIterator[AsyncSession]:
+async def session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
     async with get_session_maker()() as s:
         yield s
-    # TRUNCATE all tables between tests. The session above is closed
-    # before this runs, so there's no lock contention with engine.begin().
-    async with engine.begin() as conn:
-        for table in reversed(SQLModel.metadata.sorted_tables):
-            await conn.execute(text(f'TRUNCATE TABLE "{table.name}" RESTART IDENTITY CASCADE'))
+    # TRUNCATE every table in a single round-trip. CASCADE makes ordering
+    # irrelevant, so we skip the reverse-sorted-tables dance.
+    tables = ", ".join(f'"{t.name}"' for t in SQLModel.metadata.sorted_tables)
+    if tables:
+        async with engine.begin() as conn:
+            await conn.execute(text(f"TRUNCATE TABLE {tables} RESTART IDENTITY CASCADE"))
 
 
 @pytest_asyncio.fixture

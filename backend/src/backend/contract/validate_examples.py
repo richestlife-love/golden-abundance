@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from backend.contract.auth import AuthResponse, GoogleAuthRequest
 from backend.contract.common import Paginated
@@ -34,39 +34,29 @@ from backend.contract.user import ProfileCreate, User
 
 FIXTURES_DIR = Path(__file__).parent / "examples"
 
-# Map each fixture filename to the adapter used to validate it.
-# Adapter is either a Pydantic model class (for single-object fixtures)
-# or a TypeAdapter (for compound types like list[Reward] or
-# Paginated[NewsItem]).
-FIXTURES: dict[str, Any] = {
-    "auth_google_request.json": GoogleAuthRequest,
-    "auth_google_response.json": AuthResponse,
-    "user.json": User,
-    "profile_create.json": ProfileCreate,
+# Every value is a TypeAdapter so fixture validation is a single call
+# regardless of whether the underlying type is a BaseModel, a generic
+# like ``Paginated[NewsItem]``, or a container like ``list[Reward]``.
+FIXTURES: dict[str, TypeAdapter[Any]] = {
+    "auth_google_request.json": TypeAdapter(GoogleAuthRequest),
+    "auth_google_response.json": TypeAdapter(AuthResponse),
+    "user.json": TypeAdapter(User),
+    "profile_create.json": TypeAdapter(ProfileCreate),
     "rewards_list.json": TypeAdapter(list[Reward]),
     "news_list.json": TypeAdapter(Paginated[NewsItem]),
-    "team_as_leader.json": Team,
-    "team_as_member.json": Team,
+    "team_as_leader.json": TypeAdapter(Team),
+    "team_as_member.json": TypeAdapter(Team),
     "rank_users_week.json": TypeAdapter(Paginated[UserRankEntry]),
     "rank_teams_week.json": TypeAdapter(Paginated[TeamRankEntry]),
-    "task_interest.json": Task,
-    "task_team_challenge.json": Task,
-    "interest_form_submit.json": InterestFormBody,
-    "ticket_form_submit.json": TicketFormBody,
-    "task_submission_response.json": TaskSubmissionResponse,
-    "task_submission_response_no_reward.json": TaskSubmissionResponse,
-    "me_profile_create_response.json": MeProfileCreateResponse,
-    "me_teams_response.json": MeTeamsResponse,
+    "task_interest.json": TypeAdapter(Task),
+    "task_team_challenge.json": TypeAdapter(Task),
+    "interest_form_submit.json": TypeAdapter(InterestFormBody),
+    "ticket_form_submit.json": TypeAdapter(TicketFormBody),
+    "task_submission_response.json": TypeAdapter(TaskSubmissionResponse),
+    "task_submission_response_no_reward.json": TypeAdapter(TaskSubmissionResponse),
+    "me_profile_create_response.json": TypeAdapter(MeProfileCreateResponse),
+    "me_teams_response.json": TypeAdapter(MeTeamsResponse),
 }
-
-
-def _validate_one(adapter: Any, data: Any) -> None:
-    if isinstance(adapter, type) and issubclass(adapter, BaseModel):
-        adapter.model_validate(data)
-    elif isinstance(adapter, TypeAdapter):
-        adapter.validate_python(data)
-    else:
-        raise RuntimeError(f"Unknown adapter type: {type(adapter).__name__}")
 
 
 # Each entry: (label, callable that must raise ValidationError).
@@ -117,7 +107,7 @@ def _run_fixture_checks() -> int:
             continue
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-            _validate_one(adapter, data)
+            adapter.validate_python(data)
         except (json.JSONDecodeError, ValidationError, OSError) as exc:
             print(f"FAIL     {fname}: {exc}")
             failures += 1

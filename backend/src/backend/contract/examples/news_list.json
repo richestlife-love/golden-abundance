@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": "b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c0001",
+      "title": "夏季盛會志工招募開跑",
+      "body": "5 月 10 日金富有夏季盛會，需要接待、導覽、物資、秩序四大崗位志工。報名截止 4 月 30 日。",
+      "category": "公告",
+      "image_url": null,
+      "published_at": "2026-04-18T09:00:00Z",
+      "pinned": true
+    },
+    {
+      "id": "b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c0002",
+      "title": "本月星點雙倍週即將開始",
+      "body": "4 月 22 – 28 日，所有任務星點 ×2。趕緊邀請夥伴一起組隊衝榜！",
+      "category": "活動",
+      "image_url": null,
+      "published_at": "2026-04-16T09:00:00Z",
+      "pinned": false
+    },
+    {
+      "id": "b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c0003",
+      "title": "新任務「長者陪伴」已上線",
+      "body": "每週六下午安排 2 小時，陪伴社區長者聊天、散步，可獲得 120 星點。",
+      "category": "通知",
+      "image_url": null,
+      "published_at": "2026-04-14T09:00:00Z",
+      "pinned": false
+    }
+  ],
+  "next_cursor": null
+}

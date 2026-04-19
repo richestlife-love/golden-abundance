@@ -1,0 +1,7 @@
+# Run full CI (lint, format, typecheck, test);
+ci:
+  uv sync --all-extras --dev
+  uv run ruff check --fix
+  uv run ruff format
+  uv run ty check
+  uv run pytest

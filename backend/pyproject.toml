@@ -4,9 +4,33 @@ version = "0.1.0"
 description = "FastAPI backend server for Golden Abundance"
 authors = [{ name = "Jet Kan", email = "jetkan.yk@gmail.com" }]
 requires-python = ">=3.14"
-dependencies = [
-    "pydantic[email]>=2",
+dependencies = ["pydantic[email]>=2.13.2"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.11",
+    "ty>=0.0.31",
 ]
+
+[tool.fastapi]
+entrypoint = "backend.server:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-v", "--cov"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src/backend"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+
+[tool.ruff]
+line-length = 120
 
 [build-system]
 requires = ["uv_build>=0.11.7,<0.12.0"]

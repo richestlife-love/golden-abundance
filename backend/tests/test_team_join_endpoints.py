@@ -95,7 +95,6 @@ async def test_create_join_request_rejects_if_pending_elsewhere(
     assert r2.status_code == 409
 
 
-@pytest.mark.skip(reason="Depends on E3/E4 endpoints; unskip in those tasks")
 async def test_requester_can_reapply_after_rejection(client: AsyncClient) -> None:
     """Rejected requests don't lock out re-applications (status != 'pending' path)."""
     jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")

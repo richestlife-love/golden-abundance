@@ -1,4 +1,3 @@
-import pytest
 from httpx import AsyncClient
 
 from tests.helpers import sign_in_and_complete
@@ -54,7 +53,6 @@ async def test_team_detail_404(client: AsyncClient) -> None:
     assert response.status_code == 404
 
 
-@pytest.mark.skip(reason="Requires E2/E3 endpoints; unskip in E3 task")
 async def test_team_detail_member_sees_null_requests(client: AsyncClient) -> None:
     """Non-leader members must see `requests = null`, not the pending-request list."""
     jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")

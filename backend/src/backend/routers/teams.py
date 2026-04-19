@@ -18,7 +18,9 @@ from backend.db.models import JoinRequestRow, TeamRow, UserRow
 from backend.db.session import get_session
 from backend.services.team import (
     JoinConflict,
+    approve_join_request,
     create_join_request,
+    reject_join_request,
     row_to_contract_team,
     search_team_refs,
     user_to_ref,
@@ -128,4 +130,53 @@ async def cancel_join_request(
             detail="Only the requester can cancel a join request",
         )
     await session.delete(req)
+    await session.commit()
+
+
+@router.post(
+    "/{team_id}/join-requests/{req_id}/approve", response_model=ContractTeam
+)
+async def approve_request(
+    team_id: UUID,
+    req_id: UUID,
+    me: UserRow = Depends(current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ContractTeam:
+    team = await session.get(TeamRow, team_id)
+    if team is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
+    if team.leader_id != me.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only the leader can approve"
+        )
+    req = await session.get(JoinRequestRow, req_id)
+    if req is None or req.team_id != team_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Request not found")
+    await approve_join_request(session, team=team, req=req)
+    await session.commit()
+    await session.refresh(team)
+    return await row_to_contract_team(session, team, caller_id=me.id)
+
+
+@router.post(
+    "/{team_id}/join-requests/{req_id}/reject",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def reject_request(
+    team_id: UUID,
+    req_id: UUID,
+    me: UserRow = Depends(current_user),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    team = await session.get(TeamRow, team_id)
+    if team is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
+    if team.leader_id != me.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only the leader can reject"
+        )
+    req = await session.get(JoinRequestRow, req_id)
+    if req is None or req.team_id != team_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Request not found")
+    await reject_join_request(session, req=req)
     await session.commit()

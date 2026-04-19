@@ -55,23 +55,52 @@ def _since(period: RankPeriod) -> datetime | None:
     return None
 
 
-async def _user_points_map(
+async def _user_points_window_and_week(
     session: AsyncSession, period: RankPeriod
-) -> dict[UUID, int]:
+) -> dict[UUID, tuple[int, int]]:
+    """Return ``{user_id: (window_pts, week_pts)}`` in a single round-trip.
+
+    ``window_pts`` sums points earned inside the requested ``period``'s
+    window (all-time, 7d, or 30d). ``week_pts`` always sums the last 7
+    days regardless of ``period`` — entries need both so the UI can show
+    "X pts (week: Y)" without a second query.
+
+    Both aggregates use Postgres ``SUM(...) FILTER (WHERE ...)`` when a
+    window bound applies, so we read ``task_progress`` exactly once
+    instead of twice.
+    """
+    now = datetime.now(timezone.utc)
+    week_start = now - timedelta(days=7)
+    window_start = _since(period)
+
+    week_sum = func.coalesce(
+        func.sum(TaskDefRow.points).filter(
+            TaskProgressRow.completed_at >= week_start  # ty: ignore[unsupported-operator]
+        ),
+        0,
+    ).label("week_pts")
+    if window_start is None:
+        window_sum = func.coalesce(func.sum(TaskDefRow.points), 0).label("window_pts")
+    else:
+        window_sum = func.coalesce(
+            func.sum(TaskDefRow.points).filter(
+                TaskProgressRow.completed_at >= window_start  # ty: ignore[unsupported-operator]
+            ),
+            0,
+        ).label("window_pts")
+
     stmt = (
         select(  # ty: ignore[no-matching-overload]
             TaskProgressRow.user_id,
-            func.coalesce(func.sum(TaskDefRow.points), 0).label("pts"),
+            window_sum,
+            week_sum,
         )
         .join(TaskDefRow, TaskDefRow.id == TaskProgressRow.task_def_id)
         .where(TaskProgressRow.status == "completed")
         .group_by(TaskProgressRow.user_id)
     )
-    since = _since(period)
-    if since is not None:
-        stmt = stmt.where(TaskProgressRow.completed_at >= since)  # ty: ignore[unsupported-operator]
     rows = (await session.execute(stmt)).all()
-    return {uid: int(pts) for uid, pts in rows}
+    return {uid: (int(w), int(wk)) for uid, w, wk in rows}
 
 
 def _slice_after_cursor(
@@ -114,15 +143,14 @@ def _slice_after_cursor(
 async def leaderboard_users(
     session: AsyncSession, *, period: RankPeriod, cursor: str | None, limit: int
 ) -> Paginated[UserRankEntry]:
-    window_pts = await _user_points_map(session, period)
-    week_pts = window_pts if period == "week" else await _user_points_map(session, "week")
+    pts_by_user = await _user_points_window_and_week(session, period)
 
     users = {
         u.id: u
         for u in (await session.execute(select(UserRow))).scalars().all()
     }
     all_entries: list[tuple[int, UUID]] = sorted(
-        ((window_pts.get(uid, 0), uid) for uid in users),
+        ((pts_by_user.get(uid, (0, 0))[0], uid) for uid in users),
         key=lambda kv: (-kv[0], str(kv[1])),
     )
     page, start_idx, next_cursor = _slice_after_cursor(all_entries, cursor, limit)
@@ -131,6 +159,7 @@ async def leaderboard_users(
     for offset, (pts, uid) in enumerate(page):
         u = users[uid]
         name = u.zh_name or u.nickname or u.email.split("@", 1)[0]
+        _, week_pts = pts_by_user.get(uid, (0, 0))
         items.append(
             UserRankEntry(
                 user=UserRef(
@@ -141,7 +170,7 @@ async def leaderboard_users(
                 ),
                 rank=start_idx + offset + 1,
                 points=pts,
-                week_points=week_pts.get(uid, 0),
+                week_points=week_pts,
             )
         )
     return Paginated[UserRankEntry](items=items, next_cursor=next_cursor)
@@ -150,32 +179,32 @@ async def leaderboard_users(
 async def leaderboard_teams(
     session: AsyncSession, *, period: RankPeriod, cursor: str | None, limit: int
 ) -> Paginated[TeamRankEntry]:
-    window_pts_by_user = await _user_points_map(session, period)
-    week_pts_by_user = (
-        window_pts_by_user if period == "week" else await _user_points_map(session, "week")
-    )
+    pts_by_user = await _user_points_window_and_week(session, period)
 
     teams = (await session.execute(select(TeamRow))).scalars().all()
     if not teams:
         return Paginated[TeamRankEntry](items=[], next_cursor=None)
 
-    team_member_ids: dict[UUID, list[UUID]] = {}
-    for team in teams:
-        mems = (
-            await session.execute(
-                select(TeamMembershipRow.user_id).where(  # ty: ignore[no-matching-overload]
-                    TeamMembershipRow.team_id == team.id
-                )
+    # Batch-load every team's memberships in one query, then group by
+    # team_id. Avoids the per-team SELECT the previous loop did.
+    team_ids = [t.id for t in teams]
+    membership_rows = (
+        await session.execute(
+            select(TeamMembershipRow.team_id, TeamMembershipRow.user_id).where(  # ty: ignore[no-matching-overload]
+                TeamMembershipRow.team_id.in_(team_ids)  # ty: ignore[unresolved-attribute]
             )
-        ).all()
-        team_member_ids[team.id] = [team.leader_id] + [m[0] for m in mems]
+        )
+    ).all()
+    team_member_ids: dict[UUID, list[UUID]] = {t.id: [t.leader_id] for t in teams}
+    for team_id, user_id in membership_rows:
+        team_member_ids[team_id].append(user_id)
 
     totals: dict[UUID, int] = {
-        tid: sum(window_pts_by_user.get(uid, 0) for uid in uids)
+        tid: sum(pts_by_user.get(uid, (0, 0))[0] for uid in uids)
         for tid, uids in team_member_ids.items()
     }
     week_totals: dict[UUID, int] = {
-        tid: sum(week_pts_by_user.get(uid, 0) for uid in uids)
+        tid: sum(pts_by_user.get(uid, (0, 0))[1] for uid in uids)
         for tid, uids in team_member_ids.items()
     }
 

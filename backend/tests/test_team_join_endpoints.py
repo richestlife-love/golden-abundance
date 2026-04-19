@@ -1,4 +1,3 @@
-import pytest
 from httpx import AsyncClient
 
 from tests.helpers import sign_in_and_complete
@@ -113,7 +112,6 @@ async def test_requester_can_reapply_after_rejection(client: AsyncClient) -> Non
     assert r2.status_code == 201
 
 
-@pytest.mark.skip(reason="Depends on E3/E4 endpoints; unskip in those tasks")
 async def test_requester_can_rejoin_after_leave(client: AsyncClient) -> None:
     """After leaving a team, a user may re-request to join it."""
     jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")

@@ -20,6 +20,7 @@ from backend.services.team import (
     JoinConflict,
     approve_join_request,
     create_join_request,
+    leave_team,
     reject_join_request,
     row_to_contract_team,
     search_team_refs,
@@ -179,4 +180,21 @@ async def reject_request(
     if req is None or req.team_id != team_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Request not found")
     await reject_join_request(session, req=req)
+    await session.commit()
+
+
+@router.post("/{team_id}/leave", status_code=status.HTTP_204_NO_CONTENT)
+async def leave(
+    team_id: UUID,
+    me: UserRow = Depends(current_user),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    team = await session.get(TeamRow, team_id)
+    if team is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
+    if team.leader_id == me.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Leaders cannot leave their own team"
+        )
+    await leave_team(session, team=team, user=me)
     await session.commit()

@@ -56,13 +56,7 @@ async def row_to_contract_team(
     session: AsyncSession, team: TeamRow, *, caller_id: UUID
 ) -> ContractTeam:
     leader = await session.get(UserRow, team.leader_id)
-    # Unreachable under normal operation — teams.leader_id is a non-null
-    # FK to users.id. Defensive raise so a corrupted-DB state surfaces as
-    # a 500 rather than a NoneType attribute error in the mapper below.
-    if leader is None:
-        raise RuntimeError(
-            f"Data integrity: team {team.id} references missing leader {team.leader_id}"
-        )
+    assert leader is not None  # FK-guaranteed
 
     memberships = (
         await session.execute(
@@ -99,10 +93,7 @@ async def row_to_contract_team(
         requests = []
         for jr in join_rows:
             requester = await session.get(UserRow, jr.user_id)
-            if requester is None:
-                raise RuntimeError(
-                    f"Data integrity: join_request {jr.id} references missing user {jr.user_id}"
-                )
+            assert requester is not None  # FK-guaranteed
             requests.append(
                 ContractJoinRequest(
                     id=jr.id,

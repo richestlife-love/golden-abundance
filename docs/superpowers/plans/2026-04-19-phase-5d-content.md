@@ -20,7 +20,7 @@
 
 | Decision | Choice | Why |
 |---|---|---|
-| Cursor encoding | `base64url(json.dumps({"id": "<uuid>", "sort": "<iso-ts-or-int>"}))` | Opaque to clients, stable under inserts at head. |
+| Cursor encoding | Two shapes, both `base64url(json.dumps(...))` and opaque to clients: (a) column keyset — list of sort-column values, one per `SortCol`, handled by `services.pagination.paginate_keyset` (news: `[bool, iso-ts, uuid]`; teams: `[iso-ts, uuid]`); (b) derived keyset — dict `{"pts": int, "id": str}` for rank, whose sort key is a computed aggregate and not a column that `paginate_keyset` can order over. | List form scales to composite keyset (news needs `pinned, published_at, id`) which single `{id, sort}` can't express. Dict form keeps rank's derived-value payload self-documenting. Both are opaque to clients per phase-2 spec §7 ("Backend may encode offset, last-id, or timestamp; free to change"). |
 | Field naming | snake_case end-to-end (DB, Pydantic, JSON) | Matches spec §6 and the existing contract. |
 | Derived fields | Computed in service layer on read | `Task.status`, `Task.progress` all derive from other columns + caller identity. |
 

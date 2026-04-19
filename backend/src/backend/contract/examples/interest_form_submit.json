@@ -1,0 +1,8 @@
+{
+  "form_type": "interest",
+  "name": "簡傑特",
+  "phone": "912345678",
+  "interests": ["活動策劃", "攝影紀錄"],
+  "skills": ["設計美編", "資料分析"],
+  "availability": ["週末白天", "週末晚上"]
+}

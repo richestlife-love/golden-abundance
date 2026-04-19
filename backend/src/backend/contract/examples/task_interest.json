@@ -1,0 +1,47 @@
+{
+  "id": "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b0001",
+  "display_id": "T1",
+  "title": "填寫金富有志工表單",
+  "summary": "完成你的志工個人資料，開啟金富有志工旅程。",
+  "description": "歡迎加入金富有志工！請填寫基本個人資料，讓我們了解你的興趣、專長與可投入時段，並協助系統為你推薦合適的任務與團隊。",
+  "tag": "探索",
+  "color": "#fec701",
+  "points": 50,
+  "bonus": null,
+  "due_at": null,
+  "est_minutes": 5,
+  "is_challenge": false,
+  "requires": [],
+  "cap": null,
+  "form_type": "interest",
+  "status": "completed",
+  "progress": 1.0,
+  "steps": [
+    {
+      "id": "e5f6a7b8-9c0d-1e2f-3a4b-5c6d7e8f0001",
+      "label": "確認電子郵件與手機",
+      "done": true,
+      "order": 1
+    },
+    {
+      "id": "e5f6a7b8-9c0d-1e2f-3a4b-5c6d7e8f0002",
+      "label": "填寫個人興趣與專長",
+      "done": true,
+      "order": 2
+    },
+    {
+      "id": "e5f6a7b8-9c0d-1e2f-3a4b-5c6d7e8f0003",
+      "label": "選擇可投入的時段",
+      "done": true,
+      "order": 3
+    },
+    {
+      "id": "e5f6a7b8-9c0d-1e2f-3a4b-5c6d7e8f0004",
+      "label": "簽署志工服務同意書",
+      "done": true,
+      "order": 4
+    }
+  ],
+  "team_progress": null,
+  "created_at": "2026-04-01T00:00:00Z"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b0003",
+  "display_id": "T3",
+  "title": "組隊挑戰",
+  "summary": "組建至少 6 人志工團隊，一起挑戰進階任務。",
+  "description": "招募夥伴加入你的團隊（你是隊長），或申請加入朋友的團隊。截止日前團隊成員數達 6 人即可獲得獎勵，人數不設上限。",
+  "tag": "陪伴",
+  "color": "#fed234",
+  "points": 200,
+  "bonus": "金鑰匙紀念筆",
+  "due_at": "2026-04-30T23:59:59Z",
+  "est_minutes": 30,
+  "is_challenge": true,
+  "requires": [
+    "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b0001",
+    "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b0002"
+  ],
+  "cap": 6,
+  "form_type": null,
+  "status": "in_progress",
+  "progress": 0.33,
+  "steps": [],
+  "team_progress": {
+    "total": 2,
+    "cap": 6,
+    "led_total": 2,
+    "joined_total": 0
+  },
+  "created_at": "2026-04-01T00:00:00Z"
+}

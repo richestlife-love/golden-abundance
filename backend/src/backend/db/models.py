@@ -30,16 +30,16 @@ class UserRow(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     display_id: str = Field(index=True, unique=True, max_length=16)
     email: str = Field(index=True, unique=True, max_length=320)
-    zh_name: str | None = None
-    en_name: str | None = None
-    nickname: str | None = None
-    phone: str | None = None
-    phone_code: str | None = None
-    line_id: str | None = None
-    telegram_id: str | None = None
-    country: str | None = None
-    location: str | None = None
-    avatar_url: str | None = None
+    zh_name: str | None = Field(default=None, max_length=64)
+    en_name: str | None = Field(default=None, max_length=64)
+    nickname: str | None = Field(default=None, max_length=64)
+    phone: str | None = Field(default=None, max_length=32)
+    phone_code: str | None = Field(default=None, max_length=8)
+    line_id: str | None = Field(default=None, max_length=64)
+    telegram_id: str | None = Field(default=None, max_length=64)
+    country: str | None = Field(default=None, max_length=64)
+    location: str | None = Field(default=None, max_length=128)
+    avatar_url: str | None = Field(default=None, max_length=2048)
     profile_complete: bool = Field(default=False)
     created_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False, default=_utcnow))
 

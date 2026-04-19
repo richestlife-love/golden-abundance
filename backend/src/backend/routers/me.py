@@ -5,16 +5,18 @@ profile returns 409. This matches spec §1.2 (one-shot completion).
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth.dependencies import current_user
 from backend.contract import (
     MeProfileCreateResponse,
+    MeTeamsResponse,
     ProfileCreate,
     ProfileUpdate,
     User as ContractUser,
 )
-from backend.db.models import UserRow
+from backend.db.models import TeamMembershipRow, TeamRow, UserRow
 from backend.db.session import get_session
 from backend.services.team import create_led_team, row_to_contract_team
 from backend.services.user import row_to_contract_user
@@ -74,3 +76,30 @@ async def patch_me(
     await session.commit()
     await session.refresh(me)
     return row_to_contract_user(me)
+
+
+@router.get("/teams", response_model=MeTeamsResponse)
+async def get_me_teams(
+    me: UserRow = Depends(current_user),
+    session: AsyncSession = Depends(get_session),
+) -> MeTeamsResponse:
+    led_row = (
+        await session.execute(select(TeamRow).where(TeamRow.leader_id == me.id))  # ty: ignore[invalid-argument-type]
+    ).scalar_one_or_none()
+    joined_row = None
+    joined_link = (
+        await session.execute(
+            select(TeamMembershipRow).where(TeamMembershipRow.user_id == me.id)  # ty: ignore[invalid-argument-type]
+        )
+    ).scalar_one_or_none()
+    if joined_link is not None:
+        joined_row = await session.get(TeamRow, joined_link.team_id)
+
+    return MeTeamsResponse(
+        led=await row_to_contract_team(session, led_row, caller_id=me.id) if led_row else None,
+        joined=(
+            await row_to_contract_team(session, joined_row, caller_id=me.id)
+            if joined_row
+            else None
+        ),
+    )

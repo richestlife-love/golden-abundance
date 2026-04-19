@@ -118,18 +118,3 @@ export type SuccessData = {
   bonus: string | null;
   title?: string;
 };
-
-// Top-level screen identifiers driven by App's `screen` useState.
-export type ScreenId =
-  | "landing"
-  | "auth"
-  | "profileSetup"
-  | "profile"
-  | "profileEdit"
-  | "home"
-  | "tasks"
-  | "rank"
-  | "taskDetail"
-  | "form"
-  | "me"
-  | "rewards";

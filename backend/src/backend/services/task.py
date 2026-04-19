@@ -28,7 +28,7 @@ from backend.services.reward import create_reward_if_bonus, row_to_contract_rewa
 async def _completed_task_def_ids(session: AsyncSession, user_id: UUID) -> set[UUID]:
     rows = (
         await session.execute(
-            select(TaskProgressRow.task_def_id)
+            select(TaskProgressRow.task_def_id)  # ty: ignore[no-matching-overload]
             .where(TaskProgressRow.user_id == user_id)
             .where(TaskProgressRow.status == "completed")
         )
@@ -39,7 +39,7 @@ async def _completed_task_def_ids(session: AsyncSession, user_id: UUID) -> set[U
 async def _required_ids(session: AsyncSession, task_def_id: UUID) -> list[UUID]:
     rows = (
         await session.execute(
-            select(TaskDefRequiresRow.requires_id).where(
+            select(TaskDefRequiresRow.requires_id).where(  # ty: ignore[no-matching-overload]
                 TaskDefRequiresRow.task_def_id == task_def_id
             )
         )
@@ -51,11 +51,11 @@ async def _team_totals(
     session: AsyncSession, caller: UserRow, *, cap: int
 ) -> TeamChallengeProgress:
     led = (
-        await session.execute(select(TeamRow).where(TeamRow.leader_id == caller.id))
+        await session.execute(select(TeamRow).where(TeamRow.leader_id == caller.id))  # ty: ignore[invalid-argument-type]
     ).scalar_one_or_none()
     joined_link = (
         await session.execute(
-            select(TeamMembershipRow).where(TeamMembershipRow.user_id == caller.id)
+            select(TeamMembershipRow).where(TeamMembershipRow.user_id == caller.id)  # ty: ignore[invalid-argument-type]
         )
     ).scalar_one_or_none()
 
@@ -63,7 +63,7 @@ async def _team_totals(
     if led is not None:
         led_members = (
             await session.execute(
-                select(TeamMembershipRow).where(TeamMembershipRow.team_id == led.id)
+                select(TeamMembershipRow).where(TeamMembershipRow.team_id == led.id)  # ty: ignore[invalid-argument-type]
             )
         ).scalars().all()
         led_total = 1 + len(led_members)
@@ -75,7 +75,7 @@ async def _team_totals(
             mems = (
                 await session.execute(
                     select(TeamMembershipRow).where(
-                        TeamMembershipRow.team_id == joined_team.id
+                        TeamMembershipRow.team_id == joined_team.id  # ty: ignore[invalid-argument-type]
                     )
                 )
             ).scalars().all()
@@ -95,8 +95,8 @@ async def _steps_for(
     defs = (
         await session.execute(
             select(TaskStepDefRow)
-            .where(TaskStepDefRow.task_def_id == task_def_id)
-            .order_by(TaskStepDefRow.order.asc())
+            .where(TaskStepDefRow.task_def_id == task_def_id)  # ty: ignore[invalid-argument-type]
+            .order_by(TaskStepDefRow.order.asc())  # ty: ignore[unresolved-attribute]
         )
     ).scalars().all()
     if not defs:
@@ -105,8 +105,8 @@ async def _steps_for(
     progress_rows = (
         await session.execute(
             select(TaskStepProgressRow)
-            .where(TaskStepProgressRow.user_id == user_id)
-            .where(TaskStepProgressRow.step_id.in_(step_ids))
+            .where(TaskStepProgressRow.user_id == user_id)  # ty: ignore[invalid-argument-type]
+            .where(TaskStepProgressRow.step_id.in_(step_ids))  # ty: ignore[unresolved-attribute]
         )
     ).scalars().all()
     done_map = {r.step_id: r.done for r in progress_rows}
@@ -127,8 +127,8 @@ async def row_to_contract_task(
     progress_row = (
         await session.execute(
             select(TaskProgressRow)
-            .where(TaskProgressRow.user_id == caller.id)
-            .where(TaskProgressRow.task_def_id == task_def.id)
+            .where(TaskProgressRow.user_id == caller.id)  # ty: ignore[invalid-argument-type]
+            .where(TaskProgressRow.task_def_id == task_def.id)  # ty: ignore[invalid-argument-type]
         )
     ).scalar_one_or_none()
 
@@ -201,7 +201,7 @@ async def list_caller_tasks(
 ) -> list[ContractTask]:
     defs = (
         await session.execute(
-            select(TaskDefRow).order_by(TaskDefRow.display_id.asc())
+            select(TaskDefRow).order_by(TaskDefRow.display_id.asc())  # ty: ignore[unresolved-attribute]
         )
     ).scalars().all()
     return [await row_to_contract_task(session, d, caller=caller) for d in defs]
@@ -237,15 +237,15 @@ async def submit_task(
     existing = (
         await session.execute(
             select(TaskProgressRow)
-            .where(TaskProgressRow.user_id == caller.id)
-            .where(TaskProgressRow.task_def_id == task_def.id)
+            .where(TaskProgressRow.user_id == caller.id)  # ty: ignore[invalid-argument-type]
+            .where(TaskProgressRow.task_def_id == task_def.id)  # ty: ignore[invalid-argument-type]
         )
     ).scalar_one_or_none()
     if existing is not None and existing.status == "completed":
         raise TaskSubmitError(409, "Task already completed")
 
     if existing is None:
-        existing = TaskProgressRow(
+        existing = TaskProgressRow(  # ty: ignore[missing-argument]
             user_id=caller.id,
             task_def_id=task_def.id,
         )

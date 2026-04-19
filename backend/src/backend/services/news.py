@@ -37,13 +37,13 @@ async def list_news(
         session,
         stmt,
         sort=[
-            SortCol(NewsItemRow.pinned, to_json=bool, from_json=bool),
+            SortCol(NewsItemRow.pinned, to_json=bool, from_json=bool),  # ty: ignore[invalid-argument-type]
             SortCol(
-                NewsItemRow.published_at,
+                NewsItemRow.published_at,  # ty: ignore[invalid-argument-type]
                 to_json=lambda d: d.isoformat(),
                 from_json=datetime.fromisoformat,
             ),
-            SortCol(NewsItemRow.id, to_json=str, from_json=UUID),
+            SortCol(NewsItemRow.id, to_json=str, from_json=UUID),  # ty: ignore[invalid-argument-type]
         ],
         cursor=cursor,
         limit=limit,

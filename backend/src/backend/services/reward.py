@@ -12,7 +12,7 @@ async def create_reward_if_bonus(
 ) -> RewardRow | None:
     if task_def.bonus is None:
         return None
-    row = RewardRow(
+    row = RewardRow(  # ty: ignore[missing-argument]
         user_id=user.id,
         task_def_id=task_def.id,
         task_title=task_def.title,
@@ -43,8 +43,8 @@ async def list_rewards_for(
     rows = (
         await session.execute(
             select(RewardRow)
-            .where(RewardRow.user_id == user.id)
-            .order_by(RewardRow.earned_at.desc())
+            .where(RewardRow.user_id == user.id)  # ty: ignore[invalid-argument-type]
+            .order_by(RewardRow.earned_at.desc())  # ty: ignore[unresolved-attribute]
         )
     ).scalars().all()
     return [row_to_contract_reward(r) for r in rows]

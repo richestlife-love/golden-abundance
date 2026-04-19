@@ -59,7 +59,7 @@ async def _user_points_map(
     session: AsyncSession, period: RankPeriod
 ) -> dict[UUID, int]:
     stmt = (
-        select(
+        select(  # ty: ignore[no-matching-overload]
             TaskProgressRow.user_id,
             func.coalesce(func.sum(TaskDefRow.points), 0).label("pts"),
         )
@@ -69,7 +69,7 @@ async def _user_points_map(
     )
     since = _since(period)
     if since is not None:
-        stmt = stmt.where(TaskProgressRow.completed_at >= since)
+        stmt = stmt.where(TaskProgressRow.completed_at >= since)  # ty: ignore[unsupported-operator]
     rows = (await session.execute(stmt)).all()
     return {uid: int(pts) for uid, pts in rows}
 
@@ -163,7 +163,7 @@ async def leaderboard_teams(
     for team in teams:
         mems = (
             await session.execute(
-                select(TeamMembershipRow.user_id).where(
+                select(TeamMembershipRow.user_id).where(  # ty: ignore[no-matching-overload]
                     TeamMembershipRow.team_id == team.id
                 )
             )
@@ -191,7 +191,7 @@ async def leaderboard_teams(
         for u in (
             await session.execute(
                 select(UserRow).where(
-                    UserRow.id.in_([t.leader_id for t in teams])
+                    UserRow.id.in_([t.leader_id for t in teams])  # ty: ignore[unresolved-attribute]
                 )
             )
         ).scalars().all()

@@ -85,7 +85,7 @@ async def test_rank_users_week_filters_out_old_completions(
     from backend.db.models import TaskProgressRow
 
     jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
-    session.add(TaskProgressRow(
+    session.add(TaskProgressRow(  # ty: ignore[missing-argument]
         user_id=jet.user_id,
         task_def_id=seeded_task_defs["T1"].id,
         status="completed",

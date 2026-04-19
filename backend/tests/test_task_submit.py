@@ -137,7 +137,7 @@ async def test_submit_t2_twice_does_not_create_second_reward(
     assert r2.status_code == 409
 
     count = (await session.execute(
-        select(func.count()).select_from(RewardRow).where(RewardRow.user_id == jet.user_id)
+        select(func.count()).select_from(RewardRow).where(RewardRow.user_id == jet.user_id)  # ty: ignore[invalid-argument-type]
     )).scalar_one()
     assert count == 1
 

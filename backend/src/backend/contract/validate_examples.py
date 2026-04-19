@@ -13,13 +13,18 @@ from typing import Any
 
 from pydantic import BaseModel, TypeAdapter
 
+from backend.contract.user import ProfileCreate, User
+
 FIXTURES_DIR = Path(__file__).parent / "examples"
 
 # Map each fixture filename to the adapter used to validate it.
 # Adapter is either a Pydantic model class (for single-object fixtures)
 # or a TypeAdapter (for compound types like list[Reward] or
 # Paginated[NewsItem]).
-FIXTURES: dict[str, Any] = {}
+FIXTURES: dict[str, Any] = {
+    "user.json": User,
+    "profile_create.json": ProfileCreate,
+}
 
 
 def _validate_one(adapter: Any, data: Any) -> None:

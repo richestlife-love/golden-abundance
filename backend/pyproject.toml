@@ -5,7 +5,7 @@ description = "FastAPI backend server for Golden Abundance"
 authors = [{ name = "Jet Kan", email = "jetkan.yk@gmail.com" }]
 requires-python = ">=3.14"
 dependencies = [
-    "pydantic>=2",
+    "pydantic[email]>=2",
 ]
 
 [build-system]

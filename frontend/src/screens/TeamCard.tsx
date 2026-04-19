@@ -14,7 +14,6 @@ type Props = {
   onRejectRequest?: (requestId: string) => void;
   onCancelRequest?: () => void;
   onLeaveTeam?: () => void;
-  onOpenTeamTask?: () => void;
   onRenameTeam?: (alias: string) => void;
 };
 
@@ -29,7 +28,6 @@ export default function TeamCard({
   onRejectRequest,
   onCancelRequest,
   onLeaveTeam,
-  onOpenTeamTask,
   onRenameTeam,
 }: Props) {
   const isMemberCard = variant === "joined";
@@ -1255,7 +1253,7 @@ export default function TeamCard({
                 type="button"
                 onClick={() => {
                   setLeaveConfirmOpen(false);
-                  onLeaveTeam && onLeaveTeam();
+                  onLeaveTeam?.();
                 }}
                 style={{
                   flex: 1,

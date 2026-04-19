@@ -59,9 +59,7 @@ export default function MyRewards({
   const unlockedCount = tiers.filter((t) => totalPoints >= t.required).length;
   const nextTier = tiers.find((t) => totalPoints < t.required) || tiers[tiers.length - 1];
   const prevRequired =
-    tiers.find((t, i) => t === nextTier) && tiers.indexOf(nextTier) > 0
-      ? tiers[tiers.indexOf(nextTier) - 1].required
-      : 0;
+    tiers.indexOf(nextTier) > 0 ? tiers[tiers.indexOf(nextTier) - 1].required : 0;
   const progressPct = Math.min(
     1,
     Math.max(0, (totalPoints - prevRequired) / Math.max(1, nextTier.required - prevRequired)),

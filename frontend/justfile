@@ -1,26 +1,15 @@
-default: serve
+default: dev
 
-# Run full CI (install, format, typecheck + bundle). Mirrors backend's `ci`.
+# Run full CI (install, lint, format, typecheck + bundle). Mirrors backend's `ci`.
 ci:
     pnpm install
+    pnpm run lint
     pnpm run format
     pnpm run build
-
-# Install frontend deps (idempotent; uses pnpm-lock.yaml when present).
-install:
-    pnpm install
 
 # Run the Vite dev server on http://localhost:5173
-serve: install
+dev:
     pnpm run dev
-
-# Type-check and build the production bundle into frontend/dist
-build: install
-    pnpm run build
-
-# Format frontend sources with Prettier
-fmt: install
-    pnpm run format
 
 # Expose local port 5173 (https) via a reserved ngrok hostname
 tunnel:

@@ -57,15 +57,18 @@ export default function MyScreen({
     : 0;
   const [teamTab, setTeamTab] = useState(ledTeam && !joinedTeam ? "leader" : "member");
   const [userIdCopied, setUserIdCopied] = useState(false);
-  const copyUserId = (e: MouseEvent | KeyboardEvent) => {
+  const copyUserId = async (e: MouseEvent | KeyboardEvent) => {
     e.stopPropagation();
     e.preventDefault();
     if (!user?.id) return;
+    if (!navigator.clipboard) return;
     try {
-      navigator.clipboard && navigator.clipboard.writeText(user.id);
-    } catch (err) {}
-    setUserIdCopied(true);
-    setTimeout(() => setUserIdCopied(false), 1800);
+      await navigator.clipboard.writeText(user.id);
+      setUserIdCopied(true);
+      setTimeout(() => setUserIdCopied(false), 1800);
+    } catch {
+      // permission denied or another failure — skip confirmation
+    }
   };
 
   return (
@@ -698,7 +701,6 @@ export default function MyScreen({
                     muted={muted}
                     onCancelRequest={onCancelJoinRequest}
                     onLeaveTeam={onLeaveJoinedTeam}
-                    onOpenTeamTask={() => onOpenTask(3)}
                   />
                 </>
               )}
@@ -780,7 +782,6 @@ export default function MyScreen({
                   onRejectRequest={onRejectRequest}
                   onRenameTeam={onRenameTeam}
                   onLeaveTeam={onLeaveLedTeam}
-                  onOpenTeamTask={() => onOpenTask(3)}
                 />
               )}
             </div>

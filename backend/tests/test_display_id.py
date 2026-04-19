@@ -11,8 +11,18 @@ async def test_user_display_id_from_email(session: AsyncSession) -> None:
     assert 4 <= len(did) <= 8
 
 
+def test_base_from_email_pads_short_local_parts() -> None:
+    """Local parts with <3 alphanumerics are right-padded with 'USR' to
+    satisfy the ``^U[A-Z0-9]{3,7}$`` contract regex."""
+    from backend.services.display_id import _base_from_email
+
+    assert _base_from_email("1@x.com") == "1US"  # 1 alnum → 2-char pad
+    assert _base_from_email("ab@x.com") == "ABU"  # 2 alnum → 1-char pad
+    assert _base_from_email("@@@@@@@") == "USR"  # 0 alnum → full pad
+
+
 async def test_user_display_id_collision_suffix(session: AsyncSession) -> None:
-    session.add(UserRow(display_id="UJET", email="a@example.com"))
+    session.add(UserRow(display_id="UJET", email="a@example.com"))  # ty: ignore[missing-argument]
     await session.commit()
     did = await generate_user_display_id(session, email="jet@other.example.com")
     assert did != "UJET"
@@ -39,7 +49,7 @@ async def test_user_display_id_runs_out_after_100_collisions(
 
     base_taken = ["UJET"] + [f"UJET{n:02d}" for n in range(100)]
     for did in base_taken:
-        session.add(UserRow(display_id=did, email=f"{did}@example.com"))
+        session.add(UserRow(display_id=did, email=f"{did}@example.com"))  # ty: ignore[missing-argument]
     await session.commit()
 
     with pytest.raises(RuntimeError, match="Could not allocate|display_id"):

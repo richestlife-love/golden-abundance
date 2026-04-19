@@ -12,7 +12,7 @@ across versions; the explicit column eliminates the ambiguity and
 lets values grow without PG enum surgery.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID, uuid4
 
@@ -21,7 +21,7 @@ from sqlmodel import Field, SQLModel
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class UserRow(SQLModel, table=True):

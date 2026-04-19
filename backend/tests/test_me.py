@@ -28,7 +28,8 @@ async def test_401_when_user_was_deleted(client: AsyncClient, session: AsyncSess
     r = await client.post("/api/v1/auth/google", json={"id_token": "jet@example.com"})
     token = r.json()["access_token"]
 
-    await session.execute(delete(UserRow).where(UserRow.email == "jet@example.com"))
+    stmt = delete(UserRow).where(UserRow.email == "jet@example.com")  # ty: ignore[invalid-argument-type]
+    await session.execute(stmt)
     await session.commit()
 
     r = await client.get("/api/v1/me", headers={"Authorization": f"Bearer {token}"})
@@ -90,6 +91,17 @@ async def test_me_rejects_alg_none_jwt(client: AsyncClient) -> None:
         algorithm="none",
     )
     r = await client.get("/api/v1/me", headers={"Authorization": f"Bearer {none_alg}"})
+    assert r.status_code == 401
+
+
+async def test_me_rejects_jwt_without_sub_claim(client: AsyncClient) -> None:
+    """Router-level pin: a valid-signature token missing `sub` → 401."""
+    import jwt as pyjwt
+
+    from backend.config import get_settings
+
+    token = pyjwt.encode({"exp": 9_999_999_999}, get_settings().jwt_secret, algorithm="HS256")
+    r = await client.get("/api/v1/me", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 401
 
 

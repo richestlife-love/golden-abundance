@@ -23,12 +23,12 @@ async def upsert_user_by_email(session: AsyncSession, *, email: str) -> UserRow:
     """
     # Belt-and-braces: callers should pre-normalize but we do it here too.
     email = email.lower()
-    existing = await session.execute(select(UserRow).where(UserRow.email == email))
+    existing = await session.execute(select(UserRow).where(UserRow.email == email))  # ty: ignore[invalid-argument-type]
     row = existing.scalar_one_or_none()
     if row is not None:
         return row
     display_id = await generate_user_display_id(session, email=email)
-    row = UserRow(display_id=display_id, email=email, profile_complete=False)
+    row = UserRow(display_id=display_id, email=email, profile_complete=False)  # ty: ignore[missing-argument]
     session.add(row)
     await session.flush()  # give row an id without committing
     return row

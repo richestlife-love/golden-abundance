@@ -4,7 +4,7 @@
 callers don't need to import PyJWT exception hierarchy.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
@@ -19,7 +19,7 @@ def encode_token(*, user_id: UUID, email: str, ttl: timedelta | None = None) -> 
     settings = get_settings()
     if ttl is None:
         ttl = timedelta(seconds=settings.jwt_ttl_seconds)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload: dict[str, Any] = {
         "sub": str(user_id),
         "email": email,

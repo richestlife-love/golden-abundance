@@ -40,7 +40,7 @@ def _base_from_email(email: str) -> str:
 async def generate_user_display_id(session: AsyncSession, *, email: str) -> str:
     base = _base_from_email(email)
     candidate = f"U{base}"
-    result = await session.execute(select(UserRow.display_id))
+    result = await session.execute(select(UserRow.display_id))  # ty: ignore[no-matching-overload]
     taken = {row[0] for row in result.all()}
     if candidate not in taken:
         return candidate

@@ -54,6 +54,18 @@ const MeIcon = () => (
   </svg>
 );
 
+// Each tab gets its own accent so the nav's active state signals where you
+// are, not just that something is selected. Gold is reserved for Home (the
+// primary brand), and the three accent colors map to the role-tagged
+// semantics already declared in GlobalStyles:
+//   tasks → community (green) · rank → milestone (purple) · me → pioneer (peach)
+const TAB_ACCENT: Record<TabKey, string> = {
+  home: "var(--gold)",
+  tasks: "var(--green-deep)",
+  rank: "var(--purple-deep)",
+  me: "var(--peach-deep)",
+};
+
 const ITEMS: { key: TabKey; label: string; icon: ReactNode }[] = [
   { key: "home", label: "首页", icon: <HomeIcon /> },
   { key: "tasks", label: "任务", icon: <TasksIcon /> },
@@ -98,15 +110,28 @@ export default function BottomNav({ muted }: { muted: string }) {
               alignItems: "center",
               gap: 3,
               cursor: "pointer",
-              color: active ? "var(--gold)" : muted,
+              color: active ? TAB_ACCENT[n.key] : muted,
               border: "none",
               background: "transparent",
               padding: 0,
               font: "inherit",
+              transition: "color 0.2s ease",
             }}
           >
             <div style={{ display: "inline-flex", lineHeight: 1 }}>{n.icon}</div>
             <div style={{ fontSize: fs(10), fontWeight: active ? 700 : 500 }}>{n.label}</div>
+            {/* active indicator — a short accent underline so the color
+                registers as section identity, not just icon tint */}
+            <div
+              style={{
+                height: 2,
+                width: 18,
+                borderRadius: 2,
+                marginTop: 2,
+                background: active ? TAB_ACCENT[n.key] : "transparent",
+                transition: "background 0.2s ease",
+              }}
+            />
           </button>
         );
       })}

@@ -648,10 +648,10 @@ export default function RankScreen() {
                 border: "none",
                 background:
                   tab === t.k
-                    ? "linear-gradient(135deg, var(--gold-light), var(--gold))"
+                    ? "linear-gradient(135deg, var(--purple), var(--purple-deep))"
                     : "var(--card)",
-                color: tab === t.k ? "var(--fg)" : fg,
-                boxShadow: tab === t.k ? "0 4px 14px rgba(254,199,1,0.32)" : "none",
+                color: tab === t.k ? "#fff" : fg,
+                boxShadow: tab === t.k ? "0 4px 14px rgba(141,113,199,0.32)" : "none",
                 transition: "all 0.2s ease",
               }}
             >
@@ -686,10 +686,10 @@ export default function RankScreen() {
                   cursor: "pointer",
                   border:
                     period === p.key
-                      ? "1px solid rgba(254,199,1,0.7)"
+                      ? "1px solid rgba(141,113,199,0.6)"
                       : "1px solid rgba(0,0,0,0.08)",
-                  background: period === p.key ? "rgba(254,199,1,0.22)" : "transparent",
-                  color: period === p.key ? "#987701" : muted,
+                  background: period === p.key ? "rgba(184,164,227,0.22)" : "transparent",
+                  color: period === p.key ? "var(--purple-deep)" : muted,
                 }}
               >
                 {p.label}

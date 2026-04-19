@@ -269,7 +269,8 @@ export default function MyScreen() {
                   position: "absolute",
                   inset: -5,
                   borderRadius: 999,
-                  background: "conic-gradient(from 180deg, #fed234, #b8a4e3, #fed234)",
+                  background:
+                    "conic-gradient(from 180deg, var(--peach), var(--peach-deep), var(--peach))",
                   opacity: 0.6,
                   filter: "blur(2px)",
                 }}
@@ -280,7 +281,7 @@ export default function MyScreen() {
                   width: 68,
                   height: 68,
                   borderRadius: 999,
-                  background: "linear-gradient(135deg, var(--gold-light), var(--gold))",
+                  background: "linear-gradient(135deg, var(--peach), var(--peach-deep))",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",

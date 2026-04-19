@@ -126,8 +126,10 @@ export default function TasksScreen() {
                   flexShrink: 0,
                   padding: "7px 14px",
                   borderRadius: 999,
-                  border: active ? "none" : "1px solid rgba(254,210,52,0.35)",
-                  background: active ? "linear-gradient(135deg, #fec701, #cb9f01)" : cardBg,
+                  border: active ? "none" : "1px solid rgba(138,212,176,0.45)",
+                  background: active
+                    ? "linear-gradient(135deg, var(--green), var(--green-deep))"
+                    : cardBg,
                   color: active ? "#fff" : fg,
                   fontSize: fs(12.5),
                   fontWeight: 700,

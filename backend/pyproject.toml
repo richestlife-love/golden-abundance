@@ -1,0 +1,11 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "FastAPI backend server for Golden Abundance"
+authors = [{ name = "Jet Kan", email = "jetkan.yk@gmail.com" }]
+requires-python = ">=3.14"
+dependencies = []
+
+[build-system]
+requires = ["uv_build>=0.11.7,<0.12.0"]
+build-backend = "uv_build"

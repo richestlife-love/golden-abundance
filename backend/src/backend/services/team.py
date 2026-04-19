@@ -20,6 +20,8 @@ from backend.contract import TeamRef as ContractTeamRef
 from backend.contract import UserRef as ContractUserRef
 from backend.db.models import (
     JoinRequestRow,
+    RewardRow,
+    TaskDefRow,
     TeamMembershipRow,
     TeamRow,
     UserRow,
@@ -173,3 +175,173 @@ async def search_team_refs(
         for team, leader in page
     ]
     return Paginated[ContractTeamRef](items=items, next_cursor=next_cursor)
+
+
+class JoinConflict(Exception):
+    """Business-rule violation during join-request creation."""
+
+
+async def create_join_request(
+    session: AsyncSession, *, team: TeamRow, requester: UserRow
+) -> JoinRequestRow:
+    if team.leader_id == requester.id:
+        raise JoinConflict("Leaders cannot request to join their own team")
+
+    # Already a member of THIS team?
+    existing_membership = (
+        await session.execute(
+            select(TeamMembershipRow).where(
+                TeamMembershipRow.team_id == team.id,  # ty: ignore[invalid-argument-type]
+                TeamMembershipRow.user_id == requester.id,  # ty: ignore[invalid-argument-type]
+            )
+        )
+    ).scalar_one_or_none()
+    if existing_membership is not None:
+        raise JoinConflict("Already a member of this team")
+
+    # Any existing team membership at all?
+    any_membership = (
+        await session.execute(
+            select(TeamMembershipRow).where(TeamMembershipRow.user_id == requester.id)  # ty: ignore[invalid-argument-type]
+        )
+    ).scalar_one_or_none()
+    if any_membership is not None:
+        raise JoinConflict("Already a member of a different team")
+
+    # Any existing pending request?
+    any_pending = (
+        await session.execute(
+            select(JoinRequestRow)
+            .where(JoinRequestRow.user_id == requester.id)  # ty: ignore[invalid-argument-type]
+            .where(JoinRequestRow.status == "pending")  # ty: ignore[invalid-argument-type]
+        )
+    ).scalar_one_or_none()
+    if any_pending is not None:
+        raise JoinConflict("Already has a pending join request")
+
+    req = JoinRequestRow(team_id=team.id, user_id=requester.id, status="pending")  # ty: ignore[missing-argument]
+    session.add(req)
+    await session.flush()
+    return req
+
+
+async def approve_join_request(
+    session: AsyncSession, *, team: TeamRow, req: JoinRequestRow
+) -> None:
+    req.status = "approved"
+    session.add(req)
+    session.add(TeamMembershipRow(team_id=team.id, user_id=req.user_id))  # ty: ignore[missing-argument]
+    await session.flush()
+
+    # Team just grew — reward any user on this team whose challenge-task
+    # cap is now met. Safe no-op today (T3.bonus is None in the seed), but
+    # prevents a silent reward loss if a future challenge ships with a
+    # non-null bonus. Every leader + member's team size went up by 1.
+    member_ids = [team.leader_id, req.user_id] + [
+        row.user_id
+        for row in (
+            await session.execute(
+                select(TeamMembershipRow).where(TeamMembershipRow.team_id == team.id)  # ty: ignore[invalid-argument-type]
+            )
+        ).scalars().all()
+    ]
+    # dedupe while preserving order
+    seen: set = set()
+    unique_member_ids = [uid for uid in member_ids if not (uid in seen or seen.add(uid))]
+    for uid in unique_member_ids:
+        user_row = await session.get(UserRow, uid)
+        if user_row is not None:
+            await maybe_grant_challenge_rewards(session, user=user_row)
+
+
+async def reject_join_request(session: AsyncSession, *, req: JoinRequestRow) -> None:
+    req.status = "rejected"
+    session.add(req)
+    await session.flush()
+
+
+async def leave_team(session: AsyncSession, *, team: TeamRow, user: UserRow) -> None:
+    link = (
+        await session.execute(
+            select(TeamMembershipRow).where(
+                TeamMembershipRow.team_id == team.id,  # ty: ignore[invalid-argument-type]
+                TeamMembershipRow.user_id == user.id,  # ty: ignore[invalid-argument-type]
+            )
+        )
+    ).scalar_one_or_none()
+    if link is not None:
+        await session.delete(link)
+        await session.flush()
+
+
+async def maybe_grant_challenge_rewards(
+    session: AsyncSession, *, user: UserRow
+) -> None:
+    """Create RewardRows for any bonused challenge TaskDef where the user
+    now meets cap and no reward row already exists. Idempotent. No-op
+    when the user has no team (total == 0) or no bonused challenges exist.
+    """
+    challenge_defs = (
+        await session.execute(
+            select(TaskDefRow)
+            .where(TaskDefRow.is_challenge.is_(True))  # ty: ignore[unresolved-attribute]
+            .where(TaskDefRow.bonus.is_not(None))  # ty: ignore[unresolved-attribute]
+        )
+    ).scalars().all()
+    if not challenge_defs:
+        return
+
+    # Compute user's current team totals (leader + members of led team,
+    # leader + members of joined team; take max).
+    led_team = (
+        await session.execute(select(TeamRow).where(TeamRow.leader_id == user.id))  # ty: ignore[invalid-argument-type]
+    ).scalar_one_or_none()
+    led_total = 0
+    if led_team is not None:
+        led_mems = (
+            await session.execute(
+                select(TeamMembershipRow).where(TeamMembershipRow.team_id == led_team.id)  # ty: ignore[invalid-argument-type]
+            )
+        ).scalars().all()
+        led_total = 1 + len(led_mems)
+    joined_link = (
+        await session.execute(
+            select(TeamMembershipRow).where(TeamMembershipRow.user_id == user.id)  # ty: ignore[invalid-argument-type]
+        )
+    ).scalar_one_or_none()
+    joined_total = 0
+    if joined_link is not None:
+        joined_mems = (
+            await session.execute(
+                select(TeamMembershipRow).where(
+                    TeamMembershipRow.team_id == joined_link.team_id  # ty: ignore[invalid-argument-type]
+                )
+            )
+        ).scalars().all()
+        joined_total = 1 + len(joined_mems)
+    total = max(led_total, joined_total)
+
+    for td in challenge_defs:
+        assert td.cap is not None  # enforced by row_to_contract_task; re-verify here
+        if total < td.cap:
+            continue
+        existing = (
+            await session.execute(
+                select(RewardRow)
+                .where(RewardRow.user_id == user.id)  # ty: ignore[invalid-argument-type]
+                .where(RewardRow.task_def_id == td.id)  # ty: ignore[invalid-argument-type]
+            )
+        ).scalar_one_or_none()
+        if existing is not None:
+            continue
+        assert td.bonus is not None  # filtered by the query above
+        session.add(
+            RewardRow(  # ty: ignore[missing-argument]
+                user_id=user.id,
+                task_def_id=td.id,
+                task_title=td.title,
+                bonus=td.bonus,
+                status="earned",
+            )
+        )
+    await session.flush()

@@ -52,6 +52,8 @@ class TeamRow(SQLModel, table=True):
     name: str
     alias: str | None = None
     topic: str = Field(default="尚未指定主題")
+    # One led team per user: enforced by unique=True so `GET /me/teams`
+    # can scalar_one_or_none() the lookup.
     leader_id: UUID = Field(foreign_key="users.id", index=True, unique=True)
     cap: int = Field(default=6, ge=1)
     points: int = Field(default=0, ge=0)

@@ -31,6 +31,7 @@ entrypoint = "backend.server:app"
 testpaths = ["tests"]
 addopts = ["-v", "--cov"]
 asyncio_mode = "auto"
+pythonpath = ["."]
 
 [tool.coverage.run]
 source = ["backend"]

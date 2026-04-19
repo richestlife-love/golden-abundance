@@ -26,12 +26,6 @@ function AuroraBackground() {
   );
 }
 
-function NightBackground() {
-  return (
-    <div style={{ position: "absolute", inset: 0, background: "#1a1400" }} />
-  );
-}
-
 function PaperBackground() {
   return (
     <div style={{ position: "absolute", inset: 0, background: "#FFFDF5" }} />
@@ -86,7 +80,7 @@ function Starfield({ bright = false, opacity = 1 }) {
 }
 
 // ─── Hero variants ────────────────────────────────────────────
-function MascotHero({ dark, size }) {
+function MascotHero({ size }) {
   const s = size; // diameter of the halo
   return (
     <div
@@ -105,9 +99,7 @@ function MascotHero({ dark, size }) {
           width: s * 1.05,
           height: s * 1.05,
           borderRadius: "50%",
-          background: dark
-            ? "radial-gradient(circle, rgba(255,220,240,0.3) 0%, transparent 65%)"
-            : "radial-gradient(circle, rgba(255,220,240,0.9) 0%, rgba(220,220,255,0.5) 40%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(255,220,240,0.9) 0%, rgba(220,220,255,0.5) 40%, transparent 70%)",
           filter: "blur(10px)",
         }}
       />
@@ -118,11 +110,9 @@ function MascotHero({ dark, size }) {
           width: s * 0.95,
           height: s * 0.95,
           borderRadius: "50%",
-          background: dark
-            ? "radial-gradient(circle, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 30%, transparent 60%)"
-            : "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.85) 20%, rgba(255,250,235,0.5) 45%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.85) 20%, rgba(255,250,235,0.5) 45%, transparent 70%)",
           filter: "blur(14px)",
-          mixBlendMode: dark ? "screen" : "normal",
+          mixBlendMode: "normal",
         }}
       />
       <div
@@ -131,9 +121,7 @@ function MascotHero({ dark, size }) {
           width: s * 0.55,
           height: s * 0.55,
           borderRadius: "50%",
-          background: dark
-            ? "radial-gradient(circle, rgba(255,255,255,0.5) 0%, transparent 70%)"
-            : "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.7) 40%, transparent 75%)",
+          background: "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.7) 40%, transparent 75%)",
           filter: "blur(8px)",
         }}
       />
@@ -147,7 +135,7 @@ function MascotHero({ dark, size }) {
           cy="50%"
           r={s * 0.48}
           fill="none"
-          stroke={dark ? "rgba(255,255,255,0.18)" : "rgba(254,210,52,0.5)"}
+          stroke={"rgba(254,210,52,0.5)"}
           strokeWidth="1"
           strokeDasharray="2 6"
         />
@@ -196,7 +184,7 @@ function MascotHero({ dark, size }) {
   );
 }
 
-function PlanetHero({ dark, size }) {
+function PlanetHero({ size }) {
   const s = size;
   return (
     <div
@@ -262,7 +250,7 @@ function PlanetHero({ dark, size }) {
   );
 }
 
-function GlyphHero({ dark, size }) {
+function GlyphHero({ size }) {
   const s = size;
   return (
     <div
@@ -280,17 +268,11 @@ function GlyphHero({ dark, size }) {
           width: s * 0.77,
           height: s * 0.77,
           borderRadius: s * 0.15,
-          background: dark
-            ? "linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))"
-            : "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.4))",
+          background: "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.4))",
           backdropFilter: "blur(10px)",
           WebkitBackdropFilter: "blur(10px)",
-          border: dark
-            ? "1px solid rgba(255,255,255,0.12)"
-            : "1px solid rgba(255,255,255,0.9)",
-          boxShadow: dark
-            ? "0 20px 50px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)"
-            : "0 20px 50px rgba(254,199,1,0.3), inset 0 1px 0 rgba(255,255,255,1)",
+          border: "1px solid rgba(255,255,255,0.9)",
+          boxShadow: "0 20px 50px rgba(254,199,1,0.3), inset 0 1px 0 rgba(255,255,255,1)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -355,7 +337,7 @@ function SparkleGlyph({ x, y, size = 18, color = "#fff", delay = 0 }) {
 }
 
 // ─── Headline ─────────────────────────────────────────────────
-function Headline({ text, dark, fontSize }) {
+function Headline({ text, fontSize }) {
   // Split "欢迎加入金富有志工" → 欢迎加入 / 金富有志工
   const lines = text.length > 6 ? [text.slice(0, 4), text.slice(4)] : [text];
   return (
@@ -376,15 +358,11 @@ function Headline({ text, dark, fontSize }) {
             fontWeight: 900,
             letterSpacing: 2,
             fontFamily: '"Noto Sans SC", "PingFang SC", sans-serif',
-            background: dark
-              ? "linear-gradient(180deg, #fff4cc 0%, #fedd67 45%, #fed234 80%, #fff4cc 100%)"
-              : "linear-gradient(180deg, #cb9f01 0%, #987701 55%, #655001 100%)",
+            background: "linear-gradient(180deg, #cb9f01 0%, #987701 55%, #655001 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
-            filter: dark
-              ? "drop-shadow(0 2px 10px rgba(254,221,103,0.4))"
-              : "drop-shadow(0 2px 4px rgba(254,199,1,0.45))",
+            filter: "drop-shadow(0 2px 4px rgba(254,199,1,0.45))",
             color: "rgb(203, 159, 1)",
           }}
         >
@@ -445,7 +423,7 @@ function GradientButton({ label, onClick }) {
   );
 }
 
-function GlassButton({ label, onClick, dark }) {
+function GlassButton({ label, onClick }) {
   const [pressed, setPressed] = useState(false);
   return (
     <button
@@ -457,23 +435,19 @@ function GlassButton({ label, onClick, dark }) {
         width: "100%",
         height: 60,
         borderRadius: 999,
-        border: dark
-          ? "1px solid rgba(255,255,255,0.25)"
-          : "1px solid rgba(255,255,255,0.8)",
-        background: dark ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.55)",
+        border: "1px solid rgba(255,255,255,0.8)",
+        background: "rgba(255,255,255,0.55)",
         backdropFilter: "blur(20px) saturate(180%)",
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
         cursor: "pointer",
-        color: dark ? "#fff" : "#655001",
+        color: "#655001",
         fontSize: 20,
         fontWeight: 700,
         letterSpacing: 4,
         fontFamily: '"Noto Sans SC", "PingFang SC", sans-serif',
         boxShadow: pressed
           ? "inset 0 2px 4px rgba(0,0,0,0.1)"
-          : dark
-            ? "0 8px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)"
-            : "0 8px 30px rgba(120,100,180,0.2), inset 0 1px 0 rgba(255,255,255,1)",
+          : "0 8px 30px rgba(120,100,180,0.2), inset 0 1px 0 rgba(255,255,255,1)",
         transition: "all 0.15s ease",
         transform: pressed ? "translateY(1px)" : "none",
       }}
@@ -483,7 +457,7 @@ function GlassButton({ label, onClick, dark }) {
   );
 }
 
-function OutlineButton({ label, onClick, dark }) {
+function OutlineButton({ label, onClick }) {
   const [hovered, setHovered] = useState(false);
   return (
     <button
@@ -519,10 +493,8 @@ function OutlineButton({ label, onClick, dark }) {
           fontFamily: '"Noto Sans SC", "PingFang SC", sans-serif',
           background: hovered
             ? "linear-gradient(135deg, #fed234 0%, #fec701 45%, #fec701 100%)"
-            : dark
-              ? "#241c00"
-              : "#fff9e6",
-          color: hovered ? "#fff" : dark ? "#fedd67" : "#987701",
+            : "#fff9e6",
+          color: hovered ? "#fff" : "#987701",
           transition: "all 0.2s ease",
         }}
       >
@@ -580,7 +552,7 @@ function LaunchOverlay({ onDone }) {
 }
 
 // ─── Landing screen ───────────────────────────────────────────
-function LandingScreen({ config, onStart }) {
+function LandingScreen({ onStart }) {
   const getInitial = () => {
     const w = Math.min(
       typeof window !== "undefined" ? window.innerWidth : 390,
@@ -591,7 +563,6 @@ function LandingScreen({ config, onStart }) {
   };
   const [dims, setDims] = useState(getInitial);
   const rootRef = useRef(null);
-  const dark = config.background === "night";
 
   useEffect(() => {
     const update = () => {
@@ -621,31 +592,25 @@ function LandingScreen({ config, onStart }) {
   }, []);
 
   const Bg =
-    config.background === "night"
-      ? NightBackground
-      : config.background === "paper"
-        ? PaperBackground
-        : config.background === "gold"
-          ? GoldBackground
-          : AuroraBackground;
+    CONFIG.background === "paper"
+      ? PaperBackground
+      : CONFIG.background === "gold"
+        ? GoldBackground
+        : AuroraBackground;
   const Hero =
-    config.hero === "starfield"
+    CONFIG.hero === "starfield"
       ? PlanetHero
-      : config.hero === "glyph"
+      : CONFIG.hero === "glyph"
         ? GlyphHero
         : MascotHero;
   const Button =
-    config.button === "glass"
+    CONFIG.button === "glass"
       ? GlassButton
-      : config.button === "outline"
+      : CONFIG.button === "outline"
         ? OutlineButton
         : GradientButton;
 
-  const subtitleColor = dark
-    ? "rgba(255,255,255,0.7)"
-    : config.background === "paper"
-      ? "#987701"
-      : "#987701";
+  const subtitleColor = "#987701";
 
   // Responsive scaling based on viewport, with sensible floors
   const short = Math.max(Math.min(dims.w || 390, 440), 280);
@@ -664,7 +629,7 @@ function LandingScreen({ config, onStart }) {
         background: "#fff",
         display: "flex",
         flexDirection: "column",
-        color: dark ? "#fff" : "#241c00",
+        color: "#241c00",
       }}
     >
       <Bg />
@@ -720,7 +685,7 @@ function LandingScreen({ config, onStart }) {
               fontSize: 12,
               fontWeight: 600,
               letterSpacing: 2,
-              color: dark ? "rgba(255,255,255,0.7)" : "#987701",
+              color: "#987701",
               fontFamily: '"Noto Sans SC", "PingFang SC", sans-serif',
             }}
           >
@@ -739,7 +704,7 @@ function LandingScreen({ config, onStart }) {
             animation: "fadeInUp 0.9s 0.1s ease backwards",
           }}
         >
-          <Hero dark={dark} size={heroSize} />
+          <Hero size={heroSize} />
         </div>
 
         {/* Headline */}
@@ -749,7 +714,7 @@ function LandingScreen({ config, onStart }) {
             flexShrink: 0,
           }}
         >
-          <Headline text={config.title} dark={dark} fontSize={titleSize} />
+          <Headline text={CONFIG.title} fontSize={titleSize} />
         </div>
 
         {/* Subtitle */}
@@ -767,7 +732,7 @@ function LandingScreen({ config, onStart }) {
             flexShrink: 0,
           }}
         >
-          {config.subtitle}
+          {CONFIG.subtitle}
         </div>
 
         {/* CTA */}
@@ -777,7 +742,7 @@ function LandingScreen({ config, onStart }) {
             flexShrink: 0,
           }}
         >
-          <Button label={config.cta} onClick={onStart} dark={dark} />
+          <Button label={CONFIG.cta} onClick={onStart} />
         </div>
       </div>
 
@@ -786,7 +751,7 @@ function LandingScreen({ config, onStart }) {
 }
 
 // ─── Google Auth Screen ───────────────────────────────────────
-function GoogleAuthScreen({ config, onCancel, onSuccess }) {
+function GoogleAuthScreen({ onCancel, onSuccess }) {
   // Stages: 'chooser' -> 'loading' -> success
   const [stage, setStage] = useState("chooser");
   const [selected, setSelected] = useState(null);
@@ -1216,7 +1181,6 @@ function getEffectiveStatus(t, allTasks) {
 function TaskCard({
   t,
   allTasks,
-  dark,
   cardBg,
   cardBorder,
   muted,
@@ -1228,34 +1192,31 @@ function TaskCard({
   const urgent = status === "todo" && t.daysLeft > 0 && t.daysLeft <= 7;
   const icon = t.tag === "探索" ? "✦" : t.tag === "社区" ? "◉" : "❋";
 
-  const isDimmed = false;
-  const cardOpacity = 1;
-  const isInteractive = true;
 
   const statusChip =
     status === "completed"
       ? {
         label: "已完成",
-        color: dark ? "#A8E6C9" : "#2E9B65",
-        bg: dark ? "rgba(80,200,140,0.15)" : "rgba(60,180,120,0.12)",
+        color: "#2E9B65",
+        bg: "rgba(60,180,120,0.12)",
       }
       : status === "in_progress"
         ? {
           label: "進行中",
-          color: dark ? "#FFD88A" : "#C17F1E",
-          bg: dark ? "rgba(255,200,100,0.15)" : "rgba(220,150,40,0.14)",
+          color: "#C17F1E",
+          bg: "rgba(220,150,40,0.14)",
         }
         : status === "expired"
           ? {
             label: "已過期",
-            color: dark ? "#FFB8B8" : "#C0564E",
-            bg: dark ? "rgba(255,100,100,0.15)" : "rgba(200,80,70,0.12)",
+            color: "#C0564E",
+            bg: "rgba(200,80,70,0.12)",
           }
           : status === "locked"
             ? {
               label: "未解鎖",
               color: muted,
-              bg: dark ? "rgba(255,255,255,0.08)" : "rgba(120,110,150,0.1)",
+              bg: "rgba(120,110,150,0.1)",
             }
             : null;
 
@@ -1263,9 +1224,7 @@ function TaskCard({
     status === "completed"
       ? "linear-gradient(135deg, #7FCFA3, #5BAE85)"
       : status === "expired"
-        ? dark
-          ? "rgba(255,255,255,0.08)"
-          : "rgba(120,110,150,0.2)"
+        ? "rgba(120,110,150,0.2)"
         : `linear-gradient(135deg, ${t.color}, ${t.color}BB)`;
 
   const logoGlyph =
@@ -1277,7 +1236,7 @@ function TaskCard({
           ? "🔒"
           : icon;
   const logoColor =
-    status === "expired" ? (dark ? "#b8b0d0" : "#8a82a8") : "#fff";
+    status === "expired" ? ("#8a82a8") : "#fff";
 
   return (
     <div
@@ -1291,15 +1250,13 @@ function TaskCard({
         WebkitBackdropFilter: "blur(10px)",
         border: cardBorder,
         animation: `fadeInUp 0.5s ${0.15 + index * 0.06}s ease backwards`,
-        cursor: isInteractive ? "pointer" : "default",
+        cursor: "pointer",
         overflow: "hidden",
-        boxShadow: dark
-          ? "0 4px 16px rgba(0,0,0,0.2)"
-          : "0 4px 14px rgba(254,210,52,0.18)",
+        boxShadow: "0 4px 14px rgba(254,210,52,0.18)",
         display: "flex",
         alignItems: "center",
         gap: 12,
-        opacity: cardOpacity,
+        opacity: 1,
       }}
     >
       <div
@@ -1315,7 +1272,7 @@ function TaskCard({
           color: logoColor,
           fontSize: status === "locked" ? 18 : 20,
           fontWeight: 700,
-          boxShadow: isDimmed ? "none" : `0 4px 12px ${t.color}55`,
+          boxShadow: `0 4px 12px ${t.color}55`,
         }}
       >
         {logoGlyph}
@@ -1391,9 +1348,7 @@ function TaskCard({
                 padding: "1px 6px",
                 borderRadius: 999,
                 color: muted,
-                background: dark
-                  ? "rgba(255,255,255,0.06)"
-                  : "rgba(120,110,150,0.08)",
+                background: "rgba(120,110,150,0.08)",
               }}
             >
               <span style={{ fontSize: 8 }}>🔒</span>
@@ -1428,11 +1383,9 @@ function TaskCard({
                   fontWeight: 600,
                   padding: "1px 6px",
                   borderRadius: 999,
-                  color: urgent ? (dark ? "#FFB8B8" : "#D9534F") : muted,
+                  color: urgent ? ("#D9534F") : muted,
                   background: urgent
-                    ? dark
-                      ? "rgba(255,100,100,0.14)"
-                      : "rgba(217,83,79,0.1)"
+                    ? "rgba(217,83,79,0.1)"
                     : "transparent",
                 }}
               >
@@ -1448,9 +1401,7 @@ function TaskCard({
             style={{
               height: 4,
               borderRadius: 999,
-              background: dark
-                ? "rgba(255,255,255,0.08)"
-                : "rgba(254,210,52,0.22)",
+              background: "rgba(254,210,52,0.22)",
               overflow: "hidden",
               marginTop: 2,
             }}
@@ -1471,9 +1422,7 @@ function TaskCard({
         style={{
           width: 1,
           alignSelf: "stretch",
-          borderLeft: dark
-            ? "1px dashed rgba(255,255,255,0.12)"
-            : "1px dashed rgba(254,210,52,0.35)",
+          borderLeft: "1px dashed rgba(254,210,52,0.35)",
         }}
       />
 
@@ -1495,12 +1444,8 @@ function TaskCard({
             fontWeight: 800,
             color:
               status === "completed"
-                ? dark
-                  ? "#A8E6C9"
-                  : "#2E9B65"
-                : dark
-                  ? "#fedd67"
-                  : "#987701",
+                ? "#2E9B65"
+                : "#987701",
             whiteSpace: "nowrap",
             letterSpacing: 0.2,
             display: "inline-flex",
@@ -1519,21 +1464,17 @@ function TaskCard({
             style={{
               padding: "3px 8px",
               borderRadius: 999,
-              background: dark
-                ? "linear-gradient(135deg, rgba(184,164,227,0.25), rgba(254,199,1,0.18))"
-                : "linear-gradient(135deg, #F4EBFF, #FFE892)",
-              border: dark
-                ? "1px solid rgba(184,164,227,0.35)"
-                : "1px solid rgba(184,164,227,0.45)",
+              background: "linear-gradient(135deg, #F4EBFF, #FFE892)",
+              border: "1px solid rgba(184,164,227,0.45)",
               fontSize: 10,
               fontWeight: 700,
-              color: dark ? "#E6D8FF" : "#7A5FC4",
+              color: "#7A5FC4",
               display: "inline-flex",
               alignItems: "center",
               gap: 3,
               maxWidth: "100%",
               minWidth: 0,
-              boxShadow: dark ? "none" : "0 2px 5px rgba(184,164,227,0.2)",
+              boxShadow: "0 2px 5px rgba(184,164,227,0.2)",
             }}
           >
             <span style={{ fontSize: 9, flexShrink: 0 }}>🎁</span>
@@ -1555,7 +1496,7 @@ function TaskCard({
 }
 
 // ─── News Board (home) ────────────────────────────────────────
-function NewsBoard({ dark, fg, muted, cardBg, cardBorder }) {
+function NewsBoard({ fg, muted, cardBg, cardBorder }) {
   const items = [
     {
       id: "n1",
@@ -1643,9 +1584,7 @@ function NewsBoard({ dark, fg, muted, cardBg, cardBorder }) {
                 background:
                   i === idx
                     ? "linear-gradient(90deg, #fed234, #fec701)"
-                    : dark
-                      ? "rgba(255,255,255,0.18)"
-                      : "rgba(152,119,1,0.22)",
+                    : "rgba(152,119,1,0.22)",
                 transition: "width 0.25s ease",
               }}
             />
@@ -1730,10 +1669,8 @@ function NewsBoard({ dark, fg, muted, cardBg, cardBorder }) {
                       style={{
                         padding: "2px 7px",
                         borderRadius: 999,
-                        background: dark
-                          ? "rgba(255,255,255,0.08)"
-                          : "rgba(254,199,1,0.18)",
-                        color: dark ? "#fedd67" : "#987701",
+                        background: "rgba(254,199,1,0.18)",
+                        color: "#987701",
                         fontSize: 10,
                         fontWeight: 800,
                         display: "inline-flex",
@@ -1779,7 +1716,7 @@ function NewsBoard({ dark, fg, muted, cardBg, cardBorder }) {
                   marginTop: 8,
                   fontSize: 11,
                   fontWeight: 700,
-                  color: dark ? "#fedd67" : "#987701",
+                  color: "#987701",
                 }}
               >
                 閱讀全文 →
@@ -1794,15 +1731,13 @@ function NewsBoard({ dark, fg, muted, cardBg, cardBorder }) {
 
 // ─── Home Screen ──────────────────────────────────────────────
 function HomeScreen({
-  config,
   user,
   tasks: tasksProp,
   onSignOut,
   onNavigate,
   onOpenTask,
 }) {
-  const dark = config.background === "night";
-  const bg = dark ? "#1a1400" : "#FFFDF5";
+  const bg = "#FFFDF5";
 
   const tasks = tasksProp || TASKS;
   const activeTasks = tasks.filter((t) => {
@@ -1810,12 +1745,10 @@ function HomeScreen({
     return status === "todo" || status === "in_progress" || status === "locked";
   });
 
-  const cardBg = dark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.7)";
-  const cardBorder = dark
-    ? "1px solid rgba(255,255,255,0.1)"
-    : "1px solid rgba(255,255,255,0.9)";
-  const muted = dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)";
-  const fg = dark ? "#fff" : "#241c00";
+  const cardBg = "rgba(255,255,255,0.7)";
+  const cardBorder = "1px solid rgba(255,255,255,0.9)";
+  const muted = "rgba(50,40,0,0.6)";
+  const fg = "#241c00";
 
   // Star points + tier progress (mirrors MyRewards tier thresholds)
   const totalPoints = (tasks || [])
@@ -1860,7 +1793,7 @@ function HomeScreen({
         display: "flex",
         flexDirection: "column",
         background: bg,
-        color: dark ? "#fff" : "#241c00",
+        color: "#241c00",
         overflow: "hidden",
       }}
     >
@@ -1931,20 +1864,14 @@ function HomeScreen({
           tabIndex={0}
           style={{
             borderRadius: 22,
-            background: dark
-              ? "linear-gradient(135deg, rgba(40,28,0,0.9), rgba(50,35,0,0.85))"
-              : "linear-gradient(135deg, #FFF9DC 0%, #FFE892 70%, #FFDB5E 100%)",
-            border: dark
-              ? "1px solid rgba(254,210,52,0.28)"
-              : "1px solid rgba(254,199,1,0.4)",
+            background: "linear-gradient(135deg, #FFF9DC 0%, #FFE892 70%, #FFDB5E 100%)",
+            border: "1px solid rgba(254,199,1,0.4)",
             padding: "18px 20px 16px",
             position: "relative",
             overflow: "hidden",
             flexShrink: 0,
             cursor: "pointer",
-            boxShadow: dark
-              ? "0 8px 24px rgba(0,0,0,0.3)"
-              : "0 8px 22px rgba(200,160,0,0.2), inset 0 1px 0 rgba(255,255,255,0.6)",
+            boxShadow: "0 8px 22px rgba(200,160,0,0.2), inset 0 1px 0 rgba(255,255,255,0.6)",
             animation: "fadeInUp 0.5s 0.05s ease backwards",
           }}
         >
@@ -1957,9 +1884,7 @@ function HomeScreen({
               width: 180,
               height: 180,
               borderRadius: "50%",
-              background: dark
-                ? "radial-gradient(circle, rgba(254,210,52,0.18) 0%, transparent 65%)"
-                : "radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 65%)",
+              background: "radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 65%)",
               pointerEvents: "none",
             }}
           />
@@ -1990,7 +1915,7 @@ function HomeScreen({
                 style={{
                   fontSize: 28,
                   fontWeight: 800,
-                  color: dark ? "#fff" : "#3a2800",
+                  color: "#3a2800",
                   fontFamily: '"Noto Serif SC", serif',
                   letterSpacing: 0.5,
                   lineHeight: 1,
@@ -2004,9 +1929,7 @@ function HomeScreen({
                 const tierColor = homeCurrentTier?.color || "#b8a4e3";
                 const isBaby = !homeCurrentTier;
                 const tierTextColor = isBaby
-                  ? dark
-                    ? "#f0c4ff"
-                    : "#8c4a9a"
+                  ? "#8c4a9a"
                   : tierColor;
                 return (
                   <div
@@ -2066,7 +1989,7 @@ function HomeScreen({
                 <div
                   style={{
                     fontSize: 11,
-                    color: dark ? "rgba(254,221,103,0.9)" : "#8c6d00",
+                    color: "#8c6d00",
                     letterSpacing: 1.2,
                     fontWeight: 700,
                   }}
@@ -2092,9 +2015,7 @@ function HomeScreen({
                     WebkitTextFillColor: "transparent",
                     fontFamily: '"Noto Serif SC", serif',
                     lineHeight: 1,
-                    textShadow: dark
-                      ? "none"
-                      : "0 2px 4px rgba(200,160,0,0.15)",
+                    textShadow: "0 2px 4px rgba(200,160,0,0.15)",
                   }}
                 >
                   {totalPoints.toLocaleString()}
@@ -2103,12 +2024,10 @@ function HomeScreen({
                   style={{
                     fontSize: 30,
                     fontWeight: 800,
-                    color: dark ? "#fedd67" : "#cb9f01",
+                    color: "#cb9f01",
                     lineHeight: 1,
                     letterSpacing: -0.5,
-                    textShadow: dark
-                      ? "none"
-                      : "0 2px 4px rgba(200,160,0,0.15)",
+                    textShadow: "0 2px 4px rgba(200,160,0,0.15)",
                   }}
                 >
                   ★
@@ -2136,14 +2055,10 @@ function HomeScreen({
                         style={{
                           height: 8,
                           borderRadius: 999,
-                          background: dark
-                            ? "rgba(255,255,255,0.1)"
-                            : "rgba(120,90,0,0.12)",
+                          background: "rgba(120,90,0,0.12)",
                           overflow: "hidden",
                           position: "relative",
-                          boxShadow: dark
-                            ? "inset 0 1px 2px rgba(0,0,0,0.2)"
-                            : "inset 0 1px 2px rgba(120,90,0,0.1)",
+                          boxShadow: "inset 0 1px 2px rgba(120,90,0,0.1)",
                         }}
                       >
                         <div
@@ -2176,14 +2091,10 @@ function HomeScreen({
                               borderRadius: "50%",
                               background: reached
                                 ? "linear-gradient(135deg, #ffe066, #fec701)"
-                                : dark
-                                  ? "rgba(30,22,0,0.85)"
-                                  : "#fff",
+                                : "#fff",
                               border: reached
                                 ? "2px solid #fff"
-                                : dark
-                                  ? "2px solid rgba(254,199,1,0.4)"
-                                  : "2px solid rgba(203,159,1,0.35)",
+                                : "2px solid rgba(203,159,1,0.35)",
                               boxShadow: reached
                                 ? "0 2px 5px rgba(203,159,1,0.45)"
                                 : "0 1px 2px rgba(0,0,0,0.08)",
@@ -2232,9 +2143,7 @@ function HomeScreen({
                             fontWeight: 700,
                             color:
                               totalPoints >= t.value
-                                ? dark
-                                  ? "#fedd67"
-                                  : "#8c6d00"
+                                ? "#8c6d00"
                                 : muted,
                             letterSpacing: 0.2,
                           }}
@@ -2259,7 +2168,7 @@ function HomeScreen({
                   gap: 8,
                   fontSize: 12,
                   fontWeight: 700,
-                  color: dark ? "#E0C3FC" : "#6B4FA8",
+                  color: "#6B4FA8",
                 }}
               >
                 👑 已達最高等級·金牌志工
@@ -2319,7 +2228,6 @@ function HomeScreen({
                 key={t.id}
                 t={t}
                 allTasks={tasks}
-                dark={dark}
                 cardBg={cardBg}
                 cardBorder={cardBorder}
                 muted={muted}
@@ -2337,7 +2245,6 @@ function HomeScreen({
       {/* Bottom nav */}
       <BottomNav
         current="home"
-        dark={dark}
         muted={muted}
         onNavigate={onNavigate}
       />
@@ -2346,7 +2253,7 @@ function HomeScreen({
 }
 
 // ─── Bottom Nav (shared) ──────────────────────────────────────
-function BottomNav({ current, dark, muted, onNavigate }) {
+function BottomNav({ current, muted, onNavigate }) {
   const items = [
     { key: "home", label: "首页", icon: "◉" },
     { key: "tasks", label: "任务", icon: "❋" },
@@ -2361,12 +2268,10 @@ function BottomNav({ current, dark, muted, onNavigate }) {
         display: "flex",
         justifyContent: "space-around",
         padding: "10px 16px 18px",
-        background: dark ? "rgba(10,5,30,0.7)" : "rgba(255,255,255,0.7)",
+        background: "rgba(255,255,255,0.7)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
-        borderTop: dark
-          ? "1px solid rgba(255,255,255,0.08)"
-          : "1px solid rgba(254,210,52,0.25)",
+        borderTop: "1px solid rgba(254,210,52,0.25)",
       }}
     >
       {items.map((n) => {
@@ -2381,7 +2286,7 @@ function BottomNav({ current, dark, muted, onNavigate }) {
               alignItems: "center",
               gap: 3,
               cursor: "pointer",
-              color: active ? (dark ? "#fedd67" : "#fec701") : muted,
+              color: active ? ("#fec701") : muted,
             }}
           >
             <div style={{ fontSize: 18, lineHeight: 1 }}>{n.icon}</div>
@@ -2397,19 +2302,15 @@ function BottomNav({ current, dark, muted, onNavigate }) {
 
 // ─── Tasks Screen ─────────────────────────────────────────────
 function TasksScreen({
-  config,
   tasks: tasksProp,
   onNavigate,
   onOpenTask,
 }) {
-  const dark = config.background === "night";
-  const bg = dark ? "#1a1400" : "#FFFDF5";
-  const cardBg = dark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.7)";
-  const cardBorder = dark
-    ? "1px solid rgba(255,255,255,0.1)"
-    : "1px solid rgba(255,255,255,0.9)";
-  const muted = dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)";
-  const fg = dark ? "#fff" : "#241c00";
+  const bg = "#FFFDF5";
+  const cardBg = "rgba(255,255,255,0.7)";
+  const cardBorder = "1px solid rgba(255,255,255,0.9)";
+  const muted = "rgba(50,40,0,0.6)";
+  const fg = "#241c00";
 
   const [filter, setFilter] = useState("active");
   const tasks = tasksProp || TASKS;
@@ -2458,7 +2359,7 @@ function TasksScreen({
         display: "flex",
         flexDirection: "column",
         background: bg,
-        color: dark ? "#fff" : "#241c00",
+        color: "#241c00",
         overflow: "hidden",
       }}
     >
@@ -2524,15 +2425,11 @@ function TasksScreen({
                   borderRadius: 999,
                   border: active
                     ? "none"
-                    : dark
-                      ? "1px solid rgba(255,255,255,0.15)"
-                      : "1px solid rgba(254,210,52,0.35)",
+                    : "1px solid rgba(254,210,52,0.35)",
                   background: active
-                    ? dark
-                      ? "linear-gradient(135deg, #fedd67, #E0C3FC)"
-                      : "linear-gradient(135deg, #fec701, #cb9f01)"
+                    ? "linear-gradient(135deg, #fec701, #cb9f01)"
                     : cardBg,
-                  color: active ? (dark ? "#241c00" : "#fff") : fg,
+                  color: active ? ("#fff") : fg,
                   fontSize: 12.5,
                   fontWeight: 700,
                   cursor: "pointer",
@@ -2554,10 +2451,8 @@ function TasksScreen({
                     borderRadius: 999,
                     background: active
                       ? "rgba(255,255,255,0.25)"
-                      : dark
-                        ? "rgba(255,255,255,0.1)"
-                        : "rgba(120,110,150,0.12)",
-                    color: active ? (dark ? "#241c00" : "#fff") : muted,
+                      : "rgba(120,110,150,0.12)",
+                    color: active ? ("#fff") : muted,
                   }}
                 >
                   {tab.n}
@@ -2633,9 +2528,7 @@ function TasksScreen({
                         style={{
                           flex: 1,
                           height: 1,
-                          borderBottom: dark
-                            ? "1px dashed rgba(255,255,255,0.1)"
-                            : "1px dashed rgba(254,210,52,0.3)",
+                          borderBottom: "1px dashed rgba(254,210,52,0.3)",
                           marginLeft: 4,
                         }}
                       />
@@ -2652,7 +2545,6 @@ function TasksScreen({
                           key={t.id}
                           t={t}
                           allTasks={tasks}
-                          dark={dark}
                           cardBg={cardBg}
                           cardBorder={cardBorder}
                           muted={muted}
@@ -2672,7 +2564,6 @@ function TasksScreen({
                 key={t.id}
                 t={t}
                 allTasks={tasks}
-                dark={dark}
                 cardBg={cardBg}
                 cardBorder={cardBorder}
                 muted={muted}
@@ -2687,7 +2578,6 @@ function TasksScreen({
 
       <BottomNav
         current="tasks"
-        dark={dark}
         muted={muted}
         onNavigate={onNavigate}
       />
@@ -2697,7 +2587,6 @@ function TasksScreen({
 
 // ─── Task Detail Screen ──────────────────────────────────────
 function TaskDetailScreen({
-  config,
   tasks: tasksProp,
   taskId,
   onBack,
@@ -2705,14 +2594,11 @@ function TaskDetailScreen({
   onStartTask,
   onGoMe,
 }) {
-  const dark = config.background === "night";
-  const bg = dark ? "#1a1400" : "#FFFDF5";
-  const cardBg = dark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.7)";
-  const cardBorder = dark
-    ? "1px solid rgba(255,255,255,0.1)"
-    : "1px solid rgba(255,255,255,0.9)";
-  const muted = dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)";
-  const fg = dark ? "#fff" : "#241c00";
+  const bg = "#FFFDF5";
+  const cardBg = "rgba(255,255,255,0.7)";
+  const cardBorder = "1px solid rgba(255,255,255,0.9)";
+  const muted = "rgba(50,40,0,0.6)";
+  const fg = "#241c00";
 
   const tasks = tasksProp || TASKS;
   const t = tasks.find((x) => x.id === taskId);
@@ -2724,7 +2610,7 @@ function TaskDetailScreen({
           display: "flex",
           flexDirection: "column",
           background: bg,
-          color: dark ? "#fff" : "#241c00",
+          color: "#241c00",
           overflow: "hidden",
         }}
       >
@@ -2799,7 +2685,7 @@ function TaskDetailScreen({
         display: "flex",
         flexDirection: "column",
         background: bg,
-        color: dark ? "#fff" : "#241c00",
+        color: "#241c00",
         overflow: "hidden",
       }}
     >
@@ -3061,7 +2947,7 @@ function TaskDetailScreen({
                 style={{
                   fontSize: 20,
                   fontWeight: 800,
-                  color: dark ? "#fedd67" : "#987701",
+                  color: "#987701",
                   marginTop: 2,
                   letterSpacing: -0.2,
                   display: "inline-flex",
@@ -3084,19 +2970,15 @@ function TaskDetailScreen({
               style={{
                 padding: "14px 16px",
                 borderRadius: 18,
-                background: dark
-                  ? "linear-gradient(135deg, rgba(184,164,227,0.22), rgba(254,199,1,0.14))"
-                  : "linear-gradient(135deg, #F4EBFF, #FFF5D6 70%, #FFE892)",
-                border: dark
-                  ? "1px solid rgba(184,164,227,0.4)"
-                  : "1px solid rgba(184,164,227,0.5)",
+                background: "linear-gradient(135deg, #F4EBFF, #FFF5D6 70%, #FFE892)",
+                border: "1px solid rgba(184,164,227,0.5)",
                 position: "relative",
                 overflow: "hidden",
                 display: "flex",
                 alignItems: "center",
                 gap: 14,
                 flexShrink: 0,
-                boxShadow: dark ? "none" : "0 6px 18px rgba(184,164,227,0.22)",
+                boxShadow: "0 6px 18px rgba(184,164,227,0.22)",
               }}
             >
               {/* sparkle accents */}
@@ -3106,7 +2988,7 @@ function TaskDetailScreen({
                   position: "absolute",
                   top: 0,
                   right: 0,
-                  opacity: dark ? 0.4 : 0.5,
+                  opacity: 0.5,
                   pointerEvents: "none",
                 }}
                 width="90"
@@ -3178,7 +3060,7 @@ function TaskDetailScreen({
                     fontSize: 10,
                     fontWeight: 700,
                     letterSpacing: 1.5,
-                    color: dark ? "#D9C8FF" : "#7A5FC4",
+                    color: "#7A5FC4",
                     textTransform: "uppercase",
                   }}
                 >
@@ -3252,9 +3134,7 @@ function TaskDetailScreen({
                         gap: 10,
                         padding: "8px 10px",
                         borderRadius: 12,
-                        background: dark
-                          ? "rgba(255,255,255,0.04)"
-                          : "rgba(255,255,255,0.5)",
+                        background: "rgba(255,255,255,0.5)",
                         cursor: "pointer",
                       }}
                     >
@@ -3266,9 +3146,7 @@ function TaskDetailScreen({
                           flexShrink: 0,
                           background: done
                             ? "linear-gradient(135deg, #7FCFA3, #5BAE85)"
-                            : dark
-                              ? "rgba(255,255,255,0.1)"
-                              : "rgba(120,110,150,0.18)",
+                            : "rgba(120,110,150,0.18)",
                           color: done ? "#fff" : muted,
                           display: "flex",
                           alignItems: "center",
@@ -3363,9 +3241,7 @@ function TaskDetailScreen({
                     fontWeight: 800,
                     color:
                       teamHasTeam && teamState.total >= teamState.cap
-                        ? dark
-                          ? "#A8E6C9"
-                          : "#2E9B65"
+                        ? "#2E9B65"
                         : fg,
                   }}
                 >
@@ -3380,9 +3256,7 @@ function TaskDetailScreen({
                 style={{
                   height: 10,
                   borderRadius: 999,
-                  background: dark
-                    ? "rgba(255,255,255,0.08)"
-                    : "rgba(254,210,52,0.22)",
+                  background: "rgba(254,210,52,0.22)",
                   overflow: "hidden",
                   marginBottom: 10,
                 }}
@@ -3429,9 +3303,7 @@ function TaskDetailScreen({
                           : "transparent",
                         border: filled
                           ? "none"
-                          : dark
-                            ? "1.5px dashed rgba(255,255,255,0.18)"
-                            : "1.5px dashed rgba(254,210,52,0.45)",
+                          : "1.5px dashed rgba(254,210,52,0.45)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -3471,7 +3343,7 @@ function TaskDetailScreen({
                     fontSize: 11,
                     marginTop: 12,
                     textAlign: "center",
-                    color: dark ? "#A8E6C9" : "#2E9B65",
+                    color: "#2E9B65",
                     fontWeight: 700,
                   }}
                 >
@@ -3524,9 +3396,7 @@ function TaskDetailScreen({
                 style={{
                   height: 6,
                   borderRadius: 999,
-                  background: dark
-                    ? "rgba(255,255,255,0.08)"
-                    : "rgba(254,210,52,0.22)",
+                  background: "rgba(254,210,52,0.22)",
                   overflow: "hidden",
                   marginBottom: 14,
                 }}
@@ -3560,7 +3430,7 @@ function TaskDetailScreen({
                         background: s.done ? t.color : "transparent",
                         border: s.done
                           ? "none"
-                          : `1.5px solid ${dark ? "rgba(255,255,255,0.2)" : "rgba(120,110,150,0.3)"}`,
+                          : `1.5px solid ${"rgba(120,110,150,0.3)"}`,
                         color: "#fff",
                         fontSize: 11,
                         fontWeight: 700,
@@ -3611,7 +3481,7 @@ function TaskDetailScreen({
             <div
               style={{
                 fontSize: 13,
-                color: dark ? "rgba(255,255,255,0.85)" : "rgba(40,30,70,0.8)",
+                color: "rgba(40,30,70,0.8)",
                 lineHeight: 1.65,
                 textWrap: "pretty",
               }}
@@ -3623,9 +3493,7 @@ function TaskDetailScreen({
                 style={{
                   marginTop: 10,
                   paddingTop: 10,
-                  borderTop: dark
-                    ? "1px solid rgba(255,255,255,0.08)"
-                    : "1px solid rgba(254,210,52,0.25)",
+                  borderTop: "1px solid rgba(254,210,52,0.25)",
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
@@ -3645,9 +3513,7 @@ function TaskDetailScreen({
             position: "sticky",
             bottom: 0,
             padding: "12px 16px 16px",
-            background: dark
-              ? "linear-gradient(180deg, transparent, rgba(15,15,40,0.9) 40%)"
-              : "linear-gradient(180deg, transparent, rgba(255,250,255,0.9) 40%)",
+            background: "linear-gradient(180deg, transparent, rgba(255,250,255,0.9) 40%)",
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
             flexShrink: 0,
@@ -3667,13 +3533,9 @@ function TaskDetailScreen({
               letterSpacing: 0.5,
               fontFamily: "inherit",
               background: cta.disabled
-                ? dark
-                  ? "rgba(255,255,255,0.08)"
-                  : "rgba(100,80,1,0.15)"
+                ? "rgba(100,80,1,0.15)"
                 : cta.tone === "secondary"
-                  ? dark
-                    ? "rgba(255,255,255,0.12)"
-                    : "rgba(255,255,255,0.7)"
+                  ? "rgba(255,255,255,0.7)"
                   : `linear-gradient(135deg, ${t.color}, ${t.color}D0)`,
               color: cta.disabled
                 ? muted
@@ -3704,15 +3566,12 @@ function TaskDetailScreen({
 }
 
 // ─── 排行 (Rank) Screen ────────────────────────────────────────
-function RankScreen({ config, user, tasks, onNavigate }) {
-  const dark = config.background === "night";
-  const bg = dark ? "#1a1400" : "#FFFDF5";
-  const fg = dark ? "#fff" : "#241c00";
-  const muted = dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)";
-  const cardBg = dark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.7)";
-  const cardBorder = dark
-    ? "1px solid rgba(255,255,255,0.1)"
-    : "1px solid rgba(255,255,255,0.9)";
+function RankScreen({ user, tasks, onNavigate }) {
+  const bg = "#FFFDF5";
+  const fg = "#241c00";
+  const muted = "rgba(50,40,0,0.6)";
+  const cardBg = "rgba(255,255,255,0.7)";
+  const cardBorder = "1px solid rgba(255,255,255,0.9)";
 
   const [tab, setTab] = useState("personal"); // personal | team | challenge
   const [period, setPeriod] = useState("month"); // week | month | all
@@ -4234,7 +4093,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
         display: "flex",
         flexDirection: "column",
         background: bg,
-        color: dark ? "#fff" : "#241c00",
+        color: "#241c00",
         overflow: "hidden",
       }}
     >
@@ -4341,9 +4200,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                 background:
                   tab === t.k
                     ? "linear-gradient(135deg, #fed234, #fec701)"
-                    : dark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(255,255,255,0.7)",
+                    : "rgba(255,255,255,0.7)",
                 color: tab === t.k ? "#241c00" : fg,
                 boxShadow:
                   tab === t.k ? "0 4px 14px rgba(254,199,1,0.32)" : "none",
@@ -4381,17 +4238,13 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                   border:
                     period === p.key
                       ? "1px solid rgba(254,199,1,0.7)"
-                      : dark
-                        ? "1px solid rgba(255,255,255,0.14)"
-                        : "1px solid rgba(0,0,0,0.08)",
+                      : "1px solid rgba(0,0,0,0.08)",
                   background:
                     period === p.key
-                      ? dark
-                        ? "rgba(254,199,1,0.18)"
-                        : "rgba(254,199,1,0.22)"
+                      ? "rgba(254,199,1,0.22)"
                       : "transparent",
                   color:
-                    period === p.key ? (dark ? "#fedd67" : "#987701") : muted,
+                    period === p.key ? ("#987701") : muted,
                 }}
               >
                 {p.label}
@@ -4430,15 +4283,11 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                       cursor: "pointer",
                       border: active
                         ? "1px solid rgba(254,199,1,0.7)"
-                        : dark
-                          ? "1px solid rgba(255,255,255,0.14)"
-                          : "1px solid rgba(0,0,0,0.08)",
+                        : "1px solid rgba(0,0,0,0.08)",
                       background: active
-                        ? dark
-                          ? "rgba(254,199,1,0.18)"
-                          : "rgba(254,199,1,0.22)"
+                        ? "rgba(254,199,1,0.22)"
                         : "transparent",
-                      color: active ? (dark ? "#fedd67" : "#987701") : muted,
+                      color: active ? ("#987701") : muted,
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 4,
@@ -4471,16 +4320,12 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                 marginBottom: 14,
                 padding: "14px 16px",
                 borderRadius: 18,
-                background: dark
-                  ? "linear-gradient(135deg, rgba(254,210,52,0.14), rgba(184,164,227,0.1))"
-                  : "linear-gradient(135deg, #FFF9DC, #FFE892)",
-                border: dark
-                  ? "1px solid rgba(254,199,1,0.2)"
-                  : "1px solid rgba(254,199,1,0.35)",
+                background: "linear-gradient(135deg, #FFF9DC, #FFE892)",
+                border: "1px solid rgba(254,199,1,0.35)",
                 display: "flex",
                 alignItems: "center",
                 gap: 14,
-                boxShadow: dark ? "none" : "0 4px 12px rgba(254,199,1,0.14)",
+                boxShadow: "0 4px 12px rgba(254,199,1,0.14)",
               }}
             >
               <div
@@ -4525,7 +4370,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                   <div>
                     <b
                       style={{
-                        color: dark ? "#fedd67" : "#987701",
+                        color: "#987701",
                         fontSize: 13,
                       }}
                     >
@@ -4536,7 +4381,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                   <div>
                     <b
                       style={{
-                        color: dark ? "#fedd67" : "#987701",
+                        color: "#987701",
                         fontSize: 13,
                       }}
                     >
@@ -4550,9 +4395,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                     marginTop: 6,
                     height: 4,
                     borderRadius: 999,
-                    background: dark
-                      ? "rgba(255,255,255,0.08)"
-                      : "rgba(120,90,0,0.1)",
+                    background: "rgba(120,90,0,0.1)",
                     overflow: "hidden",
                     position: "relative",
                   }}
@@ -4588,9 +4431,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                 position: "relative",
                 background:
                   "linear-gradient(180deg, rgba(254,210,52,0.22), rgba(254,233,154,0.05) 70%, transparent)",
-                border: dark
-                  ? "1px solid rgba(254,199,1,0.18)"
-                  : "1px solid rgba(254,199,1,0.28)",
+                border: "1px solid rgba(254,199,1,0.28)",
                 overflow: "hidden",
               }}
             >
@@ -4766,14 +4607,10 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                           borderRadius: 999,
                           background: isWinner
                             ? "linear-gradient(135deg, #FFE29A, #FFC070)"
-                            : dark
-                              ? "rgba(255,255,255,0.08)"
-                              : "rgba(254,199,1,0.18)",
+                            : "rgba(254,199,1,0.18)",
                           color: isWinner
                             ? "#6B4000"
-                            : dark
-                              ? "#fedd67"
-                              : "#987701",
+                            : "#987701",
                           fontSize: 11,
                           fontWeight: 800,
                           boxShadow: isWinner
@@ -4794,22 +4631,16 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                           borderRadius: "14px 14px 4px 4px",
                           background: isWinner
                             ? "linear-gradient(180deg, #fed234, #fec701)"
-                            : dark
-                              ? "rgba(255,255,255,0.08)"
-                              : "rgba(255,255,255,0.85)",
+                            : "rgba(255,255,255,0.85)",
                           border: isWinner
                             ? "none"
-                            : dark
-                              ? "1px solid rgba(255,255,255,0.1)"
-                              : "1px solid rgba(254,199,1,0.28)",
+                            : "1px solid rgba(254,199,1,0.28)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           color: isWinner
                             ? "#241c00"
-                            : dark
-                              ? "#fedd67"
-                              : "#987701",
+                            : "#987701",
                           fontSize: 28,
                           fontWeight: 900,
                           fontFamily: '"Noto Serif SC", serif',
@@ -4844,9 +4675,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                 fontWeight: 700,
                 color: muted,
                 letterSpacing: 0.5,
-                borderBottom: dark
-                  ? "1px solid rgba(255,255,255,0.06)"
-                  : "1px solid rgba(254,199,1,0.12)",
+                borderBottom: "1px solid rgba(254,199,1,0.12)",
               }}
             >
               {tab === "personal"
@@ -4881,13 +4710,9 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                       borderTop:
                         i === 0
                           ? "none"
-                          : dark
-                            ? "1px solid rgba(255,255,255,0.06)"
-                            : "1px solid rgba(254,199,1,0.12)",
+                          : "1px solid rgba(254,199,1,0.12)",
                       background: isMe
-                        ? dark
-                          ? "rgba(254,199,1,0.14)"
-                          : "rgba(254,199,1,0.18)"
+                        ? "rgba(254,199,1,0.18)"
                         : "transparent",
                       position: "relative",
                     }}
@@ -4913,7 +4738,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                         textAlign: "center",
                         fontSize: 14,
                         fontWeight: 800,
-                        color: isMe ? (dark ? "#fedd67" : "#987701") : muted,
+                        color: isMe ? ("#987701") : muted,
                         fontFamily: '"Noto Serif SC", serif',
                       }}
                     >
@@ -5008,7 +4833,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                       style={{
                         fontSize: 14,
                         fontWeight: 800,
-                        color: isMe ? (dark ? "#fedd67" : "#987701") : fg,
+                        color: isMe ? ("#987701") : fg,
                         fontFamily: '"Noto Serif SC", serif',
                         letterSpacing: -0.3,
                       }}
@@ -5034,9 +4859,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
               bottom: 74,
               padding: "10px 14px",
               borderRadius: 16,
-              background: dark
-                ? "rgba(40,30,0,0.85)"
-                : "rgba(255,255,255,0.96)",
+              background: "rgba(255,255,255,0.96)",
               border: "1px solid rgba(254,199,1,0.45)",
               boxShadow:
                 "0 10px 28px rgba(100,80,1,0.18), 0 0 0 1px rgba(254,210,52,0.18)",
@@ -5064,7 +4887,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
                 style={{
                   fontSize: 16,
                   fontWeight: 900,
-                  color: dark ? "#fedd67" : "#987701",
+                  color: "#987701",
                   fontFamily: '"Noto Serif SC", serif',
                 }}
               >
@@ -5104,7 +4927,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
               style={{
                 fontSize: 14,
                 fontWeight: 800,
-                color: dark ? "#fedd67" : "#987701",
+                color: "#987701",
                 fontFamily: '"Noto Serif SC", serif',
               }}
             >
@@ -5116,7 +4939,6 @@ function RankScreen({ config, user, tasks, onNavigate }) {
 
       <BottomNav
         current="rank"
-        dark={dark}
         muted={muted}
         onNavigate={onNavigate}
       />
@@ -5125,9 +4947,7 @@ function RankScreen({ config, user, tasks, onNavigate }) {
 }
 
 // ─── My Rewards (MyScreen) ────────────────────────────────────
-function MyRewards({
-  dark,
-  fg,
+function MyRewards({ fg,
   muted,
   cardBg,
   cardBorder,
@@ -5350,7 +5170,7 @@ function MyRewards({
                       fontSize: 10,
                       fontWeight: 800,
                       letterSpacing: 0.6,
-                      color: dark ? "#fedd67" : "#987701",
+                      color: "#987701",
                       textTransform: "uppercase",
                     }}
                   >
@@ -5391,9 +5211,7 @@ function MyRewards({
                 style={{
                   height: 10,
                   borderRadius: 999,
-                  background: dark
-                    ? "rgba(255,255,255,0.08)"
-                    : "rgba(255,255,255,0.6)",
+                  background: "rgba(255,255,255,0.6)",
                   overflow: "hidden",
                   position: "relative",
                 }}
@@ -5502,9 +5320,7 @@ function MyRewards({
                   borderRadius: "50%",
                   background: unlocked
                     ? `linear-gradient(135deg, ${t.color}, ${t.gradEnd})`
-                    : dark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(255,255,255,0.6)",
+                    : "rgba(255,255,255,0.6)",
                   color: unlocked ? "#fff" : muted,
                   display: "flex",
                   alignItems: "center",
@@ -5512,9 +5328,7 @@ function MyRewards({
                   boxShadow: unlocked ? `0 6px 16px ${t.color}55` : "none",
                   border: unlocked
                     ? "none"
-                    : dark
-                      ? "1px dashed rgba(255,255,255,0.2)"
-                      : "1px dashed rgba(152,119,1,0.3)",
+                    : "1px dashed rgba(152,119,1,0.3)",
                   position: "relative",
                   marginBottom: 8,
                 }}
@@ -5529,9 +5343,7 @@ function MyRewards({
                       width: 20,
                       height: 20,
                       borderRadius: 999,
-                      background: dark
-                        ? "rgba(30,22,0,0.9)"
-                        : "rgba(255,255,255,0.98)",
+                      background: "rgba(255,255,255,0.98)",
                       border: "1px solid rgba(152,119,1,0.35)",
                       display: "flex",
                       alignItems: "center",
@@ -5593,7 +5405,7 @@ function MyRewards({
                   marginTop: 6,
                   fontSize: 10,
                   fontWeight: 800,
-                  color: unlocked ? (dark ? "#fedd67" : "#987701") : muted,
+                  color: unlocked ? ("#987701") : muted,
                 }}
               >
                 ★ {t.required.toLocaleString()}
@@ -5738,12 +5550,8 @@ function MyRewards({
                       borderTop:
                         i === 0
                           ? "none"
-                          : dark
-                            ? "1px solid rgba(255,255,255,0.06)"
-                            : "1px solid rgba(254,199,1,0.14)",
-                      background: dark
-                        ? "rgba(255,255,255,0.02)"
-                        : "rgba(254,210,52,0.06)",
+                          : "1px solid rgba(254,199,1,0.14)",
+                      background: "rgba(254,210,52,0.06)",
                     }}
                   >
                     {g.header}
@@ -5759,9 +5567,7 @@ function MyRewards({
                     display: "flex",
                     alignItems: "center",
                     gap: 12,
-                    borderTop: dark
-                      ? "1px solid rgba(255,255,255,0.04)"
-                      : "1px solid rgba(254,199,1,0.1)",
+                    borderTop: "1px solid rgba(254,199,1,0.1)",
                   }}
                 >
                   {/* Icon chip */}
@@ -5824,7 +5630,7 @@ function MyRewards({
                       fontSize: 14,
                       fontWeight: 900,
                       lineHeight: 1,
-                      color: dark ? "#fedd67" : "#987701",
+                      color: "#987701",
                       fontFamily: '"Noto Serif SC", serif',
                       whiteSpace: "nowrap",
                     }}
@@ -5852,15 +5658,12 @@ function MyRewards({
 }
 
 // ─── Rewards Screen (full page) ───────────────────────────────
-function RewardsScreen({ config, user, tasks, onBack }) {
-  const dark = config.background === "night";
-  const bg = dark ? "#1a1400" : "#FFFDF5";
-  const fg = dark ? "#fff" : "#241c00";
-  const muted = dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)";
-  const cardBg = dark ? "rgba(255,255,255,0.06)" : "#FFFBE6";
-  const cardBorder = dark
-    ? "1px solid rgba(255,255,255,0.1)"
-    : "1px solid rgba(254,199,1,0.22)";
+function RewardsScreen({ user, tasks, onBack }) {
+  const bg = "#FFFDF5";
+  const fg = "#241c00";
+  const muted = "rgba(50,40,0,0.6)";
+  const cardBg = "#FFFBE6";
+  const cardBorder = "1px solid rgba(254,199,1,0.22)";
 
   const totalPoints = (tasks || [])
     .filter((t) => t.status === "completed")
@@ -5875,7 +5678,7 @@ function RewardsScreen({ config, user, tasks, onBack }) {
         display: "flex",
         flexDirection: "column",
         background: bg,
-        color: dark ? "#fff" : "#241c00",
+        color: "#241c00",
         overflow: "hidden",
       }}
     >
@@ -5931,13 +5734,9 @@ function RewardsScreen({ config, user, tasks, onBack }) {
             overflow: "hidden",
             padding: "20px 20px 22px",
             borderRadius: 22,
-            background: dark
-              ? "linear-gradient(135deg, rgba(254,221,103,0.35), rgba(254,210,52,0.18), rgba(254,233,154,0.22))"
-              : "linear-gradient(160deg, #FFE48C 0%, #FFEEAD 55%, #FFF7D6 100%)",
-            border: dark
-              ? "1px solid rgba(254,199,1,0.4)"
-              : "1px solid rgba(254,199,1,0.3)",
-            boxShadow: dark ? "none" : "0 8px 22px rgba(200,160,0,0.12)",
+            background: "linear-gradient(160deg, #FFE48C 0%, #FFEEAD 55%, #FFF7D6 100%)",
+            border: "1px solid rgba(254,199,1,0.3)",
+            boxShadow: "0 8px 22px rgba(200,160,0,0.12)",
             marginBottom: 14,
           }}
         >
@@ -6036,7 +5835,6 @@ function RewardsScreen({ config, user, tasks, onBack }) {
 
         {/* Reuse MyRewards body (tiers + history) — no outer heading */}
         <MyRewards
-          dark={dark}
           fg={fg}
           muted={muted}
           cardBg={cardBg}
@@ -6051,7 +5849,6 @@ function RewardsScreen({ config, user, tasks, onBack }) {
 
 // ─── My (我的) Screen ─────────────────────────────────────────
 function MyScreen({
-  config,
   user,
   ledTeam,
   joinedTeam,
@@ -6068,14 +5865,11 @@ function MyScreen({
   onSimulateJoinApproved,
   onOpenTask,
 }) {
-  const dark = config.background === "night";
-  const bg = dark ? "#1a1400" : "#FFFDF5";
-  const fg = dark ? "#fff" : "#241c00";
-  const muted = dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)";
-  const cardBg = dark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.7)";
-  const cardBorder = dark
-    ? "1px solid rgba(255,255,255,0.1)"
-    : "1px solid rgba(255,255,255,0.9)";
+  const bg = "#FFFDF5";
+  const fg = "#241c00";
+  const muted = "rgba(50,40,0,0.6)";
+  const cardBg = "rgba(255,255,255,0.7)";
+  const cardBorder = "1px solid rgba(255,255,255,0.9)";
 
   const totalPoints = (tasks || [])
     .filter((t) => t.status === "completed")
@@ -6118,7 +5912,7 @@ function MyScreen({
         display: "flex",
         flexDirection: "column",
         background: bg,
-        color: dark ? "#fff" : "#241c00",
+        color: "#241c00",
         overflow: "hidden",
       }}
     >
@@ -6165,10 +5959,8 @@ function MyScreen({
                 border: "none",
                 cursor: "pointer",
                 padding: 0,
-                background: dark
-                  ? "rgba(255,255,255,0.08)"
-                  : "rgba(255,255,255,0.7)",
-                color: dark ? "#f5a5a5" : "#a14646",
+                background: "rgba(255,255,255,0.7)",
+                color: "#a14646",
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -6200,10 +5992,8 @@ function MyScreen({
                 border: "none",
                 cursor: "pointer",
                 padding: 0,
-                background: dark
-                  ? "rgba(255,255,255,0.08)"
-                  : "rgba(255,255,255,0.7)",
-                color: dark ? "#fedd67" : "#7a5a00",
+                background: "rgba(255,255,255,0.7)",
+                color: "#7a5a00",
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -6234,15 +6024,9 @@ function MyScreen({
             overflow: "hidden",
             flexShrink: 0,
             position: "relative",
-            background: dark
-              ? "linear-gradient(155deg, rgba(254,210,52,0.32) 0%, rgba(184,164,227,0.18) 50%, rgba(254,233,154,0.15) 100%)"
-              : "linear-gradient(155deg, #FFE48C 0%, #FFE9B8 45%, #F4EBFF 100%)",
-            border: dark
-              ? "1px solid rgba(255,255,255,0.1)"
-              : "1px solid rgba(254,199,1,0.28)",
-            boxShadow: dark
-              ? "0 10px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)"
-              : "0 10px 30px rgba(200,160,0,0.14), 0 2px 6px rgba(184,164,227,0.12), inset 0 1px 0 rgba(255,255,255,0.7)",
+            background: "linear-gradient(155deg, #FFE48C 0%, #FFE9B8 45%, #F4EBFF 100%)",
+            border: "1px solid rgba(254,199,1,0.28)",
+            boxShadow: "0 10px 30px rgba(200,160,0,0.14), 0 2px 6px rgba(184,164,227,0.12), inset 0 1px 0 rgba(255,255,255,0.7)",
           }}
         >
           {/* Decorative starfield + mountain silhouette */}
@@ -6254,7 +6038,7 @@ function MyScreen({
               position: "absolute",
               inset: 0,
               pointerEvents: "none",
-              opacity: dark ? 0.5 : 0.55,
+              opacity: 0.55,
             }}
             viewBox="0 0 400 280"
             preserveAspectRatio="none"
@@ -6263,12 +6047,12 @@ function MyScreen({
               <linearGradient id="my-mtn" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="0%"
-                  stopColor={dark ? "#b8a4e3" : "#d9c8f5"}
+                  stopColor={"#d9c8f5"}
                   stopOpacity="0.3"
                 />
                 <stop
                   offset="100%"
-                  stopColor={dark ? "#b8a4e3" : "#d9c8f5"}
+                  stopColor={"#d9c8f5"}
                   stopOpacity="0"
                 />
               </linearGradient>
@@ -6294,7 +6078,7 @@ function MyScreen({
               <g key={i} transform={`translate(${x},${y})`}>
                 <circle
                   r={r + 0.4}
-                  fill={dark ? "#fff" : "#fec701"}
+                  fill={"#fec701"}
                   opacity="0.7"
                 />
                 <circle r={r * 0.3} fill="#fff" />
@@ -6304,13 +6088,13 @@ function MyScreen({
             <g transform="translate(340,52)">
               <circle
                 r="14"
-                fill={dark ? "rgba(254,221,103,0.5)" : "rgba(254,199,1,0.35)"}
+                fill={"rgba(254,199,1,0.35)"}
               />
               <circle
                 r="14"
                 cx="5"
                 cy="-2"
-                fill={dark ? "#1a1400" : "#FFE48C"}
+                fill={"#FFE48C"}
               />
             </g>
           </svg>
@@ -6335,9 +6119,7 @@ function MyScreen({
               transition: "background 0.15s",
             }}
             onMouseOver={(e) =>
-            (e.currentTarget.style.background = dark
-              ? "rgba(255,255,255,0.03)"
-              : "rgba(255,255,255,0.25)")
+            (e.currentTarget.style.background = "rgba(255,255,255,0.25)")
             }
             onMouseOut={(e) =>
               (e.currentTarget.style.background = "transparent")
@@ -6354,7 +6136,7 @@ function MyScreen({
                   borderRadius: 999,
                   background:
                     "conic-gradient(from 180deg, #fed234, #b8a4e3, #fed234)",
-                  opacity: dark ? 0.55 : 0.6,
+                  opacity: 0.6,
                   filter: "blur(2px)",
                 }}
               />
@@ -6374,9 +6156,7 @@ function MyScreen({
                   boxShadow:
                     "0 8px 22px rgba(254,199,1,0.4), inset 0 2px 0 rgba(255,255,255,0.4)",
                   fontFamily: '"Noto Serif SC", serif',
-                  border: dark
-                    ? "2px solid rgba(26,20,0,0.5)"
-                    : "2px solid rgba(255,255,255,0.9)",
+                  border: "2px solid rgba(255,255,255,0.9)",
                 }}
               >
                 {user?.name ? user.name[0] : "志"}
@@ -6424,22 +6204,12 @@ function MyScreen({
                       fontFamily: 'ui-monospace, "SF Mono", monospace',
                       letterSpacing: 0.3,
                       background: userIdCopied
-                        ? dark
-                          ? "rgba(80,180,120,0.2)"
-                          : "rgba(80,180,120,0.18)"
-                        : dark
-                          ? "rgba(255,255,255,0.08)"
-                          : "rgba(255,255,255,0.55)",
+                        ? "rgba(80,180,120,0.18)"
+                        : "rgba(255,255,255,0.55)",
                       color: userIdCopied
-                        ? dark
-                          ? "#9ee8b8"
-                          : "#2d8050"
-                        : dark
-                          ? "rgba(255,255,255,0.75)"
-                          : "rgba(90,70,0,0.85)",
-                      border: dark
-                        ? "1px solid rgba(255,255,255,0.08)"
-                        : "1px solid rgba(120,90,0,0.12)",
+                        ? "#2d8050"
+                        : "rgba(90,70,0,0.85)",
+                      border: "1px solid rgba(120,90,0,0.12)",
                       cursor: "pointer",
                       transition: "all 0.18s ease",
                     }}
@@ -6513,9 +6283,7 @@ function MyScreen({
           <div
             style={{
               height: 1,
-              background: dark
-                ? "rgba(255,255,255,0.08)"
-                : "rgba(120,90,0,0.1)",
+              background: "rgba(120,90,0,0.1)",
             }}
           ></div>
 
@@ -6538,9 +6306,7 @@ function MyScreen({
                 textAlign: "left",
               }}
               onMouseOver={(e) =>
-              (e.currentTarget.style.background = dark
-                ? "rgba(255,255,255,0.04)"
-                : "rgba(255,255,255,0.35)")
+              (e.currentTarget.style.background = "rgba(255,255,255,0.35)")
               }
               onMouseOut={(e) =>
                 (e.currentTarget.style.background = "transparent")
@@ -6552,10 +6318,8 @@ function MyScreen({
                   width: 36,
                   height: 36,
                   borderRadius: 10,
-                  background: dark
-                    ? "rgba(254,210,52,0.16)"
-                    : "rgba(254,210,52,0.2)",
-                  color: dark ? "#fedd67" : "#987701",
+                  background: "rgba(254,210,52,0.2)",
+                  color: "#987701",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -6633,9 +6397,7 @@ function MyScreen({
               display: "flex",
               gap: 0,
               position: "relative",
-              borderBottom: dark
-                ? "1px solid rgba(255,255,255,0.08)"
-                : "1px solid rgba(120,90,0,0.12)",
+              borderBottom: "1px solid rgba(120,90,0,0.12)",
             }}
           >
             {[
@@ -6643,19 +6405,17 @@ function MyScreen({
                 id: "member",
                 glyph: "✦",
                 label: "我是組員",
-                color: dark ? "#b8e8a8" : "#3d7a2e",
-                accent: dark ? "#b8e8a8" : "#6dae4a",
-                softBg: dark
-                  ? "rgba(130,200,120,0.08)"
-                  : "rgba(168,214,128,0.14)",
+                color: "#3d7a2e",
+                accent: "#6dae4a",
+                softBg: "rgba(168,214,128,0.14)",
               },
               {
                 id: "leader",
                 glyph: "⚑",
                 label: "我是組長",
-                color: dark ? "#fedd67" : "#8c6d00",
-                accent: dark ? "#fec701" : "#fec701",
-                softBg: dark ? "rgba(254,210,52,0.1)" : "rgba(254,210,52,0.14)",
+                color: "#8c6d00",
+                accent: "#fec701",
+                softBg: "rgba(254,210,52,0.14)",
               },
             ].map((t) => {
               const active = teamTab === t.id;
@@ -6672,9 +6432,7 @@ function MyScreen({
                     background: active ? t.softBg : "transparent",
                     color: active
                       ? t.color
-                      : dark
-                        ? "rgba(255,255,255,0.4)"
-                        : "rgba(120,90,0,0.45)",
+                      : "rgba(120,90,0,0.45)",
                     fontSize: 14,
                     fontWeight: 800,
                     letterSpacing: 0.5,
@@ -6726,12 +6484,8 @@ function MyScreen({
                   style={{
                     padding: "14px 14px 14px 16px",
                     borderRadius: 16,
-                    background: dark
-                      ? "rgba(130,200,120,0.08)"
-                      : "rgba(168,214,128,0.12)",
-                    border: dark
-                      ? "1px solid rgba(184,232,168,0.22)"
-                      : "1px solid rgba(109,174,74,0.3)",
+                    background: "rgba(168,214,128,0.12)",
+                    border: "1px solid rgba(109,174,74,0.3)",
                     backdropFilter: "blur(10px)",
                     display: "flex",
                     alignItems: "center",
@@ -6743,14 +6497,12 @@ function MyScreen({
                       width: 32,
                       height: 32,
                       borderRadius: 999,
-                      background: dark
-                        ? "rgba(184,232,168,0.16)"
-                        : "rgba(109,174,74,0.2)",
+                      background: "rgba(109,174,74,0.2)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: 14,
-                      color: dark ? "#b8e8a8" : "#3d7a2e",
+                      color: "#3d7a2e",
                       flexShrink: 0,
                     }}
                   >
@@ -6760,7 +6512,7 @@ function MyScreen({
                     style={{
                       flex: 1,
                       minWidth: 0,
-                      color: dark ? "#b8e8a8" : "#3d7a2e",
+                      color: "#3d7a2e",
                       lineHeight: 1.4,
                       fontSize: "15px",
                       fontWeight: 600,
@@ -6804,9 +6556,7 @@ function MyScreen({
                         style={{
                           padding: "3px 9px",
                           borderRadius: 999,
-                          border: dark
-                            ? "1px dashed rgba(255,255,255,0.2)"
-                            : "1px dashed rgba(254,210,52,0.45)",
+                          border: "1px dashed rgba(254,210,52,0.45)",
                           background: "transparent",
                           color: muted,
                           fontSize: 10,
@@ -6824,7 +6574,6 @@ function MyScreen({
                     total={joinedTotal}
                     cap={teamCap}
                     variant="joined"
-                    dark={dark}
                     fg={fg}
                     muted={muted}
                     cardBg={cardBg}
@@ -6858,9 +6607,7 @@ function MyScreen({
                       width: 32,
                       height: 32,
                       borderRadius: 999,
-                      background: dark
-                        ? "rgba(255,255,255,0.06)"
-                        : "rgba(254,210,52,0.22)",
+                      background: "rgba(254,210,52,0.22)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -6908,7 +6655,6 @@ function MyScreen({
                   total={ledTotal}
                   cap={teamCap}
                   variant="led"
-                  dark={dark}
                   fg={fg}
                   muted={muted}
                   cardBg={cardBg}
@@ -6929,7 +6675,6 @@ function MyScreen({
 
       <BottomNav
         current="me"
-        dark={dark}
         muted={muted}
         onNavigate={onNavigate}
       />
@@ -6943,27 +6688,18 @@ function MenuRow({
   label,
   trailing,
   onClick,
-  dark,
   fg,
   muted,
   destructive,
   divider,
 }) {
-  const color = destructive ? (dark ? "#FFB8B8" : "#D9534F") : fg;
+  const color = destructive ? ("#D9534F") : fg;
   const iconBg = destructive
-    ? dark
-      ? "rgba(255,120,120,0.14)"
-      : "rgba(217,83,79,0.12)"
-    : dark
-      ? "rgba(254,210,52,0.16)"
-      : "rgba(254,210,52,0.2)";
+    ? "rgba(217,83,79,0.12)"
+    : "rgba(254,210,52,0.2)";
   const iconColor = destructive
-    ? dark
-      ? "#FFB8B8"
-      : "#D9534F"
-    : dark
-      ? "#fedd67"
-      : "#987701";
+    ? "#D9534F"
+    : "#987701";
   return (
     <button
       onClick={onClick}
@@ -6979,16 +6715,12 @@ function MenuRow({
         alignItems: "center",
         gap: 12,
         borderTop: divider
-          ? dark
-            ? "1px solid rgba(255,255,255,0.06)"
-            : "1px solid rgba(120,90,0,0.08)"
+          ? "1px solid rgba(120,90,0,0.08)"
           : "none",
         transition: "background 0.15s",
       }}
       onMouseOver={(e) =>
-      (e.currentTarget.style.background = dark
-        ? "rgba(255,255,255,0.04)"
-        : "rgba(255,255,255,0.45)")
+      (e.currentTarget.style.background = "rgba(255,255,255,0.45)")
       }
       onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
     >
@@ -7034,7 +6766,6 @@ function TeamCard({
   team,
   total,
   cap,
-  dark,
   fg,
   muted,
   cardBg,
@@ -7051,74 +6782,42 @@ function TeamCard({
   // Role-specific color palette threaded through the card
   const rc = isMemberCard
     ? {
-      primary: dark ? "#b8e8a8" : "#4d8a37",
-      primaryDeep: dark ? "#b8e8a8" : "#3d6b2e",
-      bg: dark ? "rgba(130,200,120,0.08)" : "#F3FBEA",
-      bannerGrad: dark
-        ? "linear-gradient(135deg, rgba(130,200,120,0.28), rgba(110,180,100,0.18) 60%, rgba(180,220,160,0.12))"
-        : "linear-gradient(135deg, #CDEAB0, #A8D680 60%, #CDEAB0)",
-      border: dark
-        ? "1px solid rgba(130,200,120,0.2)"
-        : "1px solid rgba(110,170,80,0.3)",
-      borderSoft: dark
-        ? "1px solid rgba(130,200,120,0.14)"
-        : "1px solid rgba(110,170,80,0.2)",
-      borderStrong: dark
-        ? "1px solid rgba(130,200,120,0.32)"
-        : "1px solid rgba(80,140,60,0.4)",
-      divider: dark
-        ? "1px solid rgba(130,200,120,0.1)"
-        : "1px solid rgba(80,140,60,0.12)",
-      shadow: dark ? "none" : "0 4px 16px rgba(80,140,60,0.1)",
-      starIcon: dark ? "#b8e8a8" : "#6aa840",
-      chipBg: dark ? "rgba(130,200,120,0.14)" : "rgba(168,214,128,0.35)",
-      chipBgSoft: dark ? "rgba(130,200,120,0.08)" : "rgba(180,220,160,0.4)",
-      leaderRowBg: dark
-        ? "linear-gradient(135deg, rgba(130,200,120,0.22), rgba(110,180,100,0.12))"
-        : "linear-gradient(135deg, rgba(168,214,128,0.4), rgba(200,232,168,0.25))",
-      leaderRowBorder: dark
-        ? "1px solid rgba(130,200,120,0.3)"
-        : "1px solid rgba(110,170,80,0.35)",
+      primary: "#4d8a37",
+      primaryDeep: "#3d6b2e",
+      bg: "#F3FBEA",
+      bannerGrad: "linear-gradient(135deg, #CDEAB0, #A8D680 60%, #CDEAB0)",
+      border: "1px solid rgba(110,170,80,0.3)",
+      borderSoft: "1px solid rgba(110,170,80,0.2)",
+      borderStrong: "1px solid rgba(80,140,60,0.4)",
+      divider: "1px solid rgba(80,140,60,0.12)",
+      shadow: "0 4px 16px rgba(80,140,60,0.1)",
+      starIcon: "#6aa840",
+      chipBg: "rgba(168,214,128,0.35)",
+      chipBgSoft: "rgba(180,220,160,0.4)",
+      leaderRowBg: "linear-gradient(135deg, rgba(168,214,128,0.4), rgba(200,232,168,0.25))",
+      leaderRowBorder: "1px solid rgba(110,170,80,0.35)",
       shareGrad:
         "linear-gradient(135deg, #6dae4a 0%, #538a37 50%, #6dae4a 100%)",
-      shareFallback: dark
-        ? "rgba(130,200,120,0.1)"
-        : "rgba(168,214,128,0.22)",
+      shareFallback: "rgba(168,214,128,0.22)",
     }
     : {
-      primary: dark ? "#fedd67" : "#987701",
-      primaryDeep: dark ? "#fedd67" : "#655001",
-      bg: dark ? "rgba(254,210,52,0.08)" : "#FFF4C4",
-      bannerGrad: dark
-        ? "linear-gradient(135deg, rgba(254,221,103,0.28), rgba(254,210,52,0.18) 60%, rgba(254,233,154,0.1))"
-        : "linear-gradient(135deg, #FFE892, #FFDB5E 60%, #FFE892)",
-      border: dark
-        ? "1px solid rgba(254,210,52,0.18)"
-        : "1px solid rgba(254,199,1,0.28)",
-      borderSoft: dark
-        ? "1px solid rgba(254,210,52,0.14)"
-        : "1px solid rgba(254,210,52,0.18)",
-      borderStrong: dark
-        ? "1px solid rgba(254,210,52,0.32)"
-        : "1px solid rgba(254,199,1,0.4)",
-      divider: dark
-        ? "1px solid rgba(255,255,255,0.06)"
-        : "1px solid rgba(120,90,0,0.08)",
-      shadow: dark ? "none" : "0 4px 16px rgba(200,160,0,0.08)",
+      primary: "#987701",
+      primaryDeep: "#655001",
+      bg: "#FFF4C4",
+      bannerGrad: "linear-gradient(135deg, #FFE892, #FFDB5E 60%, #FFE892)",
+      border: "1px solid rgba(254,199,1,0.28)",
+      borderSoft: "1px solid rgba(254,210,52,0.18)",
+      borderStrong: "1px solid rgba(254,199,1,0.4)",
+      divider: "1px solid rgba(120,90,0,0.08)",
+      shadow: "0 4px 16px rgba(200,160,0,0.08)",
       starIcon: "#fec701",
-      chipBg: dark ? "rgba(254,210,52,0.14)" : "rgba(254,210,52,0.25)",
-      chipBgSoft: dark ? "rgba(254,210,52,0.08)" : "rgba(254,210,52,0.12)",
-      leaderRowBg: dark
-        ? "linear-gradient(135deg, rgba(254,221,103,0.22), rgba(254,210,52,0.12))"
-        : "linear-gradient(135deg, rgba(254,221,103,0.28), rgba(254,210,52,0.16))",
-      leaderRowBorder: dark
-        ? "1px solid rgba(254,210,52,0.3)"
-        : "1px solid rgba(254,199,1,0.4)",
+      chipBg: "rgba(254,210,52,0.25)",
+      chipBgSoft: "rgba(254,210,52,0.12)",
+      leaderRowBg: "linear-gradient(135deg, rgba(254,221,103,0.28), rgba(254,210,52,0.16))",
+      leaderRowBorder: "1px solid rgba(254,199,1,0.4)",
       shareGrad:
         "linear-gradient(135deg, #e8a900 0%, #c48c00 50%, #e8a900 100%)",
-      shareFallback: dark
-        ? "rgba(255,255,255,0.04)"
-        : "rgba(254,210,52,0.12)",
+      shareFallback: "rgba(254,210,52,0.12)",
     };
   const [shareOpen, setShareOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -7148,9 +6847,7 @@ function TeamCard({
         style={{
           padding: "18px 18px",
           borderRadius: 20,
-          background: dark
-            ? "linear-gradient(135deg, rgba(130,200,120,0.18), rgba(180,220,160,0.1))"
-            : "linear-gradient(135deg, #E4F3D0, #D4EAC0)",
+          background: "linear-gradient(135deg, #E4F3D0, #D4EAC0)",
           border: rc.borderStrong,
           boxShadow: rc.shadow,
           display: "flex",
@@ -7194,9 +6891,7 @@ function TeamCard({
           style={{
             padding: "10px 10px 10px 14px",
             borderRadius: 14,
-            background: dark
-              ? "rgba(255,255,255,0.05)"
-              : "rgba(255,255,255,0.75)",
+            background: "rgba(255,255,255,0.75)",
             display: "flex",
             alignItems: "center",
             gap: 10,
@@ -7235,7 +6930,7 @@ function TeamCard({
                 cursor: "pointer",
                 fontFamily: "inherit",
                 fontSize: 11,
-                color: idCopied ? (dark ? "#A8E6C9" : "#2E9B65") : muted,
+                color: idCopied ? ("#2E9B65") : muted,
                 marginTop: 2,
                 display: "inline-flex",
                 alignItems: "center",
@@ -7333,9 +7028,7 @@ function TeamCard({
           overflow: "hidden",
           background: rc.bg,
           border: rc.border,
-          boxShadow: dark
-            ? "0 8px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04)"
-            : "0 8px 24px rgba(80,140,60,0.08), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)",
+          boxShadow: "0 8px 24px rgba(80,140,60,0.08), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)",
           display: "flex",
           flexDirection: "column",
         }}
@@ -7359,7 +7052,7 @@ function TeamCard({
               position: "absolute",
               inset: 0,
               pointerEvents: "none",
-              opacity: dark ? 0.35 : 0.5,
+              opacity: 0.5,
             }}
             viewBox="0 0 400 120"
             preserveAspectRatio="xMaxYMid slice"
@@ -7376,7 +7069,7 @@ function TeamCard({
                 <circle
                   r={r + 0.4}
                   fill={
-                    isMemberCard ? (dark ? "#cdf0b8" : "#6dae4a") : "#fec701"
+                    isMemberCard ? ("#6dae4a") : "#fec701"
                   }
                   opacity="0.6"
                 />
@@ -7386,7 +7079,7 @@ function TeamCard({
             {/* thin constellation line */}
             <path
               d={`M 300 58 L 345 75 L 378 92 L 352 42 L 328 22`}
-              stroke={isMemberCard ? (dark ? "#cdf0b8" : "#6dae4a") : "#fec701"}
+              stroke={isMemberCard ? ("#6dae4a") : "#fec701"}
               strokeWidth="0.6"
               fill="none"
               opacity="0.35"
@@ -7411,9 +7104,7 @@ function TeamCard({
                   gap: 5,
                   padding: "2px 9px",
                   borderRadius: 999,
-                  background: dark
-                    ? "rgba(0,0,0,0.22)"
-                    : "rgba(255,255,255,0.6)",
+                  background: "rgba(255,255,255,0.6)",
                   border: rc.borderSoft,
                   fontSize: 10,
                   fontWeight: 800,
@@ -7451,9 +7142,7 @@ function TeamCard({
                       height: 24,
                       borderRadius: 999,
                       border: rc.borderStrong,
-                      background: dark
-                        ? "rgba(255,255,255,0.06)"
-                        : "rgba(255,255,255,0.85)",
+                      background: "rgba(255,255,255,0.85)",
                       color: rc.primary,
                       fontSize: 11,
                       cursor: "pointer",
@@ -7476,9 +7165,7 @@ function TeamCard({
                       borderRadius: 999,
                       border: rc.borderStrong,
                       cursor: "pointer",
-                      background: dark
-                        ? "rgba(255,255,255,0.05)"
-                        : "rgba(255,255,255,0.7)",
+                      background: "rgba(255,255,255,0.7)",
                       color: muted,
                       fontSize: 12,
                       fontWeight: 700,
@@ -7526,12 +7213,8 @@ function TeamCard({
                 padding: "6px 10px",
                 borderRadius: 10,
                 background: idCopied
-                  ? dark
-                    ? "rgba(168,230,201,0.18)"
-                    : "rgba(80,200,140,0.18)"
-                  : dark
-                    ? "rgba(0,0,0,0.25)"
-                    : "rgba(255,255,255,0.85)",
+                  ? "rgba(80,200,140,0.18)"
+                  : "rgba(255,255,255,0.85)",
                 border: idCopied
                   ? "1px solid rgba(80,200,140,0.45)"
                   : rc.borderStrong,
@@ -7560,7 +7243,7 @@ function TeamCard({
                 style={{
                   fontSize: 13,
                   fontWeight: 800,
-                  color: idCopied ? (dark ? "#A8E6C9" : "#2E9B65") : fg,
+                  color: idCopied ? ("#2E9B65") : fg,
                   marginTop: 3,
                   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
                   letterSpacing: 1,
@@ -7621,12 +7304,8 @@ function TeamCard({
               display: "flex",
               alignItems: "center",
               gap: 14,
-              borderBottom: dark
-                ? "1px solid rgba(255,255,255,0.06)"
-                : "1px solid rgba(120,90,0,0.1)",
-              borderTop: dark
-                ? "1px solid rgba(255,255,255,0.06)"
-                : "1px solid rgba(254,199,1,0.3)",
+              borderBottom: "1px solid rgba(120,90,0,0.1)",
+              borderTop: "1px solid rgba(254,199,1,0.3)",
               textAlign: "left",
               width: "100%",
             }}
@@ -7777,7 +7456,7 @@ function TeamCard({
             display: "grid",
             gridTemplateColumns: "1.35fr 1fr",
             borderBottom: rc.divider,
-            background: dark ? "rgba(0,0,0,0.14)" : "rgba(255,255,255,0.55)",
+            background: "rgba(255,255,255,0.55)",
           }}
         >
           <div
@@ -7970,14 +7649,10 @@ function TeamCard({
                     borderRadius: 14,
                     background: m.isLeader
                       ? rc.leaderRowBg
-                      : dark
-                        ? "rgba(255,255,255,0.04)"
-                        : "rgba(255,255,255,0.7)",
+                      : "rgba(255,255,255,0.7)",
                     border: m.isLeader ? rc.leaderRowBorder : rc.borderSoft,
                     boxShadow: m.isLeader
-                      ? dark
-                        ? "none"
-                        : `0 2px 6px ${isMemberCard ? "rgba(109,174,74,0.12)" : "rgba(200,160,0,0.1)"}`
+                      ? `0 2px 6px ${isMemberCard ? "rgba(109,174,74,0.12)" : "rgba(200,160,0,0.1)"}`
                       : "none",
                   }}
                 >
@@ -7997,27 +7672,19 @@ function TeamCard({
                         i === 0
                           ? "linear-gradient(135deg, #fed234, #fec701)"
                           : i === 1
-                            ? dark
-                              ? "rgba(255,255,255,0.12)"
-                              : "rgba(180,190,200,0.5)"
+                            ? "rgba(180,190,200,0.5)"
                             : i === 2
-                              ? dark
-                                ? "rgba(200,140,80,0.25)"
-                                : "rgba(210,170,130,0.55)"
+                              ? "rgba(210,170,130,0.55)"
                               : "transparent",
                       color:
                         i === 0
                           ? "#fff"
                           : i <= 2
-                            ? dark
-                              ? "#fff"
-                              : "#fff"
+                            ? "#fff"
                             : muted,
                       border:
                         i > 2
-                          ? dark
-                            ? "1px solid rgba(255,255,255,0.1)"
-                            : "1px solid rgba(120,90,0,0.2)"
+                          ? "1px solid rgba(120,90,0,0.2)"
                           : "none",
                       fontFamily: '"Noto Serif SC", serif',
                     }}
@@ -8037,10 +7704,8 @@ function TeamCard({
                       alignItems: "center",
                       justifyContent: "center",
                       flexShrink: 0,
-                      border: dark
-                        ? "1.5px solid rgba(255,255,255,0.1)"
-                        : "1.5px solid rgba(255,255,255,0.9)",
-                      boxShadow: dark ? "none" : "0 2px 5px rgba(0,0,0,0.08)",
+                      border: "1.5px solid rgba(255,255,255,0.9)",
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
                     }}
                   >
                     {m.name[0]}
@@ -8110,9 +7775,7 @@ function TeamCard({
           <div
             style={{
               padding: "12px 16px 14px",
-              borderTop: dark
-                ? "1px solid rgba(255,255,255,0.06)"
-                : "1px solid rgba(120,90,0,0.08)",
+              borderTop: "1px solid rgba(120,90,0,0.08)",
               background:
                 "linear-gradient(180deg, rgba(255,214,168,0.1), transparent)",
             }}
@@ -8123,7 +7786,7 @@ function TeamCard({
                 alignItems: "center",
                 gap: 6,
                 fontWeight: 800,
-                color: dark ? "#FFD88A" : "#C17F1E",
+                color: "#C17F1E",
                 letterSpacing: 0.4,
                 marginBottom: 10,
                 fontSize: "15px",
@@ -8138,12 +7801,8 @@ function TeamCard({
                   style={{
                     padding: "6px 8px 6px 6px",
                     borderRadius: 999,
-                    background: dark
-                      ? "rgba(255,255,255,0.05)"
-                      : "rgba(255,255,255,0.8)",
-                    border: dark
-                      ? "1px solid rgba(255,255,255,0.08)"
-                      : "1px solid rgba(255,255,255,0.9)",
+                    background: "rgba(255,255,255,0.8)",
+                    border: "1px solid rgba(255,255,255,0.9)",
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
@@ -8207,9 +7866,7 @@ function TeamCard({
                       width: 30,
                       height: 30,
                       borderRadius: 999,
-                      border: dark
-                        ? "1px solid rgba(255,255,255,0.14)"
-                        : "1px solid rgba(254,210,52,0.4)",
+                      border: "1px solid rgba(254,210,52,0.4)",
                       cursor: "pointer",
                       background: "transparent",
                       color: muted,
@@ -8235,9 +7892,7 @@ function TeamCard({
           <div
             style={{
               padding: "10px 16px 14px",
-              borderTop: dark
-                ? "1px solid rgba(255,255,255,0.06)"
-                : "1px solid rgba(120,90,0,0.08)",
+              borderTop: "1px solid rgba(120,90,0,0.08)",
             }}
           >
             <div
@@ -8247,12 +7902,8 @@ function TeamCard({
                 textAlign: "center",
                 padding: "10px",
                 borderRadius: 12,
-                background: dark
-                  ? "rgba(255,255,255,0.02)"
-                  : "rgba(254,210,52,0.1)",
-                border: dark
-                  ? "1px dashed rgba(255,255,255,0.1)"
-                  : "1px dashed rgba(254,210,52,0.3)",
+                background: "rgba(254,210,52,0.1)",
+                border: "1px dashed rgba(254,210,52,0.3)",
               }}
             >
               尚無加入申請 · 分享邀請讓夥伴找到你
@@ -8268,7 +7919,6 @@ function TeamCard({
           copied={shareCopied}
           onCopy={copyShare}
           onClose={() => setShareOpen(false)}
-          dark={dark}
           fg={fg}
           muted={muted}
         />
@@ -8281,7 +7931,6 @@ function TeamCard({
             onRenameTeam(alias);
             setRenameOpen(false);
           }}
-          dark={dark}
           fg={fg}
           muted={muted}
         />
@@ -8306,7 +7955,7 @@ function TeamCard({
             style={{
               width: "100%",
               maxWidth: 380,
-              background: dark ? "#241c00" : "#fff",
+              background: "#fff",
               borderRadius: 20,
               padding: "22px 22px 18px",
               boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
@@ -8319,9 +7968,7 @@ function TeamCard({
                 height: 52,
                 borderRadius: 999,
                 margin: "0 auto 14px",
-                background: dark
-                  ? "rgba(255,140,140,0.14)"
-                  : "rgba(217,83,79,0.12)",
+                background: "rgba(217,83,79,0.12)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -8362,9 +8009,7 @@ function TeamCard({
                   flex: 1,
                   padding: "12px 14px",
                   borderRadius: 12,
-                  border: dark
-                    ? "1px solid rgba(255,255,255,0.14)"
-                    : "1px solid rgba(120,90,0,0.18)",
+                  border: "1px solid rgba(120,90,0,0.18)",
                   background: "transparent",
                   color: fg,
                   fontSize: 14,
@@ -8405,10 +8050,10 @@ function TeamCard({
 }
 
 // Rename team — alias bottom sheet
-function RenameTeamSheet({ team, onClose, onSave, dark, fg, muted }) {
+function RenameTeamSheet({ team, onClose, onSave, fg, muted }) {
   const [value, setValue] = useState(team.alias || "");
-  const sheetBg = dark ? "#241c00" : "#FFFFFF";
-  const inputBg = dark ? "rgba(255,255,255,0.06)" : "rgba(254,210,52,0.15)";
+  const sheetBg = "#FFFFFF";
+  const inputBg = "rgba(254,210,52,0.15)";
   return (
     <div
       onClick={onClose}
@@ -8447,7 +8092,7 @@ function RenameTeamSheet({ team, onClose, onSave, dark, fg, muted }) {
               width: 36,
               height: 4,
               borderRadius: 999,
-              background: dark ? "rgba(255,255,255,0.2)" : "rgba(40,30,70,0.2)",
+              background: "rgba(40,30,70,0.2)",
             }}
           />
         </div>
@@ -8477,9 +8122,7 @@ function RenameTeamSheet({ team, onClose, onSave, dark, fg, muted }) {
             padding: "12px 14px",
             borderRadius: 12,
             background: inputBg,
-            border: dark
-              ? "1px solid rgba(255,255,255,0.1)"
-              : "1px solid rgba(254,210,52,0.35)",
+            border: "1px solid rgba(254,210,52,0.35)",
             fontSize: 15,
             color: fg,
             fontFamily: "inherit",
@@ -8494,9 +8137,7 @@ function RenameTeamSheet({ team, onClose, onSave, dark, fg, muted }) {
               style={{
                 padding: "11px 14px",
                 borderRadius: 12,
-                border: dark
-                  ? "1px solid rgba(255,255,255,0.12)"
-                  : "1px solid rgba(254,210,52,0.4)",
+                border: "1px solid rgba(254,210,52,0.4)",
                 background: "transparent",
                 color: muted,
                 fontSize: 13,
@@ -8514,9 +8155,7 @@ function RenameTeamSheet({ team, onClose, onSave, dark, fg, muted }) {
               flex: team.alias ? "none" : 1,
               padding: "11px 14px",
               borderRadius: 12,
-              border: dark
-                ? "1px solid rgba(255,255,255,0.12)"
-                : "1px solid rgba(254,210,52,0.4)",
+              border: "1px solid rgba(254,210,52,0.4)",
               background: "transparent",
               color: muted,
               fontSize: 13,
@@ -8537,9 +8176,7 @@ function RenameTeamSheet({ team, onClose, onSave, dark, fg, muted }) {
               border: "none",
               background: value.trim()
                 ? "linear-gradient(135deg, #fed234, #fec701)"
-                : dark
-                  ? "rgba(255,255,255,0.08)"
-                  : "rgba(254,210,52,0.25)",
+                : "rgba(254,210,52,0.25)",
               color: value.trim() ? "#fff" : muted,
               fontSize: 13,
               fontWeight: 800,
@@ -8565,7 +8202,6 @@ function ShareSheet({
   copied,
   onCopy,
   onClose,
-  dark,
   fg,
   muted,
 }) {
@@ -8588,8 +8224,8 @@ function ShareSheet({
     { key: "sms", label: "訊息", bg: "#34D399", glyph: "💬" },
   ];
 
-  const sheetBg = dark ? "#241c00" : "#FFFFFF";
-  const previewBg = dark ? "rgba(255,255,255,0.05)" : "rgba(254,210,52,0.15)";
+  const sheetBg = "#FFFFFF";
+  const previewBg = "rgba(254,210,52,0.15)";
 
   return (
     <div
@@ -8630,7 +8266,7 @@ function ShareSheet({
               width: 36,
               height: 4,
               borderRadius: 999,
-              background: dark ? "rgba(255,255,255,0.2)" : "rgba(40,30,70,0.2)",
+              background: "rgba(40,30,70,0.2)",
             }}
           />
         </div>
@@ -8650,9 +8286,7 @@ function ShareSheet({
             padding: "12px 14px",
             borderRadius: 14,
             background: previewBg,
-            border: dark
-              ? "1px solid rgba(255,255,255,0.08)"
-              : "1px solid rgba(254,210,52,0.25)",
+            border: "1px solid rgba(254,210,52,0.25)",
             fontSize: 12.5,
             lineHeight: 1.6,
             color: fg,
@@ -8750,9 +8384,7 @@ function ShareSheet({
             style={{
               padding: "12px 18px",
               borderRadius: 12,
-              border: dark
-                ? "1px solid rgba(255,255,255,0.12)"
-                : "1px solid rgba(254,210,52,0.35)",
+              border: "1px solid rgba(254,210,52,0.35)",
               background: "transparent",
               cursor: "pointer",
               color: muted,
@@ -8777,17 +8409,15 @@ function ShareSheet({
 }
 
 // ─── Task Form Screens ───────────────────────────────────────
-function FormShell({
-  dark,
-  bg,
+function FormShell({ bg,
   title,
   subtitle,
   onCancel,
   children,
   footer,
 }) {
-  const fg = dark ? "#fff" : "#241c00";
-  const muted = dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)";
+  const fg = "#241c00";
+  const muted = "rgba(50,40,0,0.6)";
   return (
     <div
       style={{
@@ -8795,7 +8425,7 @@ function FormShell({
         display: "flex",
         flexDirection: "column",
         background: bg,
-        color: dark ? "#fff" : "#241c00",
+        color: "#241c00",
         overflow: "hidden",
       }}
     >
@@ -8895,9 +8525,7 @@ function FormShell({
               position: "sticky",
               bottom: 0,
               padding: "12px 16px 16px",
-              background: dark
-                ? "linear-gradient(180deg, transparent, rgba(15,15,40,0.92) 40%)"
-                : "linear-gradient(180deg, transparent, rgba(255,250,255,0.92) 40%)",
+              background: "linear-gradient(180deg, transparent, rgba(255,250,255,0.92) 40%)",
               backdropFilter: "blur(10px)",
               WebkitBackdropFilter: "blur(10px)",
               flexShrink: 0,
@@ -8911,8 +8539,8 @@ function FormShell({
   );
 }
 
-function FieldLabel({ children, required, dark }) {
-  const fg = dark ? "#fff" : "#241c00";
+function FieldLabel({ children, required }) {
+  const fg = "#241c00";
   return (
     <div style={{ fontSize: 13, fontWeight: 700, color: fg, marginBottom: 8 }}>
       {children}{" "}
@@ -8921,8 +8549,8 @@ function FieldLabel({ children, required, dark }) {
   );
 }
 
-function TextInput({ value, onChange, placeholder, dark }) {
-  const fg = dark ? "#fff" : "#241c00";
+function TextInput({ value, onChange, placeholder }) {
+  const fg = "#241c00";
   return (
     <input
       type="text"
@@ -8934,7 +8562,7 @@ function TextInput({ value, onChange, placeholder, dark }) {
         height: 46,
         padding: "0 14px",
         borderRadius: 12,
-        background: dark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.85)",
+        background: "rgba(255,255,255,0.85)",
         fontSize: 14,
         color: fg,
         fontFamily: "inherit",
@@ -8948,17 +8576,15 @@ function TextInput({ value, onChange, placeholder, dark }) {
         e.target.style.boxShadow = "0 0 0 3px rgba(254,199,1,0.25)";
       }}
       onBlur={(e) => {
-        e.target.style.borderColor = dark
-          ? "rgba(255,255,255,0.12)"
-          : "rgba(254,210,52,0.4)";
+        e.target.style.borderColor = "rgba(254,210,52,0.4)";
         e.target.style.boxShadow = "none";
       }}
     />
   );
 }
 
-function Textarea({ value, onChange, placeholder, dark, rows = 3 }) {
-  const fg = dark ? "#fff" : "#241c00";
+function Textarea({ value, onChange, placeholder, rows = 3 }) {
+  const fg = "#241c00";
   return (
     <textarea
       value={value}
@@ -8969,10 +8595,8 @@ function Textarea({ value, onChange, placeholder, dark, rows = 3 }) {
         width: "100%",
         padding: "12px 14px",
         borderRadius: 12,
-        border: dark
-          ? "1px solid rgba(255,255,255,0.12)"
-          : "1px solid rgba(254,210,52,0.4)",
-        background: dark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.85)",
+        border: "1px solid rgba(254,210,52,0.4)",
+        background: "rgba(255,255,255,0.85)",
         fontSize: 14,
         color: fg,
         fontFamily: "inherit",
@@ -8986,16 +8610,14 @@ function Textarea({ value, onChange, placeholder, dark, rows = 3 }) {
         e.target.style.boxShadow = "0 0 0 3px rgba(254,199,1,0.25)";
       }}
       onBlur={(e) => {
-        e.target.style.borderColor = dark
-          ? "rgba(255,255,255,0.12)"
-          : "rgba(254,210,52,0.4)";
+        e.target.style.borderColor = "rgba(254,210,52,0.4)";
         e.target.style.boxShadow = "none";
       }}
     />
   );
 }
 
-function ChipGroup({ options, value, onChange, multi = true, dark }) {
+function ChipGroup({ options, value, onChange, multi = true }) {
   const toggle = (opt) => {
     if (multi) {
       onChange(
@@ -9024,21 +8646,13 @@ function ChipGroup({ options, value, onChange, multi = true, dark }) {
               cursor: "pointer",
               border: sel
                 ? "1.5px solid #cb9f01"
-                : dark
-                  ? "1px solid rgba(255,255,255,0.14)"
-                  : "1px solid rgba(254,210,52,0.35)",
+                : "1px solid rgba(254,210,52,0.35)",
               background: sel
                 ? "linear-gradient(135deg, rgba(254,210,52,0.25), rgba(254,233,154,0.28))"
-                : dark
-                  ? "rgba(255,255,255,0.04)"
-                  : "rgba(255,255,255,0.6)",
+                : "rgba(255,255,255,0.6)",
               color: sel
-                ? dark
-                  ? "#fedd67"
-                  : "#655001"
-                : dark
-                  ? "#fff"
-                  : "#241c00",
+                ? "#655001"
+                : "#241c00",
               transition: "all 0.15s",
             }}
           >
@@ -9051,8 +8665,8 @@ function ChipGroup({ options, value, onChange, multi = true, dark }) {
   );
 }
 
-function SubmitButton({ label, onClick, disabled, color = "#cb9f01", dark }) {
-  const muted = dark ? "rgba(255,255,255,0.4)" : "rgba(40,30,70,0.45)";
+function SubmitButton({ label, onClick, disabled, color = "#cb9f01" }) {
+  const muted = "rgba(40,30,70,0.45)";
   return (
     <button
       onClick={onClick}
@@ -9068,9 +8682,7 @@ function SubmitButton({ label, onClick, disabled, color = "#cb9f01", dark }) {
         letterSpacing: 0.5,
         fontFamily: "inherit",
         background: disabled
-          ? dark
-            ? "rgba(255,255,255,0.08)"
-            : "rgba(100,80,1,0.15)"
+          ? "rgba(100,80,1,0.15)"
           : `linear-gradient(135deg, ${color}, ${color}C0)`,
         color: disabled ? muted : "#fff",
         boxShadow: disabled ? "none" : `0 8px 24px ${color}50`,
@@ -9082,15 +8694,12 @@ function SubmitButton({ label, onClick, disabled, color = "#cb9f01", dark }) {
 }
 
 // Onboarding — profile setup for new users (after Google sign-in)
-function ProfileScreen({ config, user, onBack, onEdit }) {
-  const dark = config.background === "night";
-  const bg = dark ? "#1a1400" : "#FFFDF5";
-  const fg = dark ? "#fff" : "#241c00";
-  const muted = dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)";
-  const cardBg = dark ? "rgba(255,255,255,0.06)" : "#FFFBE6";
-  const cardBorder = dark
-    ? "1px solid rgba(255,255,255,0.1)"
-    : "1px solid rgba(254,199,1,0.22)";
+function ProfileScreen({ user, onBack, onEdit }) {
+  const bg = "#FFFDF5";
+  const fg = "#241c00";
+  const muted = "rgba(50,40,0,0.6)";
+  const cardBg = "#FFFBE6";
+  const cardBorder = "1px solid rgba(254,199,1,0.22)";
   const accent = "#cb9f01";
 
   const [idCopied, setIdCopied] = useState(false);
@@ -9148,7 +8757,7 @@ function ProfileScreen({ config, user, onBack, onEdit }) {
         display: "flex",
         flexDirection: "column",
         background: bg,
-        color: dark ? "#fff" : "#241c00",
+        color: "#241c00",
         overflow: "hidden",
       }}
     >
@@ -9192,8 +8801,8 @@ function ProfileScreen({ config, user, onBack, onEdit }) {
             padding: "0 14px",
             borderRadius: 999,
             border: `1px solid ${accent}60`,
-            background: dark ? "rgba(254,199,1,0.14)" : "rgba(254,199,1,0.2)",
-            color: dark ? "#fedd67" : accent,
+            background: "rgba(254,199,1,0.2)",
+            color: accent,
             fontSize: 13,
             fontWeight: 700,
             fontFamily: "inherit",
@@ -9219,11 +8828,9 @@ function ProfileScreen({ config, user, onBack, onEdit }) {
           style={{
             padding: "22px 18px",
             borderRadius: 22,
-            background: dark
-              ? "linear-gradient(135deg, rgba(254,210,52,0.22), rgba(254,233,154,0.18))"
-              : "linear-gradient(160deg, #FFE48C 0%, #FFEEAD 55%, #FFF7D6 100%)",
-            border: dark ? cardBorder : "1px solid rgba(254,199,1,0.3)",
-            boxShadow: dark ? "none" : "0 8px 22px rgba(200,160,0,0.12)",
+            background: "linear-gradient(160deg, #FFE48C 0%, #FFEEAD 55%, #FFF7D6 100%)",
+            border: "1px solid rgba(254,199,1,0.3)",
+            boxShadow: "0 8px 22px rgba(200,160,0,0.12)",
             display: "flex",
             alignItems: "center",
             gap: 16,
@@ -9283,22 +8890,12 @@ function ProfileScreen({ config, user, onBack, onEdit }) {
                     fontFamily: 'ui-monospace, "SF Mono", monospace',
                     letterSpacing: 0.3,
                     background: idCopied
-                      ? dark
-                        ? "rgba(80,180,120,0.2)"
-                        : "rgba(80,180,120,0.18)"
-                      : dark
-                        ? "rgba(255,255,255,0.08)"
-                        : "rgba(255,255,255,0.55)",
+                      ? "rgba(80,180,120,0.18)"
+                      : "rgba(255,255,255,0.55)",
                     color: idCopied
-                      ? dark
-                        ? "#9ee8b8"
-                        : "#2d8050"
-                      : dark
-                        ? "rgba(255,255,255,0.75)"
-                        : "rgba(90,70,0,0.85)",
-                    border: dark
-                      ? "1px solid rgba(255,255,255,0.08)"
-                      : "1px solid rgba(120,90,0,0.12)",
+                      ? "#2d8050"
+                      : "rgba(90,70,0,0.85)",
+                    border: "1px solid rgba(120,90,0,0.12)",
                     cursor: "pointer",
                     transition: "all 0.18s ease",
                     fontFamily: 'ui-monospace, "SF Mono", monospace',
@@ -9364,9 +8961,7 @@ function ProfileScreen({ config, user, onBack, onEdit }) {
                 borderTop:
                   i === 0
                     ? "none"
-                    : dark
-                      ? "1px solid rgba(255,255,255,0.06)"
-                      : "1px solid rgba(254,199,1,0.12)",
+                    : "1px solid rgba(254,199,1,0.12)",
               }}
             >
               <div
@@ -9375,10 +8970,8 @@ function ProfileScreen({ config, user, onBack, onEdit }) {
                   height: 30,
                   borderRadius: 8,
                   flexShrink: 0,
-                  background: dark
-                    ? "rgba(255,255,255,0.06)"
-                    : "rgba(254,199,1,0.18)",
-                  color: dark ? "#fedd67" : accent,
+                  background: "rgba(254,199,1,0.18)",
+                  color: accent,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -9416,7 +9009,6 @@ function ProfileScreen({ config, user, onBack, onEdit }) {
 
 // Onboarding — profile setup for new users (after Google sign-in)
 function ProfileSetupForm({
-  config,
   user,
   initial,
   onCancel,
@@ -9425,14 +9017,11 @@ function ProfileSetupForm({
   subtitle = "初次加入，請填寫基本資訊，稍後可於「我的」中修改",
   submitLabel = "完成註冊",
 }) {
-  const dark = config.background === "night";
-  const bg = dark ? "#1a1400" : "#FFFDF5";
-  const muted = dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)";
-  const cardBg = dark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.6)";
-  const cardBorder = dark
-    ? "1px solid rgba(255,255,255,0.1)"
-    : "1px solid rgba(255,255,255,0.9)";
-  const fg = dark ? "#fff" : "#241c00";
+  const bg = "#FFFDF5";
+  const muted = "rgba(50,40,0,0.6)";
+  const cardBg = "rgba(255,255,255,0.6)";
+  const cardBorder = "1px solid rgba(255,255,255,0.9)";
+  const fg = "#241c00";
 
   const initEn =
     initial?.enName ||
@@ -9581,7 +9170,6 @@ function ProfileSetupForm({
 
   return (
     <FormShell
-      dark={dark}
       bg={bg}
       title={title}
       subtitle={subtitle}
@@ -9604,7 +9192,6 @@ function ProfileSetupForm({
           }
           disabled={!valid}
           color="#fec701"
-          dark={dark}
         />
       }
     >
@@ -9613,10 +9200,8 @@ function ProfileSetupForm({
         style={{
           padding: "16px 14px",
           borderRadius: 16,
-          background: dark ? "rgba(254,199,1,0.12)" : "rgba(254,199,1,0.18)",
-          border: dark
-            ? "1px solid rgba(254,221,103,0.25)"
-            : "1px solid rgba(254,199,1,0.35)",
+          background: "rgba(254,199,1,0.18)",
+          border: "1px solid rgba(254,199,1,0.35)",
           display: "flex",
           alignItems: "center",
           gap: 12,
@@ -9659,19 +9244,18 @@ function ProfileSetupForm({
       </div>
 
       <div style={card}>
-        <FieldLabel required dark={dark}>
+        <FieldLabel required>
           中文姓名
         </FieldLabel>
         <TextInput
           value={zhName}
           onChange={setZhName}
           placeholder="請輸入你的中文姓名"
-          dark={dark}
         />
       </div>
 
       <div style={card}>
-        <FieldLabel dark={dark}>英文姓名</FieldLabel>
+        <FieldLabel>英文姓名</FieldLabel>
         <div
           style={{
             fontSize: 11,
@@ -9686,12 +9270,11 @@ function ProfileSetupForm({
           value={enName}
           onChange={setEnName}
           placeholder="e.g. Chia-Yi Lin"
-          dark={dark}
         />
       </div>
 
       <div style={card}>
-        <FieldLabel dark={dark}>暱稱 Nickname</FieldLabel>
+        <FieldLabel>暱稱 Nickname</FieldLabel>
         <div
           style={{
             fontSize: 11,
@@ -9706,12 +9289,11 @@ function ProfileSetupForm({
           value={nickname}
           onChange={setNickname}
           placeholder="e.g. 小佳 / Alice Ng"
-          dark={dark}
         />
       </div>
 
       <div style={card}>
-        <FieldLabel required dark={dark}>
+        <FieldLabel required>
           聯絡電話
         </FieldLabel>
         <div style={{ display: "flex", gap: 8 }}>
@@ -9724,11 +9306,9 @@ function ProfileSetupForm({
                 padding: "0 28px 0 12px",
                 borderRadius: 12,
                 border: "1px solid rgba(254, 210, 52, 0.4)",
-                background: dark
-                  ? "rgba(255,255,255,0.06)"
-                  : "rgba(255,255,255,0.85)",
+                background: "rgba(255,255,255,0.85)",
                 fontSize: 14,
-                color: dark ? "#fff" : "#241c00",
+                color: "#241c00",
                 fontFamily: "inherit",
                 outline: "none",
                 cursor: "pointer",
@@ -9750,7 +9330,7 @@ function ProfileSetupForm({
                 transform: "translateY(-50%)",
                 pointerEvents: "none",
                 fontSize: 10,
-                color: dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)",
+                color: "rgba(50,40,0,0.6)",
               }}
             >
               ▾
@@ -9761,14 +9341,13 @@ function ProfileSetupForm({
               value={phone}
               onChange={setPhone}
               placeholder="912-345-678"
-              dark={dark}
             />
           </div>
         </div>
       </div>
 
       <div style={card}>
-        <FieldLabel dark={dark}>LINE ID</FieldLabel>
+        <FieldLabel>LINE ID</FieldLabel>
         <div
           style={{
             fontSize: 11,
@@ -9783,12 +9362,11 @@ function ProfileSetupForm({
           value={lineId}
           onChange={setLineId}
           placeholder="@your-line-id"
-          dark={dark}
         />
       </div>
 
       <div style={card}>
-        <FieldLabel dark={dark}>Telegram ID</FieldLabel>
+        <FieldLabel>Telegram ID</FieldLabel>
         <div
           style={{
             fontSize: 11,
@@ -9803,12 +9381,11 @@ function ProfileSetupForm({
           value={telegramId}
           onChange={setTelegramId}
           placeholder="@your-telegram-id"
-          dark={dark}
         />
       </div>
 
       <div style={card}>
-        <FieldLabel required dark={dark}>
+        <FieldLabel required>
           所在國家/地區
         </FieldLabel>
         <ChipGroup
@@ -9816,13 +9393,12 @@ function ProfileSetupForm({
           value={country}
           onChange={handleCountry}
           multi={false}
-          dark={dark}
         />
       </div>
 
       {country && (
         <div style={card}>
-          <FieldLabel required dark={dark}>
+          <FieldLabel required>
             所在城市/地區
           </FieldLabel>
           <div
@@ -9840,7 +9416,6 @@ function ProfileSetupForm({
               value={location}
               onChange={setLocation}
               placeholder="e.g. Canada, Vancouver"
-              dark={dark}
             />
           ) : (
             <ChipGroup
@@ -9848,7 +9423,6 @@ function ProfileSetupForm({
               value={location}
               onChange={setLocation}
               multi={false}
-              dark={dark}
             />
           )}
         </div>
@@ -9858,14 +9432,11 @@ function ProfileSetupForm({
 }
 
 // Task 1 — Interest & skills form
-function InterestForm({ config, onCancel, onSubmit }) {
-  const dark = config.background === "night";
-  const bg = dark ? "#1a1400" : "#FFFDF5";
-  const muted = dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)";
-  const cardBg = dark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.6)";
-  const cardBorder = dark
-    ? "1px solid rgba(255,255,255,0.1)"
-    : "1px solid rgba(255,255,255,0.9)";
+function InterestForm({ onCancel, onSubmit }) {
+  const bg = "#FFFDF5";
+  const muted = "rgba(50,40,0,0.6)";
+  const cardBg = "rgba(255,255,255,0.6)";
+  const cardBorder = "1px solid rgba(255,255,255,0.9)";
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -9888,7 +9459,6 @@ function InterestForm({ config, onCancel, onSubmit }) {
 
   return (
     <FormShell
-      dark={dark}
       bg={bg}
       title="填寫志工表單"
       subtitle="填寫個人資訊、興趣與可投入時段"
@@ -9899,36 +9469,33 @@ function InterestForm({ config, onCancel, onSubmit }) {
           onClick={onSubmit}
           disabled={!valid}
           color="#fec701"
-          dark={dark}
         />
       }
     >
       <div style={card}>
-        <FieldLabel required dark={dark}>
+        <FieldLabel required>
           姓名
         </FieldLabel>
         <TextInput
           value={name}
           onChange={setName}
           placeholder="請輸入你的姓名"
-          dark={dark}
         />
       </div>
 
       <div style={card}>
-        <FieldLabel required dark={dark}>
+        <FieldLabel required>
           聯絡電話
         </FieldLabel>
         <TextInput
           value={phone}
           onChange={setPhone}
           placeholder="09xx-xxxxxx"
-          dark={dark}
         />
       </div>
 
       <div style={card}>
-        <FieldLabel required dark={dark}>
+        <FieldLabel required>
           興趣方向
         </FieldLabel>
         <div
@@ -9955,12 +9522,11 @@ function InterestForm({ config, onCancel, onSubmit }) {
           value={interests}
           onChange={setInterests}
           multi
-          dark={dark}
         />
       </div>
 
       <div style={card}>
-        <FieldLabel dark={dark}>專長技能</FieldLabel>
+        <FieldLabel>專長技能</FieldLabel>
         <div
           style={{
             fontSize: 11,
@@ -9985,12 +9551,11 @@ function InterestForm({ config, onCancel, onSubmit }) {
           value={skills}
           onChange={setSkills}
           multi
-          dark={dark}
         />
       </div>
 
       <div style={card}>
-        <FieldLabel required dark={dark}>
+        <FieldLabel required>
           可投入時段
         </FieldLabel>
         <ChipGroup
@@ -9998,7 +9563,6 @@ function InterestForm({ config, onCancel, onSubmit }) {
           value={availability}
           onChange={setAvailability}
           multi
-          dark={dark}
         />
       </div>
     </FormShell>
@@ -10006,14 +9570,11 @@ function InterestForm({ config, onCancel, onSubmit }) {
 }
 
 // Task 2 — Ticket form
-function TicketForm({ config, onCancel, onSubmit }) {
-  const dark = config.background === "night";
-  const bg = dark ? "#1a1400" : "#FFFDF5";
-  const cardBg = dark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.6)";
-  const cardBorder = dark
-    ? "1px solid rgba(255,255,255,0.1)"
-    : "1px solid rgba(255,255,255,0.9)";
-  const muted = dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)";
+function TicketForm({ onCancel, onSubmit }) {
+  const bg = "#FFFDF5";
+  const cardBg = "rgba(255,255,255,0.6)";
+  const cardBorder = "1px solid rgba(255,255,255,0.9)";
+  const muted = "rgba(50,40,0,0.6)";
 
   const [name, setName] = useState("");
   const [ticket725, setTicket725] = useState("");
@@ -10031,7 +9592,6 @@ function TicketForm({ config, onCancel, onSubmit }) {
 
   return (
     <FormShell
-      dark={dark}
       bg={bg}
       title="夏季盛會報名"
       subtitle="請輸入 7/25 與 7/26 場次票券編號"
@@ -10042,7 +9602,6 @@ function TicketForm({ config, onCancel, onSubmit }) {
           onClick={onSubmit}
           disabled={!valid}
           color="#8AD4B0"
-          dark={dark}
         />
       }
     >
@@ -10052,9 +9611,9 @@ function TicketForm({ config, onCancel, onSubmit }) {
           borderRadius: 16,
           background:
             "linear-gradient(135deg, rgba(138,212,176,0.18), rgba(138,212,176,0.08))",
-          border: `1px solid ${dark ? "rgba(138,212,176,0.3)" : "rgba(138,212,176,0.4)"}`,
+          border: `1px solid ${"rgba(138,212,176,0.4)"}`,
           fontSize: 12,
-          color: dark ? "#B8E8D0" : "#2E7B5A",
+          color: "#2E7B5A",
           lineHeight: 1.5,
         }}
       >
@@ -10064,26 +9623,24 @@ function TicketForm({ config, onCancel, onSubmit }) {
       </div>
 
       <div style={card}>
-        <FieldLabel required dark={dark}>
+        <FieldLabel required>
           姓名
         </FieldLabel>
         <TextInput
           value={name}
           onChange={setName}
           placeholder="請輸入你的姓名"
-          dark={dark}
         />
       </div>
 
       <div style={card}>
-        <FieldLabel required dark={dark}>
+        <FieldLabel required>
           7/25 票券編號
         </FieldLabel>
         <TextInput
           value={ticket725}
           onChange={setTicket725}
           placeholder="例如：RL-0725-8420"
-          dark={dark}
         />
         <div style={{ fontSize: 11, color: muted, marginTop: 6 }}>
           可於購票 Email 或錢包中找到 12 位編號
@@ -10091,24 +9648,22 @@ function TicketForm({ config, onCancel, onSubmit }) {
       </div>
 
       <div style={card}>
-        <FieldLabel required dark={dark}>
+        <FieldLabel required>
           7/26 票券編號
         </FieldLabel>
         <TextInput
           value={ticket726}
           onChange={setTicket726}
           placeholder="例如：RL-0726-1173"
-          dark={dark}
         />
       </div>
 
       <div style={card}>
-        <FieldLabel dark={dark}>備註</FieldLabel>
+        <FieldLabel>備註</FieldLabel>
         <Textarea
           value={note}
           onChange={setNote}
           placeholder="飲食需求、交通協助等（可留白）"
-          dark={dark}
         />
       </div>
     </FormShell>
@@ -10223,15 +9778,12 @@ const MOCK_TEAMS = [
 ];
 
 // Task 3 — Join a team (search by team ID, name, or leader)
-function TeamForm({ config, onCancel, onSubmit }) {
-  const dark = config.background === "night";
-  const bg = dark ? "#1a1400" : "#FFFDF5";
-  const fg = dark ? "#fff" : "#241c00";
-  const muted = dark ? "rgba(255,255,255,0.6)" : "rgba(50,40,0,0.6)";
-  const cardBg = dark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.6)";
-  const cardBorder = dark
-    ? "1px solid rgba(255,255,255,0.1)"
-    : "1px solid rgba(255,255,255,0.9)";
+function TeamForm({ onCancel, onSubmit }) {
+  const bg = "#FFFDF5";
+  const fg = "#241c00";
+  const muted = "rgba(50,40,0,0.6)";
+  const cardBg = "rgba(255,255,255,0.6)";
+  const cardBorder = "1px solid rgba(255,255,255,0.9)";
 
   const [teamQuery, setTeamQuery] = useState("");
   const [pendingJoin, setPendingJoin] = useState(null);
@@ -10304,7 +9856,6 @@ function TeamForm({ config, onCancel, onSubmit }) {
 
   return (
     <FormShell
-      dark={dark}
       bg={bg}
       title="加入團隊"
       subtitle="輸入團隊編號或搜尋名稱，向組長送出申請"
@@ -10315,12 +9866,11 @@ function TeamForm({ config, onCancel, onSubmit }) {
           onClick={handleSubmit}
           disabled={!valid}
           color="#6dae4a"
-          dark={dark}
         />
       }
     >
       <div style={card}>
-        <FieldLabel required dark={dark}>
+        <FieldLabel required>
           團隊編號 / 名稱
         </FieldLabel>
         <div
@@ -10358,12 +9908,8 @@ function TeamForm({ config, onCancel, onSubmit }) {
               height: 44,
               padding: "0 14px 0 38px",
               borderRadius: 12,
-              border: dark
-                ? "1px solid rgba(255,255,255,0.12)"
-                : "1px solid rgba(109,174,74,0.4)",
-              background: dark
-                ? "rgba(255,255,255,0.06)"
-                : "rgba(255,255,255,0.9)",
+              border: "1px solid rgba(109,174,74,0.4)",
+              background: "rgba(255,255,255,0.9)",
               fontSize: 13,
               color: fg,
               fontFamily: "inherit",
@@ -10382,9 +9928,7 @@ function TeamForm({ config, onCancel, onSubmit }) {
                 textAlign: "center",
                 color: muted,
                 fontSize: 12,
-                border: dark
-                  ? "1px dashed rgba(255,255,255,0.12)"
-                  : "1px dashed rgba(109,174,74,0.35)",
+                border: "1px dashed rgba(109,174,74,0.35)",
                 borderRadius: 12,
                 lineHeight: 1.6,
               }}
@@ -10408,14 +9952,10 @@ function TeamForm({ config, onCancel, onSubmit }) {
                     borderRadius: 14,
                     background: isPending
                       ? "linear-gradient(135deg, rgba(168,214,128,0.3), rgba(109,174,74,0.22))"
-                      : dark
-                        ? "rgba(255,255,255,0.04)"
-                        : "rgba(255,255,255,0.6)",
+                      : "rgba(255,255,255,0.6)",
                     border: isPending
                       ? "1.5px solid rgba(109,174,74,0.65)"
-                      : dark
-                        ? "1px solid rgba(255,255,255,0.08)"
-                        : "1px solid rgba(109,174,74,0.25)",
+                      : "1px solid rgba(109,174,74,0.25)",
                     cursor: full ? "default" : "pointer",
                     display: "flex",
                     alignItems: "center",
@@ -10459,10 +9999,8 @@ function TeamForm({ config, onCancel, onSubmit }) {
                           letterSpacing: 0.4,
                           padding: "1px 6px",
                           borderRadius: 4,
-                          background: dark
-                            ? "rgba(184,232,168,0.14)"
-                            : "rgba(168,214,128,0.35)",
-                          color: dark ? "#b8e8a8" : "#3d7a2e",
+                          background: "rgba(168,214,128,0.35)",
+                          color: "#3d7a2e",
                           fontFamily: "monospace",
                         }}
                       >
@@ -10479,9 +10017,7 @@ function TeamForm({ config, onCancel, onSubmit }) {
                       borderRadius: 999,
                       background:
                         full && !isPending
-                          ? dark
-                            ? "rgba(255,255,255,0.06)"
-                            : "rgba(120,110,150,0.12)"
+                          ? "rgba(120,110,150,0.12)"
                           : isPending
                             ? "transparent"
                             : "linear-gradient(135deg, #8dc968, #6dae4a)",
@@ -10490,9 +10026,7 @@ function TeamForm({ config, onCancel, onSubmit }) {
                         full && !isPending
                           ? muted
                           : isPending
-                            ? dark
-                              ? "#b8e8a8"
-                              : "#3d7a2e"
+                            ? "#3d7a2e"
                             : "#fff",
                       fontSize: 11,
                       fontWeight: 700,
@@ -10612,7 +10146,6 @@ function FormSuccessOverlay({
 
 // ─── App ──────────────────────────────────────────────────────
 function App() {
-  const config = CONFIG;
   const [screen, setScreen] = useState("landing"); // 'landing' | 'auth' | 'home' | 'tasks' | 'taskDetail' | 'form' | 'rewards'
   const [rewardsFrom, setRewardsFrom] = useState("home");
   const navigateTo = (next) => {
@@ -10851,27 +10384,24 @@ function App() {
         width: "100vw",
         display: "flex",
         flexDirection: "column",
-        background: config.background === "night" ? "#1a1400" : "#F2ECDC",
+        background: "#F2ECDC",
         fontFamily: '"Noto Sans SC", "PingFang SC", -apple-system, sans-serif',
         overflow: "hidden",
       }}
     >
       {screen === "landing" && (
         <LandingScreen
-          config={config}
           onStart={() => setScreen("auth")}
         />
       )}
       {screen === "auth" && (
         <GoogleAuthScreen
-          config={config}
           onCancel={() => setScreen("landing")}
           onSuccess={handleSignIn}
         />
       )}
       {screen === "profileSetup" && (
         <ProfileSetupForm
-          config={config}
           user={user}
           onCancel={() => {
             setUser(null);
@@ -10882,7 +10412,6 @@ function App() {
       )}
       {screen === "profile" && (
         <ProfileScreen
-          config={config}
           user={user}
           onBack={() => setScreen("me")}
           onEdit={() => setScreen("profileEdit")}
@@ -10890,7 +10419,6 @@ function App() {
       )}
       {screen === "profileEdit" && (
         <ProfileSetupForm
-          config={config}
           user={user}
           initial={user}
           title="編輯個人資料"
@@ -10902,7 +10430,6 @@ function App() {
       )}
       {screen === "home" && (
         <HomeScreen
-          config={config}
           user={user}
           tasks={tasks}
           onSignOut={handleSignOut}
@@ -10912,7 +10439,6 @@ function App() {
       )}
       {screen === "tasks" && (
         <TasksScreen
-          config={config}
           tasks={tasks}
           onNavigate={setScreen}
           onOpenTask={openTask}
@@ -10920,7 +10446,6 @@ function App() {
       )}
       {screen === "rank" && (
         <RankScreen
-          config={config}
           user={user}
           tasks={tasks}
           onNavigate={setScreen}
@@ -10928,7 +10453,6 @@ function App() {
       )}
       {screen === "taskDetail" && (
         <TaskDetailScreen
-          config={config}
           tasks={tasks}
           taskId={currentTaskId}
           onBack={() => setScreen("tasks")}
@@ -10939,28 +10463,24 @@ function App() {
       )}
       {screen === "form" && currentTaskId === 1 && (
         <InterestForm
-          config={config}
           onCancel={() => setScreen("taskDetail")}
           onSubmit={() => completeTask(1)}
         />
       )}
       {screen === "form" && currentTaskId === 2 && (
         <TicketForm
-          config={config}
           onCancel={() => setScreen("taskDetail")}
           onSubmit={() => completeTask(2)}
         />
       )}
       {screen === "form" && currentTaskId === 3 && (
         <TeamForm
-          config={config}
           onCancel={() => setScreen("me")}
           onSubmit={joinTeam}
         />
       )}
       {screen === "me" && (
         <MyScreen
-          config={config}
           user={user}
           ledTeam={ledTeam}
           joinedTeam={joinedTeam}
@@ -10983,7 +10503,6 @@ function App() {
       )}
       {screen === "rewards" && (
         <RewardsScreen
-          config={config}
           user={user}
           tasks={tasks}
           onBack={() => setScreen(rewardsFrom)}

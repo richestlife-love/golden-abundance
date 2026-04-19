@@ -82,14 +82,6 @@ async def paginate_keyset(
     last page. Raises ``InvalidCursor`` on malformed input or
     cursor-shape mismatch.
     """
-    # Fail loudly on empty sort — without an ORDER BY the cursor
-    # predicate has no reference, so next_cursor would drift under
-    # concurrent inserts. The same-direction invariant documented on
-    # this module is enforced mechanically by the `.desc()` call below:
-    # every column sorts DESC, period; SortCol offers no direction knob.
-    if not sort:
-        raise ValueError("paginate_keyset requires at least one sort column")
-
     if cursor is not None:
         payload = decode_cursor(cursor)
         if not isinstance(payload, list) or len(payload) != len(sort):

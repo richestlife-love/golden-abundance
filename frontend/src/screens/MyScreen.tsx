@@ -1,7 +1,7 @@
 import { fs } from "../utils";
 import { useState } from "react";
 import type { MouseEvent, KeyboardEvent } from "react";
-import { useNavigate, Outlet } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useAppState } from "../state/AppStateContext";
 import BottomNav from "../ui/BottomNav";
 import TeamCard from "./TeamCard";
@@ -792,8 +792,6 @@ export default function MyScreen() {
       </div>
 
       <BottomNav muted={muted} />
-      {/* Child routes (e.g. /me/profile) render here, overlaying the screen */}
-      <Outlet />
     </div>
   );
 }

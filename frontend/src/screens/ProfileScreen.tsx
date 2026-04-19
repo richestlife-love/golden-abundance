@@ -1,6 +1,6 @@
 import { fs } from "../utils";
 import { useState } from "react";
-import { useNavigate, Outlet } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useAppState } from "../state/AppStateContext";
 
 export default function ProfileScreen() {
@@ -304,8 +304,6 @@ export default function ProfileScreen() {
           ))}
         </div>
       </div>
-      {/* Child routes (e.g. /me/profile/edit) render here, overlaying the screen */}
-      <Outlet />
     </div>
   );
 }

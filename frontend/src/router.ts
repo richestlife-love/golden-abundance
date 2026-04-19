@@ -27,7 +27,9 @@ const routeTree = rootRoute.addChildren([
     homeRoute,
     tasksRoute.addChildren([taskDetailRoute.addChildren([taskStartRoute])]),
     leaderboardRoute,
-    meRoute.addChildren([profileRoute.addChildren([profileEditRoute])]),
+    meRoute,
+    profileRoute,
+    profileEditRoute,
     rewardsRoute,
   ]),
 ]);

@@ -1,9 +1,9 @@
 import { createRoute } from "@tanstack/react-router";
 import ProfileScreen from "../screens/ProfileScreen";
-import { meRoute } from "./_authed.me";
+import { authedRoute } from "./_authed";
 
 export const profileRoute = createRoute({
-  getParentRoute: () => meRoute,
-  path: "/profile",
+  getParentRoute: () => authedRoute,
+  path: "/me/profile",
   component: ProfileScreen,
 });

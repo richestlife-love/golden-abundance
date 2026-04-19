@@ -1,7 +1,7 @@
 import { createRoute, redirect, useNavigate } from "@tanstack/react-router";
 import ProfileSetupForm from "../screens/ProfileSetupForm";
 import { useAppState } from "../state/AppStateContext";
-import { profileRoute } from "./_authed.me.profile";
+import { authedRoute } from "./_authed";
 
 function ProfileEditRoute() {
   const navigate = useNavigate();
@@ -23,8 +23,8 @@ function ProfileEditRoute() {
 }
 
 export const profileEditRoute = createRoute({
-  getParentRoute: () => profileRoute,
-  path: "/edit",
+  getParentRoute: () => authedRoute,
+  path: "/me/profile/edit",
   beforeLoad: ({ location }) => {
     if (!location.state.fromProfile) {
       throw redirect({ to: "/me/profile" });

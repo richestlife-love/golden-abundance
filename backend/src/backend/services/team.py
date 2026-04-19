@@ -7,6 +7,7 @@ later. Initial topic is the literal ``"尚未指定主題"`` — matches the
 frontend prototype's placeholder (see contract design §1.4).
 """
 
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import select
@@ -35,7 +36,7 @@ def user_to_ref(row: UserRow) -> ContractUserRef:
 
 
 async def create_led_team(session: AsyncSession, user: UserRow) -> TeamRow:
-    result = await session.execute(select(TeamRow.display_id))
+    result = await session.execute(select(TeamRow.display_id))  # ty: ignore[no-matching-overload]
     taken = {row[0] for row in result.all()}
     display_id = generate_team_display_id(user_display_id=user.display_id, used=taken)
     leader_name = user.zh_name or user.nickname or user.email.split("@", 1)[0]
@@ -43,7 +44,7 @@ async def create_led_team(session: AsyncSession, user: UserRow) -> TeamRow:
         display_id=display_id,
         name=f"{leader_name}的團隊",
         leader_id=user.id,
-    )
+    )  # ty: ignore[missing-argument]
     session.add(team)
     await session.flush()
     return team
@@ -60,7 +61,7 @@ async def row_to_contract_team(
 
     memberships = (
         await session.execute(
-            select(TeamMembershipRow).where(TeamMembershipRow.team_id == team.id)
+            select(TeamMembershipRow).where(TeamMembershipRow.team_id == team.id)  # ty: ignore[invalid-argument-type]
         )
     ).scalars().all()
     member_user_ids = [m.user_id for m in memberships]
@@ -68,7 +69,7 @@ async def row_to_contract_team(
     if member_user_ids:
         member_rows = (
             await session.execute(
-                select(UserRow).where(UserRow.id.in_(member_user_ids))
+                select(UserRow).where(UserRow.id.in_(member_user_ids))  # ty: ignore[unresolved-attribute]
             )
         ).scalars().all()
         members = [user_to_ref(u) for u in member_rows]
@@ -85,9 +86,9 @@ async def row_to_contract_team(
         join_rows = (
             await session.execute(
                 select(JoinRequestRow)
-                .where(JoinRequestRow.team_id == team.id)
-                .where(JoinRequestRow.status == "pending")
-                .order_by(JoinRequestRow.requested_at.asc())
+                .where(JoinRequestRow.team_id == team.id)  # ty: ignore[invalid-argument-type]
+                .where(JoinRequestRow.status == "pending")  # ty: ignore[invalid-argument-type]
+                .order_by(JoinRequestRow.requested_at.asc())  # ty: ignore[unresolved-attribute]
             )
         ).scalars().all()
         requests = []
@@ -136,27 +137,25 @@ async def search_team_refs(
     cursor: str | None,
     limit: int,
 ) -> Paginated[ContractTeamRef]:
-    from datetime import datetime
-
-    stmt = select(TeamRow, UserRow).join(UserRow, TeamRow.leader_id == UserRow.id)
+    stmt = select(TeamRow, UserRow).join(UserRow, TeamRow.leader_id == UserRow.id)  # ty: ignore[invalid-argument-type]
     if q:
         like = f"%{q}%"
-        stmt = stmt.where(TeamRow.name.ilike(like) | TeamRow.alias.ilike(like))
+        stmt = stmt.where(TeamRow.name.ilike(like) | TeamRow.alias.ilike(like))  # ty: ignore[unresolved-attribute]
     if topic:
-        stmt = stmt.where(TeamRow.topic == topic)
+        stmt = stmt.where(TeamRow.topic == topic)  # ty: ignore[invalid-argument-type]
     if leader_display_id:
-        stmt = stmt.where(UserRow.display_id == leader_display_id)
+        stmt = stmt.where(UserRow.display_id == leader_display_id)  # ty: ignore[invalid-argument-type]
 
     page, next_cursor = await paginate_keyset(
         session,
         stmt,
         sort=[
             SortCol(
-                TeamRow.created_at,
+                TeamRow.created_at,  # ty: ignore[invalid-argument-type]
                 to_json=lambda d: d.isoformat(),
                 from_json=datetime.fromisoformat,
             ),
-            SortCol(TeamRow.id, to_json=str, from_json=UUID),
+            SortCol(TeamRow.id, to_json=str, from_json=UUID),  # ty: ignore[invalid-argument-type]
         ],
         cursor=cursor,
         limit=limit,

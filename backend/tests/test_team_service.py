@@ -1,10 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.db.models import TeamMembershipRow, UserRow
+from backend.db.models import TeamMembershipRow
 from backend.services.team import (
     create_led_team,
     row_to_contract_team,
     search_team_refs,
+    user_to_ref,
 )
 from backend.services.user import upsert_user_by_email
 
@@ -51,7 +52,7 @@ async def test_row_to_contract_team_as_member(session: AsyncSession) -> None:
     member = await upsert_user_by_email(session, email="mem@example.com")
     await session.flush()
     team = await create_led_team(session, leader)
-    session.add(TeamMembershipRow(team_id=team.id, user_id=member.id))
+    session.add(TeamMembershipRow(team_id=team.id, user_id=member.id))  # ty: ignore[missing-argument]
     await session.commit()
 
     contract = await row_to_contract_team(session, team, caller_id=member.id)
@@ -79,10 +80,6 @@ async def test_search_team_refs_filters_by_leader_display_id(session: AsyncSessi
 
 async def test_user_to_ref_does_not_leak_pii(session: AsyncSession) -> None:
     """UserRef must not expose email/phone/line_id/etc. to other team members."""
-    from backend.db.models import UserRow
-    from backend.services.user import upsert_user_by_email
-    from backend.services.team import user_to_ref
-
     user = await upsert_user_by_email(session, email="jet@example.com")
     user.phone = "0912345678"
     user.line_id = "private-line-id"

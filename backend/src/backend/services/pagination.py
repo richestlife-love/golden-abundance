@@ -100,4 +100,4 @@ async def paginate_keyset(
         next_cursor = encode_cursor(
             [s.to_json(v) for s, v in zip(sort, last_values, strict=True)]
         )
-    return page, next_cursor
+    return page, next_cursor  # ty: ignore[invalid-return-type]

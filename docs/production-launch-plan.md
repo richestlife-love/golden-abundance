@@ -18,9 +18,9 @@ See the [design spec](superpowers/specs/2026-04-19-api-contract-design.md).
 - [ ] ~~Validate wire format end-to-end (no persistence yet)~~ — replaced by fixture validation above; end-to-end happens in Phase 4 when the frontend wires up
 
 ## Phase 3 — Routing
-- [ ] Replace `useState("screen")` with React Router or TanStack Router
-- [ ] Map screens to URLs (`/`, `/home`, `/tasks/:id`, `/me`, etc.)
-- [ ] Verify bookmarkable URLs and browser back/forward
+- [x] Replace `useState("screen")` with React Router or TanStack Router
+- [x] Map screens to URLs (`/`, `/home`, `/tasks/:id`, `/me`, etc.)
+- [x] Verify bookmarkable URLs and browser back/forward
 
 ## Phase 4 — Wire frontend to backend
 - [ ] Add TanStack Query for data fetching, cache, loading/error states

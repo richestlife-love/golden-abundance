@@ -119,9 +119,14 @@ async def _steps_for(
 
 
 async def row_to_contract_task(
-    session: AsyncSession, task_def: TaskDefRow, *, caller: UserRow
+    session: AsyncSession,
+    task_def: TaskDefRow,
+    *,
+    caller: UserRow,
+    completed_ids: set[UUID] | None = None,
 ) -> ContractTask:
-    completed_ids = await _completed_task_def_ids(session, caller.id)
+    if completed_ids is None:
+        completed_ids = await _completed_task_def_ids(session, caller.id)
     requires = await _required_ids(session, task_def.id)
 
     progress_row = (
@@ -204,7 +209,11 @@ async def list_caller_tasks(
             select(TaskDefRow).order_by(TaskDefRow.display_id.asc())  # ty: ignore[unresolved-attribute]
         )
     ).scalars().all()
-    return [await row_to_contract_task(session, d, caller=caller) for d in defs]
+    completed_ids = await _completed_task_def_ids(session, caller.id)
+    return [
+        await row_to_contract_task(session, d, caller=caller, completed_ids=completed_ids)
+        for d in defs
+    ]
 
 
 class TaskSubmitError(Exception):

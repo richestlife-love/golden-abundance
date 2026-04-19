@@ -38,6 +38,41 @@ export default function GlobalStyles() {
            (XiaoWei) with a classical Latin serif (Cormorant) so mixed-script
            headlines share one voice. */
         --font-display: "ZCOOL XiaoWei", "Cormorant Garamond", "Noto Serif SC", serif;
+
+        /* Radius scale — use tokens over raw numbers so shapes stay in sync. */
+        --radius-xs: 8px;   /* chips, inline badges */
+        --radius-sm: 12px;  /* inputs, small buttons */
+        --radius-md: 14px;  /* tile/logo blocks */
+        --radius-lg: 18px;  /* cards */
+        --radius-xl: 22px;  /* hero cards, sheets */
+        --radius-pill: 999px;
+
+        /* Elevation — one silhouette per tier, tinted warm so shadows sit
+           on the paper rather than looking charcoal on cream. */
+        --shadow-1: 0 2px 8px rgba(120, 90, 10, 0.10);
+        --shadow-2: 0 8px 22px rgba(120, 90, 10, 0.16);
+        --shadow-3: 0 14px 34px rgba(200, 160, 0, 0.32);
+        --shadow-inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+
+        /* Spacing — 4px grid, named by role rather than size. */
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-5: 20px;
+        --space-6: 24px;
+        --space-8: 32px;
+
+        /* Type scale — fluid clamps keyed off the mobile viewport so the
+           scale stays balanced on narrow phones and edge-case tablets. */
+        --text-xs: clamp(10px, 2.8vw, 11px);
+        --text-sm: clamp(12px, 3.2vw, 13px);
+        --text-base: clamp(13px, 3.6vw, 14px);
+        --text-md: clamp(14px, 4vw, 16px);
+        --text-lg: clamp(16px, 4.6vw, 18px);
+        --text-xl: clamp(20px, 5.4vw, 22px);
+        --text-2xl: clamp(24px, 7vw, 28px);
+        --text-display: clamp(40px, 12vw, 52px);
       }
       html, body { margin: 0; padding: 0; background: var(--bg-shell); }
       * { box-sizing: border-box; }
@@ -52,8 +87,8 @@ export default function GlobalStyles() {
       /* Shared form-field base — inputs & textareas */
       .ga-input {
         width: 100%;
-        padding: 0 14px;
-        border-radius: 12px;
+        padding: 0 var(--space-4);
+        border-radius: var(--radius-sm);
         background: rgba(255, 255, 255, 0.85);
         color: var(--fg);
         font-family: inherit;

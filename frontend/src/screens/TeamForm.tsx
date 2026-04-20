@@ -3,12 +3,43 @@ import { useState, useMemo } from "react";
 import FormShell from "../ui/FormShell";
 import FieldLabel from "../ui/FieldLabel";
 import SubmitButton from "../ui/SubmitButton";
-import { MOCK_TEAMS } from "../data";
-import type { Team } from "../types";
+
+// Demo-only list of searchable teams. Plan 4c replaces this with a real
+// `teamsInfiniteQueryOptions` call + useCreateJoinRequest mutation.
+const DEMO_TEAMS = [
+  {
+    id: "T-MING2024",
+    name: "星河守望隊",
+    leader: "周明蓁",
+    topic: "長者陪伴",
+    grad: "linear-gradient(135deg, #fed234, #fec701)",
+  },
+  {
+    id: "T-WEI8810",
+    name: "光點行動組",
+    leader: "許子瑋",
+    topic: "社區導覽",
+    grad: "linear-gradient(135deg, #fec701, #B8A4E3)",
+  },
+  {
+    id: "T-TING0517",
+    name: "綠意日常",
+    leader: "鄭宜庭",
+    topic: "環境關懷",
+    grad: "linear-gradient(135deg, #8AD4B0, #FFD6A8)",
+  },
+  {
+    id: "T-CHU1109",
+    name: "童心共讀",
+    leader: "劉雅筑",
+    topic: "兒童陪讀",
+    grad: "linear-gradient(135deg, #fed234, #FFD6A8)",
+  },
+];
 
 type Props = {
   onCancel: () => void;
-  onSubmit: (teamData: Omit<Team, "role">) => void;
+  onSubmit: () => void;
 };
 
 export default function TeamForm({ onCancel, onSubmit }: Props) {
@@ -32,7 +63,7 @@ export default function TeamForm({ onCancel, onSubmit }: Props) {
   const q = teamQuery.trim().toUpperCase();
   const filteredTeams = useMemo(
     () =>
-      MOCK_TEAMS.filter(
+      DEMO_TEAMS.filter(
         (t) =>
           q === "" ||
           t.id.toUpperCase().includes(q) ||
@@ -45,49 +76,6 @@ export default function TeamForm({ onCancel, onSubmit }: Props) {
 
   const valid = pendingJoin != null;
 
-  const handleSubmit = () => {
-    const t = MOCK_TEAMS.find((x) => x.id === pendingJoin);
-    if (!t) return;
-    // Populate with a few mock members so the team view feels real
-    const mockMemberPool = [
-      {
-        id: "m-a",
-        name: "林詠瑜",
-        avatar: "linear-gradient(135deg, var(--gold-light), var(--gold))",
-      },
-      {
-        id: "m-b",
-        name: "陳志豪",
-        avatar: "linear-gradient(135deg, #fec701, #B8A4E3)",
-      },
-      {
-        id: "m-c",
-        name: "王美玲",
-        avatar: "linear-gradient(135deg, #8AD4B0, #fec701)",
-      },
-      {
-        id: "m-d",
-        name: "張書維",
-        avatar: "linear-gradient(135deg, #FFC170, #F39770)",
-      },
-    ];
-
-    const mockMembers = mockMemberPool.slice(0, Math.max(0, (t.members || 1) - 1));
-    onSubmit({
-      id: t.id,
-      status: "pending",
-      name: t.name,
-      topic: t.topic,
-      leader: { id: t.leaderId, name: t.leader, avatar: t.leaderAvatar },
-      members: mockMembers,
-      currentCount: t.members,
-      cap: t.cap,
-      points: t.points,
-      weekPoints: t.weekPoints,
-      rank: t.rank,
-    });
-  };
-
   return (
     <FormShell
       bg={bg}
@@ -97,7 +85,7 @@ export default function TeamForm({ onCancel, onSubmit }: Props) {
       footer={
         <SubmitButton
           label={valid ? "送出加入申請" : "請先選擇團隊"}
-          onClick={handleSubmit}
+          onClick={onSubmit}
           disabled={!valid}
           color="#6dae4a"
         />
@@ -203,7 +191,7 @@ export default function TeamForm({ onCancel, onSubmit }: Props) {
                       width: 42,
                       height: 42,
                       borderRadius: 12,
-                      background: team.leaderAvatar,
+                      background: team.grad,
                       color: "#fff",
                       fontSize: fs(16),
                       fontWeight: 700,

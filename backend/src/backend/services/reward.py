@@ -31,7 +31,7 @@ def row_to_contract_reward(row: RewardRow) -> ContractReward:
         task_id=row.task_def_id,
         task_title=row.task_title,
         bonus=row.bonus,
-        status=row.status,  # type: ignore[arg-type]
+        status=row.status,
         earned_at=row.earned_at,
         claimed_at=row.claimed_at,
     )

@@ -22,7 +22,7 @@ def _row_to_contract(row: NewsItemRow) -> ContractNewsItem:
         id=row.id,
         title=row.title,
         body=row.body,
-        category=row.category,  # type: ignore[arg-type]
+        category=row.category,
         image_url=row.image_url,
         published_at=row.published_at,
         pinned=row.pinned,

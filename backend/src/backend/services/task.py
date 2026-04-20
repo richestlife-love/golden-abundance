@@ -162,7 +162,7 @@ async def row_to_contract_task(
         title=task_def.title,
         summary=task_def.summary,
         description=task_def.description,
-        tag=task_def.tag,  # type: ignore[arg-type]
+        tag=task_def.tag,
         color=task_def.color,
         points=task_def.points,
         bonus=task_def.bonus,
@@ -171,8 +171,8 @@ async def row_to_contract_task(
         is_challenge=task_def.is_challenge,
         requires=requires,
         cap=task_def.cap,
-        form_type=task_def.form_type,  # type: ignore[arg-type]
-        status=status,  # type: ignore[arg-type]
+        form_type=task_def.form_type,
+        status=status,
         progress=progress_value,
         steps=steps,
         team_progress=team_progress,

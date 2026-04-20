@@ -180,7 +180,7 @@ async def row_to_contract_team(session: AsyncSession, team: TeamRow, *, caller_i
         points=team.points,
         week_points=team.week_points,
         rank=None,
-        role=role,  # type: ignore[arg-type]
+        role=role,
         requests=requests,
         created_at=team.created_at,
     )

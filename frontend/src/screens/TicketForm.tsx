@@ -6,12 +6,20 @@ import TextInput from "../ui/TextInput";
 import Textarea from "../ui/Textarea";
 import SubmitButton from "../ui/SubmitButton";
 
+export interface TicketFormBody {
+  name: string;
+  ticket_725: string;
+  ticket_726: string;
+  note?: string | null;
+}
+
 type Props = {
   onCancel: () => void;
-  onSubmit: () => void;
+  onSubmit: (body: TicketFormBody) => void | Promise<void>;
+  isSubmitting?: boolean;
 };
 
-export default function TicketForm({ onCancel, onSubmit }: Props) {
+export default function TicketForm({ onCancel, onSubmit, isSubmitting = false }: Props) {
   const bg = "var(--bg)";
   const cardBg = "rgba(255,255,255,0.6)";
   const cardBorder = "1px solid var(--card-strong)";
@@ -38,7 +46,19 @@ export default function TicketForm({ onCancel, onSubmit }: Props) {
       subtitle="請輸入 7/25 與 7/26 場次票券編號"
       onCancel={onCancel}
       footer={
-        <SubmitButton label="提交報名" onClick={onSubmit} disabled={!valid} color="#8AD4B0" />
+        <SubmitButton
+          label={isSubmitting ? "送出中..." : "提交報名"}
+          onClick={() =>
+            onSubmit({
+              name: name.trim(),
+              ticket_725: ticket725.trim(),
+              ticket_726: ticket726.trim(),
+              note: note.trim() || null,
+            })
+          }
+          disabled={!valid || isSubmitting}
+          color="#8AD4B0"
+        />
       }
     >
       <div

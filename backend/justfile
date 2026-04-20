@@ -1,45 +1,45 @@
 # Run full CI (lint, format, typecheck, contract fixtures, tests).
 ci:
-  uv sync --all-extras --dev
-  uv run ruff check --fix
-  uv run ruff format
-  uv run ty check
-  uv run python -m backend.contract.validate_examples
-  uv run pytest
+    uv sync --all-extras --dev
+    uv run ruff check --fix
+    uv run ruff format
+    uv run ty check
+    uv run python -m backend.contract.validate_examples
+    uv run pytest
 
-# Validate example JSON fixtures against the Pydantic contract models
+# Validate example JSON fixtures against the Pydantic contract models.
 contract-validate:
-  uv run python -m backend.contract.validate_examples
+    uv run python -m backend.contract.validate_examples
 
-# Run the FastAPI dev server on http://localhost:8000 with reload
+# Run the FastAPI dev server with reload (default port 8000).
 dev port="8000":
-  uv run fastapi dev --port {{port}}
+    uv run fastapi dev --port {{port}}
 
-# Start local Postgres (docker compose)
+# Start local Postgres via docker compose.
 db-up:
-  docker compose up -d --wait
+    docker compose up -d --wait
 
-# Stop local Postgres
+# Stop local Postgres.
 db-down:
-  docker compose down
+    docker compose down
 
-# Run Alembic migrations to head
+# Run Alembic migrations to head.
 migrate:
-  uv run alembic upgrade head
+    uv run alembic upgrade head
 
-# Create a new Alembic revision (pass MSG="message")
+# Create a new Alembic revision (pass MSG="message").
 makemigration MSG:
-  uv run alembic revision --autogenerate -m "{{MSG}}"
+    uv run alembic revision --autogenerate -m "{{MSG}}"
 
-# Run pytest only
+# Run pytest (extra args pass through).
 test *args:
-  uv run pytest {{args}}
+    uv run pytest {{args}}
 
-# Populate dev database with task definitions and news items (idempotent)
+# Populate dev database with task definitions and news items (idempotent).
 seed:
-  uv run python -m backend.seed
+    uv run python -m backend.seed
 
 # Truncate seed-owned tables and re-seed. APP_ENV=prod is refused.
 seed-reset:
-  uv run python -m backend.seed_reset
-  uv run python -m backend.seed
+    uv run python -m backend.seed_reset
+    uv run python -m backend.seed

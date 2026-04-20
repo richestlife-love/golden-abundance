@@ -1,6 +1,6 @@
 set dotenv-filename := ".env.local"
 
-# Run full CI (install, lint, format, typecheck, tests, bundle). Mirrors backend's `ci`.
+# Run full CI (install, lint, format, typecheck, tests, bundle).
 ci:
     pnpm install
     pnpm run lint
@@ -9,11 +9,11 @@ ci:
     pnpm run test
     pnpm run build
 
-# Run the Vite dev server (default :5173; override with VITE_PORT in .env.local).
+# Run the Vite dev server (default port 5173; override via VITE_PORT in .env.local).
 dev:
     pnpm run dev
 
-# Run Vitest once (extra args pass through to vitest).
+# Run Vitest once (extra args pass through).
 test *args:
     pnpm run test {{args}}
 

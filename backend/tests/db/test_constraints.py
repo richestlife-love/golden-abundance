@@ -16,7 +16,15 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.db.models import JoinRequestRow, TeamRow, UserRow
+from backend.db.models import (
+    JoinRequestRow,
+    RewardRow,
+    TaskDefRow,
+    TaskProgressRow,
+    TeamMembershipRow,
+    TeamRow,
+    UserRow,
+)
 
 
 async def _seed_two_teams_and_user(session: AsyncSession) -> tuple[TeamRow, TeamRow, UserRow]:
@@ -134,9 +142,7 @@ async def test_timestamp_server_defaults_populate_on_raw_insert(session: AsyncSe
             " VALUES (gen_random_uuid(), 'URAW', 'raw@example.com', false)"
         )
     )
-    created = (
-        await session.execute(text("SELECT created_at FROM users WHERE email = 'raw@example.com'"))
-    ).scalar_one()
+    created = (await session.execute(text("SELECT created_at FROM users WHERE email = 'raw@example.com'"))).scalar_one()
     assert created is not None
     await session.rollback()
 
@@ -161,3 +167,43 @@ async def test_task_progress_progress_unit_interval(session: AsyncSession) -> No
         await session.execute(stmt, {"uid": user.id, "tid": td_id})
         await session.flush()
     await session.rollback()
+
+
+async def test_delete_user_cascades_to_dependent_rows(session: AsyncSession) -> None:
+    """Deleting a user row must cascade through every child table — the FKs
+    were rewritten with ``ON DELETE CASCADE`` in migration c004."""
+    team_a, _, requester = await _seed_two_teams_and_user(session)
+    session.add(TeamMembershipRow(team_id=team_a.id, user_id=requester.id))  # ty: ignore[missing-argument]
+    session.add(JoinRequestRow(team_id=team_a.id, user_id=requester.id, status="rejected"))  # ty: ignore[missing-argument]
+    td = TaskDefRow(  # ty: ignore[missing-argument]
+        display_id="TCAS",
+        title="x",
+        summary="x",
+        description="x",
+        tag="探索",
+        color="#000000",
+        points=0,
+        est_minutes=0,
+        is_challenge=False,
+    )
+    session.add(td)
+    await session.flush()
+    session.add(
+        TaskProgressRow(user_id=requester.id, task_def_id=td.id, status="completed", progress=1.0)  # ty: ignore[missing-argument]
+    )
+    session.add(
+        RewardRow(user_id=requester.id, task_def_id=td.id, task_title="x", bonus="b", status="earned")  # ty: ignore[missing-argument]
+    )
+    await session.commit()
+
+    await session.execute(text("DELETE FROM users WHERE id = :uid"), {"uid": requester.id})
+    await session.commit()
+
+    for query in (
+        "SELECT count(*) FROM team_memberships WHERE user_id = :uid",
+        "SELECT count(*) FROM join_requests WHERE user_id = :uid",
+        "SELECT count(*) FROM task_progress WHERE user_id = :uid",
+        "SELECT count(*) FROM rewards WHERE user_id = :uid",
+    ):
+        remaining = (await session.execute(text(query), {"uid": requester.id})).scalar_one()
+        assert remaining == 0, f"{query} left {remaining} orphan rows"

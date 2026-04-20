@@ -66,7 +66,7 @@ class TeamRow(SQLModel, table=True):
     topic: str = Field(default="尚未指定主題")
     # One led team per user: enforced by unique=True so `GET /me/teams`
     # can scalar_one_or_none() the lookup.
-    leader_id: UUID = Field(foreign_key="users.id", index=True, unique=True)
+    leader_id: UUID = Field(foreign_key="users.id", ondelete="CASCADE", index=True, unique=True)
     cap: int = Field(default=6, ge=1)
     points: int = Field(default=0, ge=0)
     week_points: int = Field(default=0, ge=0)
@@ -84,8 +84,8 @@ class TeamMembershipRow(SQLModel, table=True):
     __tablename__ = "team_memberships"
     __table_args__ = (UniqueConstraint("user_id", name="uq_membership_user"),)
 
-    team_id: UUID = Field(foreign_key="teams.id", primary_key=True)
-    user_id: UUID = Field(foreign_key="users.id", primary_key=True)
+    team_id: UUID = Field(foreign_key="teams.id", ondelete="CASCADE", primary_key=True)
+    user_id: UUID = Field(foreign_key="users.id", ondelete="CASCADE", primary_key=True)
     joined_at: datetime = Field(
         sa_column=Column(
             DateTime(timezone=True),
@@ -112,8 +112,8 @@ class JoinRequestRow(SQLModel, table=True):
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    team_id: UUID = Field(foreign_key="teams.id", index=True)
-    user_id: UUID = Field(foreign_key="users.id", index=True)
+    team_id: UUID = Field(foreign_key="teams.id", ondelete="CASCADE", index=True)
+    user_id: UUID = Field(foreign_key="users.id", ondelete="CASCADE", index=True)
     status: Literal["pending", "approved", "rejected"] = Field(
         default="pending",
         sa_column=Column(String(16), nullable=False, default="pending"),
@@ -167,8 +167,8 @@ class TaskDefRequiresRow(SQLModel, table=True):
 
     __tablename__ = "task_def_requires"
 
-    task_def_id: UUID = Field(foreign_key="task_defs.id", primary_key=True)
-    requires_id: UUID = Field(foreign_key="task_defs.id", primary_key=True)
+    task_def_id: UUID = Field(foreign_key="task_defs.id", ondelete="CASCADE", primary_key=True)
+    requires_id: UUID = Field(foreign_key="task_defs.id", ondelete="CASCADE", primary_key=True)
 
 
 class TaskStepDefRow(SQLModel, table=True):
@@ -179,7 +179,7 @@ class TaskStepDefRow(SQLModel, table=True):
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    task_def_id: UUID = Field(foreign_key="task_defs.id", index=True)
+    task_def_id: UUID = Field(foreign_key="task_defs.id", ondelete="CASCADE", index=True)
     label: str
     order: int = Field(ge=0)
 
@@ -192,8 +192,8 @@ class TaskProgressRow(SQLModel, table=True):
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    user_id: UUID = Field(foreign_key="users.id", index=True)
-    task_def_id: UUID = Field(foreign_key="task_defs.id", index=True)
+    user_id: UUID = Field(foreign_key="users.id", ondelete="CASCADE", index=True)
+    task_def_id: UUID = Field(foreign_key="task_defs.id", ondelete="CASCADE", index=True)
     status: Literal["todo", "in_progress", "completed"] = Field(
         default="todo",
         sa_column=Column(String(16), nullable=False, default="todo"),
@@ -216,8 +216,8 @@ class TaskStepProgressRow(SQLModel, table=True):
     __table_args__ = (UniqueConstraint("user_id", "step_id", name="uq_step_progress_user_step"),)
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    user_id: UUID = Field(foreign_key="users.id", index=True)
-    step_id: UUID = Field(foreign_key="task_step_defs.id", index=True)
+    user_id: UUID = Field(foreign_key="users.id", ondelete="CASCADE", index=True)
+    step_id: UUID = Field(foreign_key="task_step_defs.id", ondelete="CASCADE", index=True)
     done: bool = Field(default=False)
 
 
@@ -226,8 +226,8 @@ class RewardRow(SQLModel, table=True):
     __table_args__ = (UniqueConstraint("user_id", "task_def_id", name="uq_reward_user_task"),)
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    user_id: UUID = Field(foreign_key="users.id", index=True)
-    task_def_id: UUID = Field(foreign_key="task_defs.id", index=True)
+    user_id: UUID = Field(foreign_key="users.id", ondelete="CASCADE", index=True)
+    task_def_id: UUID = Field(foreign_key="task_defs.id", ondelete="CASCADE", index=True)
     task_title: str
     bonus: str
     status: Literal["earned", "claimed"] = Field(

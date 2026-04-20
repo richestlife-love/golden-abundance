@@ -1,53 +1,39 @@
 # Frontend
 
-React 18 + TypeScript + Vite.
+React 18 + TypeScript + Vite. See the [root README](../README.md) for prerequisites, recipe tables, and typical workflows.
 
-## Running
+## API proxy
 
-Prereqs: [`just`](https://github.com/casey/just), `pnpm` 10+ (see `packageManager` in `package.json`), Node 22+ — dev uses Node 25 via `.nvmrc` (`nvm use` / `fnm use` picks it up); the `engines` floor is 22 so LTS contributors can run too. Also Docker (for the backend's Postgres), and [`uv`](https://github.com/astral-sh/uv) (used by `gen-types` to load the FastAPI app in-process).
+Vite proxies `/api/*` to the backend (default `http://localhost:8000`, overridable via `VITE_API_BASE_URL`), so client code uses relative paths:
 
-Recipes are organised as a root justfile plus per-subtree justfiles (`backend/justfile`, `frontend/justfile`) wired together with `just` modules. Cross-stack recipes (`dev`, `gen-types`, `gen-demo-accounts`) live at the repo root. Subtree recipes can be run either by `cd`ing in or via the module prefix from root (e.g. `just backend db-up`). Frontend-only commands that have no just recipe are `pnpm` scripts under `frontend/`.
-
-### Daily dev loop — from the repo root
-
-```sh
-just dev
+```ts
+fetch('/api/v1/me')
 ```
 
-Boots backend (`:8000`) + frontend (`:5173`) in parallel; Ctrl-C kills both. Vite proxies `/api/*` to the backend, so `fetch('/api/v1/me')` just works. **Requires** the backend DB already up, migrated, and seeded — see the one-time setup below.
+`just dev` (from repo root) boots backend + frontend together. `just frontend dev` boots Vite only — API calls will 404 at the proxy unless a backend is already running. `pnpm build` and `pnpm typecheck` require `src/api/schema.d.ts`; run `just gen-types` from the repo root first.
 
-### After a backend contract change — from the repo root
+## Environment
 
-```sh
-just gen-types            # rewrites frontend/src/api/schema.d.ts from the in-process FastAPI OpenAPI
-just gen-demo-accounts    # rewrites frontend/src/dev/demo-accounts.json from backend.seed.DEMO_USERS
-```
+Local overrides live in `frontend/.env.local` (gitignored). Copy `frontend/.env.example` as a starting point. Supported variables:
 
-`gen-types` needs neither a running server nor a DB — it imports the FastAPI app and dumps OpenAPI in-process. `schema.d.ts` is gitignored; CI must run this before any `tsc`/`vite build` step. `demo-accounts.json` is checked in — regenerate and commit after changing `DEMO_USERS`.
+| Variable | Purpose |
+| --- | --- |
+| `VITE_API_BASE_URL` | Backend origin for the `/api` proxy. Defaults to `http://localhost:8000`. |
+| `VITE_PORT` | Dev server port. Defaults to `5173`. |
+| `VITE_ALLOWED_HOSTS` | Comma-separated hosts for Vite's `allowedHosts` (needed behind a tunnel such as ngrok). |
+| `NGROK_HOST` | Hostname used by `just frontend tunnel`. |
 
-### One-time / after-DB-schema-change setup — backend recipes
+## pnpm scripts
 
-```sh
-just backend db-up        # docker compose up Postgres
-just backend migrate      # alembic upgrade head
-just backend seed-reset   # truncate seed tables + reseed demo users, tasks, news
-```
+`just frontend <recipe>` covers the normal loop. The underlying `pnpm` scripts are also available for direct invocation:
 
-Or `cd backend && just db-up` etc. if you prefer. `seed-reset` is refused when `APP_ENV=prod`. Use it (instead of `just backend seed`) when seed _content_ has changed — `seed` is idempotent but skip-on-conflict, so it won't update rows that already exist. Run `just --list backend` (or `just --list` inside `backend/`) to see the full recipe set (`ci`, `test`, `makemigration`, etc.).
-
-### Frontend-only commands
-
-From repo root (preferred):
-
-```sh
-just frontend dev          # Vite only (no backend; API calls 404 at the proxy)
-just frontend test         # Vitest run (pass extra args: just frontend test --watch)
-just frontend ci           # install + lint + format + typecheck + test + bundle
-```
-
-Or `cd frontend` and drop the `frontend` prefix. The underlying `pnpm` scripts (`pnpm dev`, `pnpm test`, `pnpm test:watch`, `pnpm build`, `pnpm typecheck`, `pnpm lint`, `pnpm format`) are also available for direct invocation. `pnpm build` (and `pnpm typecheck`) require `frontend/src/api/schema.d.ts` — run `just gen-types` from root first.
-
-Local env overrides go in `frontend/.env.local` (gitignored). See `frontend/.env.example` for the supported variables (`VITE_API_BASE_URL`, `VITE_PORT`, `VITE_ALLOWED_HOSTS`, `NGROK_HOST`).
+| Script | Does |
+| --- | --- |
+| `pnpm dev` | Vite dev server. |
+| `pnpm test` / `pnpm test:watch` | Vitest run / watch. |
+| `pnpm build` | Production bundle (requires `src/api/schema.d.ts`). |
+| `pnpm typecheck` | `tsc --noEmit` (requires `src/api/schema.d.ts`). |
+| `pnpm lint` / `pnpm format` | ESLint / Prettier. |
 
 ## Layout
 
@@ -55,11 +41,13 @@ Local env overrides go in `frontend/.env.local` (gitignored). See `frontend/.env
 - `src/main.tsx` — React root with StrictMode
 - `src/App.tsx` — screen orchestration and app state
 - `src/types.ts` — client-side data types (replaced in Phase 4 by contract-generated types)
-- `src/data.ts` — mock TASKS / MOCK_TEAMS (MOCK_MEMBERS exported for future use)
+- `src/data.ts` — mock `TASKS` / `MOCK_TEAMS` (`MOCK_MEMBERS` exported for future use)
 - `src/utils.ts` — pure helpers (`getEffectiveStatus`)
 - `src/ui/` — 17 shared presentational primitives
 - `src/screens/` — 18 screen/flow components
 - `src/assets/` — static images (fingerprinted by Vite)
+- `src/api/schema.d.ts` — generated by `just gen-types` (gitignored)
+- `src/dev/demo-accounts.json` — generated by `just gen-demo-accounts` (checked in)
 
 ## TypeScript configuration
 

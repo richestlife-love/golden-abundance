@@ -43,7 +43,7 @@ async def test_seed_populates_expected_task_display_ids(
 ) -> None:
     """Pin the task identity — catches accidental renaming to T001/etc."""
     await seed_run()
-    rows = (await session.execute(select(TaskDefRow.display_id).order_by(TaskDefRow.display_id))).scalars().all()
+    rows = (await session.execute(select(TaskDefRow.display_id).order_by(TaskDefRow.display_id))).scalars().all()  # ty: ignore[no-matching-overload]
     assert rows == ["T1", "T2", "T3", "T4"]
 
 
@@ -52,7 +52,7 @@ async def test_seed_news_has_one_pinned(session: AsyncSession) -> None:
     await seed_run()
     pinned_count = (
         await session.execute(
-            select(func.count()).select_from(NewsItemRow).where(NewsItemRow.pinned == True)  # noqa: E712
+            select(func.count()).select_from(NewsItemRow).where(NewsItemRow.pinned == True)  # noqa: E712  # ty: ignore[invalid-argument-type]
         )
     ).scalar_one()
     assert pinned_count == 1
@@ -61,14 +61,14 @@ async def test_seed_news_has_one_pinned(session: AsyncSession) -> None:
 async def test_seed_t2_requires_t1(session: AsyncSession) -> None:
     """The T2→T1 prerequisite link must be created exactly once."""
     await seed_run()
-    t1 = (await session.execute(select(TaskDefRow).where(TaskDefRow.display_id == "T1"))).scalar_one()
-    t2 = (await session.execute(select(TaskDefRow).where(TaskDefRow.display_id == "T2"))).scalar_one()
+    t1 = (await session.execute(select(TaskDefRow).where(TaskDefRow.display_id == "T1"))).scalar_one()  # ty: ignore[invalid-argument-type]
+    t2 = (await session.execute(select(TaskDefRow).where(TaskDefRow.display_id == "T2"))).scalar_one()  # ty: ignore[invalid-argument-type]
     links = (
         (
             await session.execute(
                 select(TaskDefRequiresRow).where(
-                    TaskDefRequiresRow.task_def_id == t2.id,
-                    TaskDefRequiresRow.requires_id == t1.id,
+                    TaskDefRequiresRow.task_def_id == t2.id,  # ty: ignore[invalid-argument-type]
+                    TaskDefRequiresRow.requires_id == t1.id,  # ty: ignore[invalid-argument-type]
                 )
             )
         )

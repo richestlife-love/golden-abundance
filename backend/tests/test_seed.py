@@ -1,19 +1,21 @@
+import os
+import subprocess
+import sys
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.db.models import (
+    NewsItemRow,
+    TaskDefRequiresRow,
+    TaskDefRow,
+    TaskStepDefRow,
+)
 from backend.seed import run as seed_run
 
 
 async def _counts(session: AsyncSession) -> tuple[int, int, int, int]:
     """Return (task_defs, news_items, requires_links, step_defs) counts."""
-    from sqlalchemy import func, select
-
-    from backend.db.models import (
-        NewsItemRow,
-        TaskDefRequiresRow,
-        TaskDefRow,
-        TaskStepDefRow,
-    )
-
     tasks = (await session.execute(select(func.count()).select_from(TaskDefRow))).scalar_one()
     news = (await session.execute(select(func.count()).select_from(NewsItemRow))).scalar_one()
     reqs = (await session.execute(select(func.count()).select_from(TaskDefRequiresRow))).scalar_one()
@@ -40,10 +42,6 @@ async def test_seed_populates_expected_task_display_ids(
     session: AsyncSession,
 ) -> None:
     """Pin the task identity — catches accidental renaming to T001/etc."""
-    from sqlalchemy import select
-
-    from backend.db.models import TaskDefRow
-
     await seed_run()
     rows = (await session.execute(select(TaskDefRow.display_id).order_by(TaskDefRow.display_id))).scalars().all()
     assert rows == ["T1", "T2", "T3", "T4"]
@@ -51,10 +49,6 @@ async def test_seed_populates_expected_task_display_ids(
 
 async def test_seed_news_has_one_pinned(session: AsyncSession) -> None:
     """Pinned flag must survive the seed — news sort depends on it."""
-    from sqlalchemy import func, select
-
-    from backend.db.models import NewsItemRow
-
     await seed_run()
     pinned_count = (
         await session.execute(
@@ -66,27 +60,25 @@ async def test_seed_news_has_one_pinned(session: AsyncSession) -> None:
 
 async def test_seed_t2_requires_t1(session: AsyncSession) -> None:
     """The T2→T1 prerequisite link must be created exactly once."""
-    from sqlalchemy import select
-
-    from backend.db.models import TaskDefRequiresRow, TaskDefRow
-
     await seed_run()
     t1 = (await session.execute(select(TaskDefRow).where(TaskDefRow.display_id == "T1"))).scalar_one()
     t2 = (await session.execute(select(TaskDefRow).where(TaskDefRow.display_id == "T2"))).scalar_one()
     links = (
-        await session.execute(
-            select(TaskDefRequiresRow).where(
-                TaskDefRequiresRow.task_def_id == t2.id,
-                TaskDefRequiresRow.requires_id == t1.id,
+        (
+            await session.execute(
+                select(TaskDefRequiresRow).where(
+                    TaskDefRequiresRow.task_def_id == t2.id,
+                    TaskDefRequiresRow.requires_id == t1.id,
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(links) == 1
 
 
-async def test_seed_runs_via_python_module_entrypoint(
-    session: AsyncSession, postgres_container
-) -> None:
+async def test_seed_runs_via_python_module_entrypoint(session: AsyncSession, postgres_container) -> None:
     """Smoke: `python -m backend.seed` exits 0 and prints seed: done.
 
     This catches (a) missing `if __name__ == '__main__'` block, (b) broken
@@ -99,10 +91,6 @@ async def test_seed_runs_via_python_module_entrypoint(
     seed T1-T4 via `seeded_task_defs` collide on the display_id unique
     constraint.
     """
-    import os
-    import subprocess
-    import sys
-
     env = {
         **os.environ,
         "DATABASE_URL": postgres_container.get_connection_url(),

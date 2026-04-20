@@ -3,11 +3,13 @@ news items, and nothing else. Users sign in via /auth/google and
 complete their own profile + team.
 
 Run with: `just -f backend/justfile seed` (after `just db-up` + `just migrate`).
-Running twice is safe — existing rows (by display_id / title) are skipped.
+Running sequentially twice is safe — existing rows (by display_id / title) are skipped.
+Concurrent invocations are not coordinated; one may lose on the unique constraint,
+which is acceptable for a dev seed.
 """
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -108,8 +110,6 @@ async def _upsert_task_defs(session: AsyncSession) -> dict[str, TaskDefRow]:
 
 
 async def _upsert_news(session: AsyncSession) -> None:
-    from datetime import timedelta
-
     existing = {n.title for n in (await session.execute(select(NewsItemRow))).scalars().all()}
     _now = datetime.now(tz=timezone.utc)
     # News items: (title, body, category, pinned, offset_days)

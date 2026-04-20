@@ -15,8 +15,8 @@ from pydantic import TypeAdapter, ValidationError
 
 from backend.contract.auth import AuthResponse, GoogleAuthRequest
 from backend.contract.common import Paginated
+from backend.contract.leaderboard import TeamLeaderboardEntry, UserLeaderboardEntry
 from backend.contract.news import NewsItem
-from backend.contract.rank import TeamRankEntry, UserRankEntry
 from backend.contract.reward import Reward
 from backend.contract.task import (
     InterestFormBody,
@@ -46,8 +46,8 @@ FIXTURES: dict[str, TypeAdapter[Any]] = {
     "news_list.json": TypeAdapter(Paginated[NewsItem]),
     "team_as_leader.json": TypeAdapter(Team),
     "team_as_member.json": TypeAdapter(Team),
-    "rank_users_week.json": TypeAdapter(Paginated[UserRankEntry]),
-    "rank_teams_week.json": TypeAdapter(Paginated[TeamRankEntry]),
+    "leaderboard_users_week.json": TypeAdapter(Paginated[UserLeaderboardEntry]),
+    "leaderboard_teams_week.json": TypeAdapter(Paginated[TeamLeaderboardEntry]),
     "task_interest.json": TypeAdapter(Task),
     "task_team_challenge.json": TypeAdapter(Task),
     "interest_form_submit.json": TypeAdapter(InterestFormBody),

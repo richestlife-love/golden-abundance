@@ -7,10 +7,10 @@ from typing import Literal
 
 from backend.contract.common import StrictModel, TeamRef, UserRef
 
-RankPeriod = Literal["week", "month", "all_time"]
+LeaderboardPeriod = Literal["week", "month", "all_time"]
 
 
-class UserRankEntry(StrictModel):
+class UserLeaderboardEntry(StrictModel):
     """Single entry in the user leaderboard."""
 
     user: UserRef
@@ -19,7 +19,7 @@ class UserRankEntry(StrictModel):
     week_points: int
 
 
-class TeamRankEntry(StrictModel):
+class TeamLeaderboardEntry(StrictModel):
     """Single entry in the team leaderboard."""
 
     team: TeamRef

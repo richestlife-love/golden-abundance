@@ -21,8 +21,8 @@ from backend.contract import (
     TaskSubmissionResponse,
     # Team
     Team, JoinRequest, TeamUpdate, MeTeamsResponse, MeProfileCreateResponse,
-    # Rank
-    UserRankEntry, TeamRankEntry, RankPeriod,
+    # Leaderboard
+    UserLeaderboardEntry, TeamLeaderboardEntry, LeaderboardPeriod,
     # Rewards & News
     Reward, NewsItem,
 )
@@ -40,7 +40,7 @@ you need the schema.
 | `auth.py`        | `GoogleAuthRequest`, `AuthResponse`, `TokenClaims`                               |
 | `common.py`      | `UserRef`, `TeamRef`, `Paginated[T]`                                             |
 | `news.py`        | `NewsItem`                                                                       |
-| `rank.py`        | `UserRankEntry`, `TeamRankEntry`, `RankPeriod`                                   |
+| `leaderboard.py` | `UserLeaderboardEntry`, `TeamLeaderboardEntry`, `LeaderboardPeriod`              |
 | `rewards.py`     | `Reward`                                                                         |
 | `task.py`        | `Task`, `TaskStep`, `TeamChallengeProgress`, `InterestFormBody`, `TicketFormBody`, `SubmitBody`, `TaskSubmissionResponse` |
 | `team.py`        | `Team`, `JoinRequest`, `TeamUpdate`, `MeTeamsResponse`, `MeProfileCreateResponse` |

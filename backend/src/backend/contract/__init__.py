@@ -12,8 +12,12 @@ payload shape for documentation only and is not a request/response body.
 
 from backend.contract.auth import AuthResponse, GoogleAuthRequest
 from backend.contract.common import Paginated, TeamRef, UserRef
+from backend.contract.leaderboard import (
+    LeaderboardPeriod,
+    TeamLeaderboardEntry,
+    UserLeaderboardEntry,
+)
 from backend.contract.news import NewsItem
-from backend.contract.rank import RankPeriod, TeamRankEntry, UserRankEntry
 from backend.contract.reward import Reward
 from backend.contract.task import (
     InterestFormBody,
@@ -38,13 +42,13 @@ __all__ = [
     "GoogleAuthRequest",
     "InterestFormBody",
     "JoinRequest",
+    "LeaderboardPeriod",
     "MeProfileCreateResponse",
     "MeTeamsResponse",
     "NewsItem",
     "Paginated",
     "ProfileCreate",
     "ProfileUpdate",
-    "RankPeriod",
     "Reward",
     "SubmitBody",
     "Task",
@@ -52,11 +56,11 @@ __all__ = [
     "TaskSubmissionResponse",
     "Team",
     "TeamChallengeProgress",
-    "TeamRankEntry",
+    "TeamLeaderboardEntry",
     "TeamRef",
     "TeamUpdate",
     "TicketFormBody",
     "User",
-    "UserRankEntry",
+    "UserLeaderboardEntry",
     "UserRef",
 ]

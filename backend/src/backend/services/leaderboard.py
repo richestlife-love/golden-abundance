@@ -29,11 +29,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.contract import (
+    LeaderboardPeriod,
     Paginated,
-    RankPeriod,
-    TeamRankEntry,
+    TeamLeaderboardEntry,
     TeamRef,
-    UserRankEntry,
+    UserLeaderboardEntry,
     UserRef,
 )
 from backend.db.models import (
@@ -51,7 +51,7 @@ from backend.services.pagination import (
 from backend.services.user import derive_user_name
 
 
-def _since(period: RankPeriod) -> datetime | None:
+def _since(period: LeaderboardPeriod) -> datetime | None:
     now = datetime.now(UTC)
     if period == "week":
         return now - timedelta(days=7)
@@ -60,7 +60,7 @@ def _since(period: RankPeriod) -> datetime | None:
     return None
 
 
-async def _user_points_window_and_week(session: AsyncSession, period: RankPeriod) -> dict[UUID, tuple[int, int]]:
+async def _user_points_window_and_week(session: AsyncSession, period: LeaderboardPeriod) -> dict[UUID, tuple[int, int]]:
     """Return ``{user_id: (window_pts, week_pts)}`` in a single round-trip.
 
     ``window_pts`` sums points earned inside the requested ``period``'s
@@ -121,7 +121,7 @@ def _slice_after_cursor(
             cursor_pts = int(payload["pts"])
             cursor_id_str = str(payload["id"])
         except (KeyError, TypeError, ValueError) as exc:
-            raise InvalidCursorError(f"rank cursor missing/invalid pts/id: {exc}") from exc
+            raise InvalidCursorError(f"leaderboard cursor missing/invalid pts/id: {exc}") from exc
         for idx, (pts, eid) in enumerate(sorted_entries):
             if pts < cursor_pts or (pts == cursor_pts and str(eid) > cursor_id_str):
                 start_idx = idx
@@ -140,10 +140,10 @@ def _slice_after_cursor(
 async def leaderboard_users(
     session: AsyncSession,
     *,
-    period: RankPeriod,
+    period: LeaderboardPeriod,
     cursor: str | None,
     limit: int,
-) -> Paginated[UserRankEntry]:
+) -> Paginated[UserLeaderboardEntry]:
     pts_by_user = await _user_points_window_and_week(session, period)
 
     users = {u.id: u for u in (await session.execute(select(UserRow))).scalars().all()}
@@ -153,12 +153,12 @@ async def leaderboard_users(
     )
     page, start_idx, next_cursor = _slice_after_cursor(all_entries, cursor, limit)
 
-    items: list[UserRankEntry] = []
+    items: list[UserLeaderboardEntry] = []
     for offset, (pts, uid) in enumerate(page):
         u = users[uid]
         _, week_pts = pts_by_user.get(uid, (0, 0))
         items.append(
-            UserRankEntry(
+            UserLeaderboardEntry(
                 user=UserRef(
                     id=u.id,
                     display_id=u.display_id,
@@ -170,21 +170,21 @@ async def leaderboard_users(
                 week_points=week_pts,
             ),
         )
-    return Paginated[UserRankEntry](items=items, next_cursor=next_cursor)
+    return Paginated[UserLeaderboardEntry](items=items, next_cursor=next_cursor)
 
 
 async def leaderboard_teams(
     session: AsyncSession,
     *,
-    period: RankPeriod,
+    period: LeaderboardPeriod,
     cursor: str | None,
     limit: int,
-) -> Paginated[TeamRankEntry]:
+) -> Paginated[TeamLeaderboardEntry]:
     pts_by_user = await _user_points_window_and_week(session, period)
 
     teams = (await session.execute(select(TeamRow))).scalars().all()
     if not teams:
-        return Paginated[TeamRankEntry](items=[], next_cursor=None)
+        return Paginated[TeamLeaderboardEntry](items=[], next_cursor=None)
 
     # Batch-load every team's memberships in one query, then group by
     # team_id. Avoids the per-team SELECT the previous loop did.
@@ -219,12 +219,12 @@ async def leaderboard_teams(
         .all()
     }
 
-    items: list[TeamRankEntry] = []
+    items: list[TeamLeaderboardEntry] = []
     for offset, (pts, tid) in enumerate(page):
         t = team_by_id[tid]
         leader = leaders[t.leader_id]
         items.append(
-            TeamRankEntry(
+            TeamLeaderboardEntry(
                 team=TeamRef(
                     id=t.id,
                     display_id=t.display_id,
@@ -242,4 +242,4 @@ async def leaderboard_teams(
                 week_points=week_totals.get(tid, 0),
             ),
         )
-    return Paginated[TeamRankEntry](items=items, next_cursor=next_cursor)
+    return Paginated[TeamLeaderboardEntry](items=items, next_cursor=next_cursor)

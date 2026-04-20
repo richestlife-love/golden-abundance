@@ -145,8 +145,8 @@ async def test_submit_t2_twice_does_not_create_second_reward(
         ("POST", f"/api/v1/tasks/{uuid4()}/submit"),
         ("GET", "/api/v1/me/tasks"),
         ("GET", "/api/v1/me/rewards"),
-        ("GET", "/api/v1/rank/users"),
-        ("GET", "/api/v1/rank/teams"),
+        ("GET", "/api/v1/leaderboard/users"),
+        ("GET", "/api/v1/leaderboard/teams"),
         ("GET", "/api/v1/news"),
     ],
 )

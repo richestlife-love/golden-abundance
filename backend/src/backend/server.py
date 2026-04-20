@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.config import get_settings
-from backend.routers import auth, health, me, news, rank, tasks, teams
+from backend.routers import auth, health, leaderboard, me, news, tasks, teams
 from backend.services.pagination import InvalidCursorError
 
 API_V1 = "/api/v1"
@@ -34,7 +34,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix=API_V1)
     app.include_router(me.router, prefix=API_V1)
     app.include_router(news.router, prefix=API_V1)
-    app.include_router(rank.router, prefix=API_V1)
+    app.include_router(leaderboard.router, prefix=API_V1)
     app.include_router(tasks.router, prefix=API_V1)
     app.include_router(teams.router, prefix=API_V1)
 

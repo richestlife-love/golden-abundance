@@ -110,17 +110,17 @@ model names re-exported from `backend.contract`.
 - 204
 - 403 leader cannot leave own team; 404
 
-## Rank
+## Leaderboard
 
-### `GET /rank/users`
+### `GET /leaderboard/users`
 - Auth: B
-- Query: `period` (`RankPeriod`, default `"week"`), `cursor`, `limit` (default 50, max 100)
-- 200: `Paginated[UserRankEntry]`
+- Query: `period` (`LeaderboardPeriod`, default `"week"`), `cursor`, `limit` (default 50, max 100)
+- 200: `Paginated[UserLeaderboardEntry]`
 
-### `GET /rank/teams`
+### `GET /leaderboard/teams`
 - Auth: B
 - Query: `period`, `cursor`, `limit`
-- 200: `Paginated[TeamRankEntry]`
+- 200: `Paginated[TeamLeaderboardEntry]`
 
 ## News
 

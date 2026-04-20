@@ -156,3 +156,17 @@ Surfaced during Phase 5d (tasks, submissions, rewards, leaderboards, news feed).
 ### Feature gaps
 - **No reward-claim transition** — `Reward.status` declares both `"earned"` and `"claimed"` states, but no endpoint moves rows out of `"earned"`. The frontend prototype has no claim flow; the column is wired so Phase 6+ can add `POST /rewards/{id}/claim` (plus whatever fulfillment integration is real by then) without a schema change.
 - **News has no admin publish path** — [`backend/src/backend/routers/news.py`](../backend/src/backend/routers/news.py) exposes only `GET /news`; rows must be inserted directly via DB or a migration seed. When editorial workflow becomes real, add an admin-guarded `POST /news` + `PATCH /news/{id}` (the role system itself is TBD; whatever Phase 6 auth settles on needs an admin flag).
+
+## Tech debt / review findings (Phase 5e)
+
+Surfaced during Phase 5e (idempotent dev seed + Phase 5 closeout). The seed items are all "intentional for dev seed" per the 5e plan's self-review; revisit at production hardening. The flaky JWT test is pre-existing — tracked here because it surfaced during the 5e final review.
+
+### Concurrency / consistency
+- **Seed is not race-safe** — [`backend/src/backend/seed.py`](../backend/src/backend/seed.py). Two concurrent `just seed` invocations can both pass the `select(TaskDefRow)` / `select(NewsItemRow)` existence check and both INSERT; the loser hits a unique-constraint `IntegrityError`. The module docstring admits this explicitly; acceptable for a dev seed. If seed ever runs at deploy time across replicas, switch the upserts to `INSERT … ON CONFLICT DO NOTHING` or wrap them in `try/except IntegrityError: await session.rollback()`.
+
+### Tooling hygiene
+- **Seed is skip-on-conflict only; no force-refresh path** — [`backend/src/backend/seed.py`](../backend/src/backend/seed.py). Operators who change seed content (e.g., edit a T2 title) must `TRUNCATE` the affected tables manually to pick up the change — running `just seed` again is a no-op because the natural keys (`display_id` / `title`) already exist. Consider a `just seed-reset` recipe that truncates the seed tables + re-seeds, gated on `APP_ENV != "production"` so it can't wipe a prod DB.
+- **Seed bypasses `services.display_id`; no drift guard** — [`backend/src/backend/seed.py`](../backend/src/backend/seed.py). T1-T4 `display_id` values are hard-coded to match the current validator shape. If [`services/display_id.py`](../backend/src/backend/services/display_id.py) ever tightens its rules (e.g., requires 3-digit suffixes like `T001`), the seed will silently continue emitting `T1` / `T2` / etc. Add a unit test that re-validates every seeded `display_id` through the current validator, or accept the coupling.
+
+### Testing
+- **`tests/test_jwt.py::test_decode_rejects_tampered_token` is flaky (~10%)** — [`backend/tests/test_jwt.py`](../backend/tests/test_jwt.py). Pre-existing on `main`; surfaced during the Phase 5e final review with 2/20 runs failing on an otherwise-clean `main`. The test flips one base64url character of the signature segment; when the flipped char decodes to the same byte value, HMAC verification still passes. Fix: flip every char in the signature segment, or base64url-decode the signature first and mutate a middle byte.

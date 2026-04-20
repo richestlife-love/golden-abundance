@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+import pytest
 from httpx import AsyncClient
 
 from tests.helpers import sign_in_and_complete
@@ -115,3 +116,23 @@ async def test_list_teams_malformed_cursor_400(client: AsyncClient) -> None:
     jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
     response = await client.get("/api/v1/teams?cursor=not-a-real-cursor!!!", headers=jet.headers)
     assert response.status_code == 400
+
+
+@pytest.mark.parametrize(
+    ("payload", "case"),
+    [
+        ([None], "wrong-length-list"),
+        ({"created_at": "2026-01-01T00:00:00+00:00", "id": "x"}, "dict-not-list"),
+    ],
+)
+async def test_list_teams_wrong_shape_cursor_400(client: AsyncClient, payload, case: str) -> None:
+    """A well-formed cursor whose decoded payload doesn't match the sort
+    shape (len != 2, or not a list at all) must 400, not 500. GET /teams
+    sorts by (created_at, id) — two columns.
+    """
+    from backend.services.pagination import encode_cursor
+
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    wrong = encode_cursor(payload)
+    response = await client.get(f"/api/v1/teams?cursor={wrong}", headers=jet.headers)
+    assert response.status_code == 400, f"{case}: {response.text}"

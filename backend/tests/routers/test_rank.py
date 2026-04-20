@@ -142,3 +142,75 @@ async def test_rank_users_ties_break_by_user_id(session: AsyncSession, client: A
     data = (await client.get("/api/v1/rank/users?period=all_time", headers=a.headers)).json()
     ids = [i["user"]["id"] for i in data["items"]]
     assert ids == sorted(ids)
+
+
+async def test_rank_users_period_month_returns_200(client: AsyncClient) -> None:
+    """Pins the ``month`` branch of ``_since()`` so a future period-enum
+    change doesn't silently drop 30-day filtering.
+    """
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    r = await client.get("/api/v1/rank/users?period=month", headers=jet.headers)
+    assert r.status_code == 200
+
+
+async def test_rank_users_cursor_past_end_returns_empty_page(client: AsyncClient) -> None:
+    """A cursor whose (pts, id) tuple is strictly past every entry must
+    yield an empty page, not a 500. Hits the for-else branch in
+    ``_slice_after_cursor`` where start_idx = len(sorted_entries).
+    """
+    from backend.services.pagination import encode_cursor
+
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    # No user has pts < -1 (pts >= 0 always), and no user has pts == -1,
+    # so the for-loop completes without break.
+    past_end = encode_cursor({"pts": -1, "id": "ffffffff-ffff-ffff-ffff-ffffffffffff"})
+    r = await client.get(f"/api/v1/rank/users?cursor={past_end}", headers=jet.headers)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["items"] == []
+    assert data["next_cursor"] is None
+
+
+async def test_rank_teams_empty_when_zero_teams(client: AsyncClient) -> None:
+    """No profile → no auto-created led team → zero teams in DB.
+    The early-return branch in ``leaderboard_teams`` must return an
+    empty page without executing the membership query.
+    """
+    from tests.helpers import sign_in
+
+    headers = await sign_in(client, "noprof@example.com")
+    r = await client.get("/api/v1/rank/teams", headers=headers)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["items"] == []
+    assert data["next_cursor"] is None
+
+
+async def test_rank_teams_includes_approved_member_points(client: AsyncClient, seeded_task_defs) -> None:
+    """A team with an approved (non-leader) member must include that
+    member's points in the team total. Pins the membership-grouping
+    loop in ``leaderboard_teams`` that builds ``team_member_ids``.
+    """
+    leader = await sign_in_and_complete(client, "lead@example.com", "領")
+    member = await sign_in_and_complete(client, "mem@example.com", "員")
+    req = (
+        await client.post(
+            f"/api/v1/teams/{leader.led_team_id}/join-requests",
+            headers=member.headers,
+        )
+    ).json()
+    approve = await client.post(
+        f"/api/v1/teams/{leader.led_team_id}/join-requests/{req['id']}/approve",
+        headers=leader.headers,
+    )
+    assert approve.status_code == 200
+
+    # Only the member submits — team total must reflect the member's 50 pts.
+    await client.post(
+        f"/api/v1/tasks/{seeded_task_defs['T1'].id}/submit",
+        json=_INTEREST,
+        headers=member.headers,
+    )
+    data = (await client.get("/api/v1/rank/teams?period=all_time", headers=leader.headers)).json()
+    leader_team = next(i for i in data["items"] if i["team"]["id"] == str(leader.led_team_id))
+    assert leader_team["points"] == 50

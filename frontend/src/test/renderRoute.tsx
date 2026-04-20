@@ -1,82 +1,45 @@
-import { useEffect } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { expect } from "vitest";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
-import { AppStateProvider, useAppState, type AppState } from "../state/AppStateContext";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "../auth/session";
+import { UIStateProvider } from "../ui/UIStateProvider";
+import { AppStateProvider } from "../state/AppStateContext";
+import { tokenStore } from "../auth/token";
 import { createAppRouter } from "../router";
-import type { User } from "../types";
+import { makeTestQueryClient } from "./queryClient";
 
-export type SeedAuth = "guest" | "authed-incomplete" | "authed-complete";
-
-function userForSeed(seed: SeedAuth): User | null {
-  if (seed === "guest") return null;
-  const base: User = {
-    id: "UTEST00",
-    email: "a@b.com",
-    name: "A",
-    avatar: "",
-  };
-  return seed === "authed-complete" ? { ...base, zhName: "甲" } : base;
-}
-
-function Shell({
-  router,
-  stateRef,
-}: {
-  router: ReturnType<typeof createAppRouter>;
-  stateRef: { current: AppState | null };
-}) {
-  const state = useAppState();
-  const { user, profileComplete } = state;
-  useEffect(() => {
-    stateRef.current = state;
-  });
-  useEffect(() => {
-    router.invalidate();
-  }, [router, user, profileComplete]);
-  return (
-    <RouterProvider
-      router={router}
-      context={{
-        auth: { user: user ? { id: user.id } : null, profileComplete },
-      }}
-    />
-  );
+export interface RenderRouteOpts {
+  /** Pre-seed the bearer token. Test handlers will see "Authorization: Bearer <token>". */
+  token?: string;
 }
 
 export interface RenderRouteResult {
   router: ReturnType<typeof createAppRouter>;
   dom: ReturnType<typeof render>;
-  getState: () => AppState;
 }
 
-export function renderRoute(path: string, opts: { seed?: SeedAuth } = {}): RenderRouteResult {
-  const seed = opts.seed ?? "guest";
+export function renderRoute(path: string, opts: RenderRouteOpts = {}): RenderRouteResult {
+  if (opts.token) tokenStore.set(opts.token);
+  const queryClient = makeTestQueryClient();
   const router = createAppRouter({
+    queryClient,
     history: createMemoryHistory({ initialEntries: [path] }),
-    initialContext: {
-      auth: {
-        user: seed === "guest" ? null : { id: "UTEST00" },
-        profileComplete: seed === "authed-complete",
-      },
-    },
   });
-  const stateRef: { current: AppState | null } = { current: null };
   const dom = render(
-    <AppStateProvider initialUser={userForSeed(seed)}>
-      <Shell router={router} stateRef={stateRef} />
-    </AppStateProvider>,
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AppStateProvider>
+          <UIStateProvider>
+            <RouterProvider router={router} />
+          </UIStateProvider>
+        </AppStateProvider>
+      </AuthProvider>
+    </QueryClientProvider>,
   );
-  const getState = (): AppState => {
-    if (!stateRef.current) throw new Error("AppState not yet mounted");
-    return stateRef.current;
-  };
-  return { router, dom, getState };
+  return { router, dom };
 }
 
-// Assert both the URL and a string unique to the destination screen. URL-only
-// checks miss bugs where the router navigates but the component never mounts
-// (e.g., nested-route with no <Outlet/> on the parent).
 export async function expectScreen(
   router: ReturnType<typeof createAppRouter>,
   path: string,

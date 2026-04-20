@@ -43,9 +43,7 @@ describe("apiFetch", () => {
   });
 
   it("returns undefined on 204", async () => {
-    server.use(
-      http.post("/api/v1/auth/logout", () => new HttpResponse(null, { status: 204 })),
-    );
+    server.use(http.post("/api/v1/auth/logout", () => new HttpResponse(null, { status: 204 })));
     const data = await apiFetch<void>("/auth/logout", { method: "POST" });
     expect(data).toBeUndefined();
   });
@@ -78,9 +76,7 @@ describe("apiFetch", () => {
   it("calls registered session-expired handler on 401", async () => {
     const handler = vi.fn();
     setSessionExpiredHandler(handler);
-    server.use(
-      http.get("/api/v1/me", () => new HttpResponse(null, { status: 401 })),
-    );
+    server.use(http.get("/api/v1/me", () => new HttpResponse(null, { status: 401 })));
     await expect(apiFetch("/me")).rejects.toBeInstanceOf(ApiError);
     expect(handler).toHaveBeenCalledTimes(1);
     expect(handler).toHaveBeenCalledWith({
@@ -89,9 +85,7 @@ describe("apiFetch", () => {
   });
 
   it("does not throw when no 401 handler is registered", async () => {
-    server.use(
-      http.get("/api/v1/me", () => new HttpResponse(null, { status: 401 })),
-    );
+    server.use(http.get("/api/v1/me", () => new HttpResponse(null, { status: 401 })));
     await expect(apiFetch("/me")).rejects.toBeInstanceOf(ApiError);
   });
 });

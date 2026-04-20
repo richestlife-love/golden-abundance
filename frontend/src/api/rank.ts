@@ -28,12 +28,8 @@ function qs(p: RankParams): string {
   return `?${usp.toString()}`;
 }
 
-export const listUserRank = (
-  p: RankParams,
-): Promise<Paginated<UserRankEntry>> =>
+export const listUserRank = (p: RankParams): Promise<Paginated<UserRankEntry>> =>
   apiFetch<Paginated<UserRankEntry>>(`/rank/users${qs(p)}`);
 
-export const listTeamRank = (
-  p: RankParams,
-): Promise<Paginated<TeamRankEntry>> =>
+export const listTeamRank = (p: RankParams): Promise<Paginated<TeamRankEntry>> =>
   apiFetch<Paginated<TeamRankEntry>>(`/rank/teams${qs(p)}`);

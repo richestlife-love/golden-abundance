@@ -9,13 +9,7 @@ export const defaultHandlers = [
   http.get("/api/v1/me/teams", () => HttpResponse.json(f.myTeams)),
   http.get("/api/v1/me/rewards", () => HttpResponse.json(f.rewardsList)),
   http.get("/api/v1/news", () => HttpResponse.json({ items: f.newsList, next_cursor: null })),
-  http.get("/api/v1/rank/users", () =>
-    HttpResponse.json({ items: [], next_cursor: null }),
-  ),
-  http.get("/api/v1/rank/teams", () =>
-    HttpResponse.json({ items: [], next_cursor: null }),
-  ),
-  http.get("/api/v1/teams", () =>
-    HttpResponse.json({ items: [], next_cursor: null }),
-  ),
+  http.get("/api/v1/rank/users", () => HttpResponse.json({ items: [], next_cursor: null })),
+  http.get("/api/v1/rank/teams", () => HttpResponse.json({ items: [], next_cursor: null })),
+  http.get("/api/v1/teams", () => HttpResponse.json({ items: [], next_cursor: null })),
 ];

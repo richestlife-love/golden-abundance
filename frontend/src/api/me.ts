@@ -12,14 +12,10 @@ type ProfileUpdate = components["schemas"]["ProfileUpdate"];
 
 export const getMe = (): Promise<User> => apiFetch<User>("/me");
 export const getMyTasks = (): Promise<Task[]> => apiFetch<Task[]>("/me/tasks");
-export const getMyTeams = (): Promise<MeTeamsResponse> =>
-  apiFetch<MeTeamsResponse>("/me/teams");
-export const getMyRewards = (): Promise<Reward[]> =>
-  apiFetch<Reward[]>("/me/rewards");
+export const getMyTeams = (): Promise<MeTeamsResponse> => apiFetch<MeTeamsResponse>("/me/teams");
+export const getMyRewards = (): Promise<Reward[]> => apiFetch<Reward[]>("/me/rewards");
 
-export const postProfile = (
-  body: ProfileCreate,
-): Promise<MeProfileCreateResponse> =>
+export const postProfile = (body: ProfileCreate): Promise<MeProfileCreateResponse> =>
   apiFetch<MeProfileCreateResponse>("/me/profile", {
     method: "POST",
     body: JSON.stringify(body),

@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useEffect, useState, type ReactNode } from "react";
 import { setToastSink, type Toast } from "./toasts";
 
 export interface SuccessData {
@@ -45,9 +39,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   }, [enqueue]);
 
   return (
-    <UIStateCtx.Provider
-      value={{ successData, setSuccessData, toasts, dismissToast }}
-    >
+    <UIStateCtx.Provider value={{ successData, setSuccessData, toasts, dismissToast }}>
       {children}
     </UIStateCtx.Provider>
   );

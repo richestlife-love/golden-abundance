@@ -10,11 +10,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import {
-  QueryClient,
-  QueryClientProvider,
-  type UseMutationResult,
-} from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, type UseMutationResult } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { server } from "../../test/msw/server";
 import { qk } from "../../queries/keys";
@@ -122,19 +118,11 @@ const cases: Case[] = [
   {
     name: "useApproveJoinRequest",
     useHook: useApproveJoinRequest,
-    handler: http.post(
-      `/api/v1/teams/${teamId}/join-requests/${reqId}/approve`,
-      () => HttpResponse.json(f.teamJetLed),
+    handler: http.post(`/api/v1/teams/${teamId}/join-requests/${reqId}/approve`, () =>
+      HttpResponse.json(f.teamJetLed),
     ),
     args: { teamId, reqId },
-    expectedKeys: [
-      qk.myTeams,
-      qk.team(teamId),
-      qk.myTasks,
-      qk.myRewards,
-      qk.me,
-      ["rank"],
-    ],
+    expectedKeys: [qk.myTeams, qk.team(teamId), qk.myTasks, qk.myRewards, qk.me, ["rank"]],
   },
   {
     name: "useRejectJoinRequest",
@@ -154,21 +142,12 @@ const cases: Case[] = [
       () => new HttpResponse(null, { status: 204 }),
     ),
     args: teamId,
-    expectedKeys: [
-      qk.team(teamId),
-      qk.myTeams,
-      qk.myTasks,
-      qk.myRewards,
-      qk.me,
-      ["rank"],
-    ],
+    expectedKeys: [qk.team(teamId), qk.myTeams, qk.myTasks, qk.myRewards, qk.me, ["rank"]],
   },
   {
     name: "usePatchTeam",
     useHook: usePatchTeam,
-    handler: http.patch(`/api/v1/teams/${teamId}`, () =>
-      HttpResponse.json(f.teamJetLed),
-    ),
+    handler: http.patch(`/api/v1/teams/${teamId}`, () => HttpResponse.json(f.teamJetLed)),
     args: { teamId, body: { alias: "new alias" } },
     expectedKeys: [qk.team(teamId), qk.myTeams, ["teams"]],
   },
@@ -179,13 +158,7 @@ function makeClient(): QueryClient {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
 }
 
-function Wrapper({
-  client,
-  children,
-}: {
-  client: QueryClient;
-  children: ReactNode;
-}) {
+function Wrapper({ client, children }: { client: QueryClient; children: ReactNode }) {
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
 
@@ -197,17 +170,13 @@ describe("default-invalidate map", () => {
       const qc = makeClient();
       const spy = vi.spyOn(qc, "invalidateQueries");
       const { result } = renderHook(useHook, {
-        wrapper: ({ children }) => (
-          <Wrapper client={qc}>{children}</Wrapper>
-        ),
+        wrapper: ({ children }) => <Wrapper client={qc}>{children}</Wrapper>,
       });
 
       result.current.mutate(args);
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      const calledKeys = spy.mock.calls.map(
-        ([opts]) => (opts as { queryKey: unknown }).queryKey,
-      );
+      const calledKeys = spy.mock.calls.map(([opts]) => (opts as { queryKey: unknown }).queryKey);
       expect(calledKeys).toEqual(expect.arrayContaining([...expectedKeys]));
     },
   );

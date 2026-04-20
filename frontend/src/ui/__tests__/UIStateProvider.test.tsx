@@ -8,15 +8,9 @@ function Probe() {
   const { successData, setSuccessData, toasts } = useUIState();
   return (
     <div>
-      <div data-testid="success">
-        {successData ? (successData.bonus ?? "yes") : "no"}
-      </div>
+      <div data-testid="success">{successData ? (successData.bonus ?? "yes") : "no"}</div>
       <div data-testid="toast-count">{toasts.length}</div>
-      <button
-        onClick={() =>
-          setSuccessData({ color: "#fff", points: 50, bonus: "ok" })
-        }
-      >
+      <button onClick={() => setSuccessData({ color: "#fff", points: 50, bonus: "ok" })}>
         push success
       </button>
     </div>

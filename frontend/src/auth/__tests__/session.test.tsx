@@ -47,9 +47,7 @@ describe("AuthProvider", () => {
   });
 
   it("signIn stores the token and seeds qk.me", async () => {
-    server.use(
-      http.post("/api/v1/auth/google", () => HttpResponse.json(f.authResponseJet)),
-    );
+    server.use(http.post("/api/v1/auth/google", () => HttpResponse.json(f.authResponseJet)));
     const qc = new QueryClient();
     probe(qc);
     act(() => {
@@ -65,9 +63,7 @@ describe("AuthProvider", () => {
     const qc = new QueryClient();
     qc.setQueryData(qk.me, f.userJet);
     probe(qc);
-    server.use(
-      http.post("/api/v1/auth/logout", () => new HttpResponse(null, { status: 204 })),
-    );
+    server.use(http.post("/api/v1/auth/logout", () => new HttpResponse(null, { status: 204 })));
     act(() => {
       screen.getByText("out").click();
     });

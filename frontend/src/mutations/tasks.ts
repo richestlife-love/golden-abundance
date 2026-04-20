@@ -11,8 +11,7 @@ type SubmitBody =
 export function useSubmitTask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: SubmitBody }) =>
-      api.submitTask(id, body),
+    mutationFn: ({ id, body }: { id: string; body: SubmitBody }) => api.submitTask(id, body),
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: qk.task(id) });
       qc.invalidateQueries({ queryKey: qk.myTasks });

@@ -13,9 +13,8 @@ export default function HomeScreen() {
   const { data: user } = useMe();
   const { data: tasks } = useMyTasks();
   const { signOut } = useAuth();
-  const onSignOut = async () => {
-    await signOut();
-    navigate({ to: "/" });
+  const onSignOut = () => {
+    void signOut();
   };
   const onOpenTask = (displayId: string) =>
     navigate({ to: "/tasks/$taskId", params: { taskId: displayId } });

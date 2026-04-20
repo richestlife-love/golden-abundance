@@ -22,11 +22,15 @@ function WelcomeRoute() {
       error={complete.error?.message ?? null}
       onCancel={() => {
         void signOut();
-        navigate({ to: "/" });
       }}
       onSubmit={async (profile) => {
-        await complete.mutateAsync(profile);
-        navigate({ to: "/home" });
+        try {
+          await complete.mutateAsync(profile);
+          navigate({ to: "/home" });
+        } catch {
+          // error surfaces via complete.error; form stays mounted so the
+          // user can retry without an unhandled-rejection warning.
+        }
       }}
     />
   );

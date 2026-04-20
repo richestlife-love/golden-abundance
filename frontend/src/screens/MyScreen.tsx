@@ -113,9 +113,8 @@ export default function MyScreen() {
             <button
               type="button"
               aria-label="登出"
-              onClick={async () => {
-                await signOut();
-                navigate({ to: "/" });
+              onClick={() => {
+                void signOut();
               }}
               title="登出"
               style={{

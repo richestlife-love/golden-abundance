@@ -18,7 +18,7 @@ pytestmark = pytest.mark.asyncio
 async def _truncate_all(engine: AsyncEngine) -> None:
     tables = ", ".join(f'"{t.name}"' for t in SQLModel.metadata.sorted_tables)
     async with engine.begin() as conn:
-        await conn.execute(text(f"TRUNCATE TABLE {tables} RESTART IDENTITY CASCADE"))
+        await conn.execute(text(f"TRUNCATE TABLE {tables} CASCADE"))
 
 
 async def test_demo_users_seeded(engine: AsyncEngine) -> None:

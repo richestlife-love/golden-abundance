@@ -31,7 +31,7 @@ TASK_DISPLAY_ID_RE = re.compile(r"^T[0-9A-Z]+$")
 async def _truncate_all(engine: AsyncEngine) -> None:
     tables = ", ".join(f'"{t.name}"' for t in SQLModel.metadata.sorted_tables)
     async with engine.begin() as conn:
-        await conn.execute(text(f"TRUNCATE TABLE {tables} RESTART IDENTITY CASCADE"))
+        await conn.execute(text(f"TRUNCATE TABLE {tables} CASCADE"))
 
 
 async def test_seeded_user_display_ids_round_trip(engine: AsyncEngine) -> None:

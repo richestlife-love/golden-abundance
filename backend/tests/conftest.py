@@ -107,7 +107,7 @@ async def session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
     tables = ", ".join(f'"{t.name}"' for t in SQLModel.metadata.sorted_tables)
     if tables:
         async with engine.begin() as conn:
-            await conn.execute(text(f"TRUNCATE TABLE {tables} RESTART IDENTITY CASCADE"))
+            await conn.execute(text(f"TRUNCATE TABLE {tables} CASCADE"))
 
 
 @pytest_asyncio.fixture

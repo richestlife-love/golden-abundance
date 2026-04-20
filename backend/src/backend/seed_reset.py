@@ -28,7 +28,7 @@ async def run() -> None:
         raise SystemExit("seed-reset refused: APP_ENV=prod")
     engine = get_engine()
     async with engine.begin() as conn:
-        await conn.execute(text("TRUNCATE task_defs, news_items, users RESTART IDENTITY CASCADE"))
+        await conn.execute(text("TRUNCATE task_defs, news_items, users CASCADE"))
     print("seed-reset: done")
 
 

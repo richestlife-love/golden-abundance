@@ -1293,6 +1293,9 @@ Surfaced during Phase 4 (frontend wired to backend). Address as each becomes act
 ### Optimistic-mutation gaps
 - `qk.team(uuid)` is invalidated defensively but never patched optimistically — Phase 3/4 has no team-detail route subscriber. When a team-detail deep link ships, extend the three optimistic mutations in `mutations/teams.ts` to also patch `qk.team(uuid)` when present.
 
+### Invalidation architecture
+- **Default-invalidate map is inlined per-hook, not shared.** Spec §6.1 describes the map as a table; 4a landed the inlined version and 4c's optimistic upgrades layered on top without consolidating. A shared `INVALIDATE_MAP: Record<MutationName, QueryKey[]>` + `onSuccessFactory(name)` would collapse ~40 lines of `qc.invalidateQueries({...})` calls across `mutations/{me,tasks,teams}.ts`, make the `mutations/__tests__/me.test.tsx` table-driven assertion a direct import rather than a hand-maintained duplicate, and give the optimistic-mutation `onSettled` hooks a single source of truth. Low-risk post-4c refactor — no behavior change, just deduplication.
+
 ### Demo flow ergonomics
 - Seed reaches at most 3/6 on T3 — completing T3 requires extra manual approvals (spec §7.1). Add `just seed-extra-team-members` if this becomes a bottleneck for product demos.
 

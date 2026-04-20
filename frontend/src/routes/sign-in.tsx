@@ -1,20 +1,27 @@
-import { createRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createRoute, redirect, useNavigate, useSearch } from "@tanstack/react-router";
 import GoogleAuthScreen from "../screens/GoogleAuthScreen";
-import { useAppState } from "../state/AppStateContext";
+import { useAuth } from "../auth/session";
+import { tokenStore } from "../auth/token";
+import { meQueryOptions } from "../queries/me";
 import { rootRoute } from "./__root";
+
+interface SignInSearch {
+  returnTo?: string;
+}
 
 function SignInRoute() {
   const navigate = useNavigate();
-  const { handleSignIn } = useAppState();
+  const search = useSearch({ from: "/sign-in" });
+  const { signIn } = useAuth();
   return (
     <GoogleAuthScreen
       onCancel={() => navigate({ to: "/" })}
-      onSuccess={(raw) => {
-        // After sign-in, the auth effect in main.tsx's AppShell (router.invalidate)
-        // re-runs the guard on /sign-in, which redirects to /welcome (incomplete
-        // profile) or /home (complete). No explicit navigate needed — and doing
-        // both would race.
-        handleSignIn(raw);
+      onSelectAccount={async (email) => {
+        await signIn(email);
+        if (search.returnTo) {
+          navigate({ to: search.returnTo });
+        }
+        // Otherwise the _authed guard / index redirect handles routing.
       }}
     />
   );
@@ -23,10 +30,13 @@ function SignInRoute() {
 export const signInRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/sign-in",
-  beforeLoad: ({ context }) => {
-    if (context.auth.user) {
-      throw redirect({ to: context.auth.profileComplete ? "/home" : "/welcome" });
-    }
+  validateSearch: (raw: Record<string, unknown>): SignInSearch => ({
+    returnTo: typeof raw.returnTo === "string" ? raw.returnTo : undefined,
+  }),
+  beforeLoad: async ({ context }) => {
+    if (!tokenStore.get()) return;
+    const me = await context.queryClient.ensureQueryData(meQueryOptions());
+    throw redirect({ to: me.profile_complete ? "/home" : "/welcome" });
   },
   component: SignInRoute,
 });

@@ -1,5 +1,7 @@
 import { useRouter } from "@tanstack/react-router";
-import { useAppState } from "../state/AppStateContext";
+import { useMe } from "../hooks/useMe";
+import { useMyTasks } from "../hooks/useMyTasks";
+import { useMyRewards } from "../hooks/useMyRewards";
 import { fs } from "../utils";
 import { ChevronLeftIcon } from "../ui/Icon";
 import MyRewards from "./MyRewards";
@@ -7,7 +9,9 @@ import MyRewards from "./MyRewards";
 export default function RewardsScreen() {
   const router = useRouter();
   const onBack = () => router.history.back();
-  const { user, tasks } = useAppState();
+  const { data: user } = useMe();
+  const { data: tasks } = useMyTasks();
+  const { data: rewards } = useMyRewards();
   const bg = "var(--bg)";
   const fg = "var(--fg)";
   const muted = "var(--muted)";
@@ -17,7 +21,7 @@ export default function RewardsScreen() {
   const totalPoints = tasks
     .filter((t) => t.status === "completed")
     .reduce((s, t) => s + t.points, 0);
-  const displayName = user?.nickname || user?.zhName || user?.name || "志工";
+  const displayName = user.nickname || user.zh_name || user.name || "志工";
   const initial = (displayName || "U").slice(0, 1).toUpperCase();
 
   return (
@@ -179,6 +183,7 @@ export default function RewardsScreen() {
           cardBg={cardBg}
           cardBorder={cardBorder}
           totalPoints={totalPoints}
+          rewards={rewards}
           hideHeader
         />
       </div>

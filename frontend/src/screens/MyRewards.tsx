@@ -1,10 +1,15 @@
 import { fs } from "../utils";
+import type { components } from "../api/schema";
+
+type Reward = components["schemas"]["Reward"];
+
 type Props = {
   fg: string;
   muted: string;
   cardBg: string;
   cardBorder: string;
   totalPoints: number;
+  rewards: Reward[];
   hideHeader?: boolean;
 };
 
@@ -14,6 +19,7 @@ export default function MyRewards({
   cardBg,
   cardBorder,
   totalPoints,
+  rewards,
   hideHeader,
 }: Props) {
   // Milestone tiers — unlocked determined by totalPoints
@@ -484,217 +490,105 @@ export default function MyRewards({
           查看全部 →
         </div>
       </div>
-      {(() => {
-        const history = [
-          {
-            id: "h1",
-            title: "完成任務 · 填寫金富有志工表單",
-            source: "任務獎勵",
-            points: 50,
-            color: "#fec701",
-            gradEnd: "#fed234",
-            date: "今天 14:32",
-            icon: "✓",
-          },
-          {
-            id: "h2",
-            title: "每日簽到",
-            source: "每日獎勵",
-            points: 10,
-            color: "#8AD4B0",
-            gradEnd: "#4EA886",
-            date: "今天 09:15",
-            icon: "◉",
-          },
-          {
-            id: "h3",
-            title: "夏季盛會報名 · 階段完成",
-            source: "任務進度",
-            points: 40,
-            color: "#F8B2C6",
-            gradEnd: "#DA7B99",
-            date: "昨天 20:48",
-            icon: "❋",
-          },
-          {
-            id: "h4",
-            title: "組隊達標獎勵",
-            source: "團隊獎勵",
-            points: 80,
-            color: "#B8A4E3",
-            gradEnd: "#8D71C7",
-            date: "4月17日",
-            icon: "⚑",
-          },
-          {
-            id: "h5",
-            title: "邀請好友加入",
-            source: "推薦獎勵",
-            points: 30,
-            color: "#FFC170",
-            gradEnd: "#F39770",
-            date: "4月15日",
-            icon: "♡",
-          },
-          {
-            id: "h6",
-            title: "完成任務 · 春季志工培訓",
-            source: "任務獎勵",
-            points: 30,
-            color: "#fec701",
-            gradEnd: "#fed234",
-            date: "4月10日",
-            icon: "✓",
-            expired: true,
-          },
-          {
-            id: "h7",
-            title: "個人資料完整度達 100%",
-            source: "成就獎勵",
-            points: 20,
-            color: "#A5C8F7",
-            gradEnd: "#6A94CE",
-            date: "4月8日",
-            icon: "★",
-          },
-        ];
-
-        // Grouped by day label for visual rhythm
-        const grouped: Array<{ header?: string; entry?: (typeof history)[0] }> = [];
-        let lastDate: string | null = null;
-        history.forEach((h) => {
-          const key = h.date.split(" ")[0];
-          if (key !== lastDate) {
-            grouped.push({ header: key });
-            lastDate = key;
-          }
-          grouped.push({ entry: h });
-        });
-
-        return (
-          <div
-            style={{
-              marginTop: 8,
-              borderRadius: 16,
-              background: cardBg,
-              border: cardBorder,
-              backdropFilter: "blur(8px)",
-              overflow: "hidden",
-            }}
-          >
-            {grouped.map((g, i) => {
-              if (g.header) {
-                return (
-                  <div
-                    key={"h-" + i}
-                    style={{
-                      padding: i === 0 ? "10px 14px 6px" : "10px 14px 6px",
-                      fontSize: fs(10),
-                      fontWeight: 800,
-                      letterSpacing: 0.8,
-                      color: muted,
-                      textTransform: "uppercase",
-                      borderTop: i === 0 ? "none" : "1px solid rgba(254,199,1,0.14)",
-                      background: "rgba(254,210,52,0.06)",
-                    }}
-                  >
-                    {g.header}
-                  </div>
-                );
-              }
-              const h = g.entry!;
-              return (
+      {rewards.length === 0 ? (
+        <div
+          style={{
+            marginTop: 8,
+            padding: "22px 18px",
+            borderRadius: 16,
+            background: cardBg,
+            border: cardBorder,
+            backdropFilter: "blur(8px)",
+            textAlign: "center",
+            fontSize: fs(12),
+            color: muted,
+            lineHeight: 1.6,
+          }}
+        >
+          尚未累積任何獎勵
+          <br />
+          <span style={{ fontSize: fs(11), opacity: 0.8 }}>完成任務即可獲得限定禮物</span>
+        </div>
+      ) : (
+        <div
+          style={{
+            marginTop: 8,
+            borderRadius: 16,
+            background: cardBg,
+            border: cardBorder,
+            backdropFilter: "blur(8px)",
+            overflow: "hidden",
+          }}
+        >
+          {rewards.map((r, i) => (
+            <div
+              key={r.id}
+              style={{
+                padding: "10px 14px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                borderTop: i === 0 ? "none" : "1px solid rgba(254,199,1,0.1)",
+              }}
+            >
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 10,
+                  flexShrink: 0,
+                  background: "linear-gradient(135deg, #fec701, #fed234)",
+                  color: "#fff",
+                  fontSize: fs(15),
+                  fontWeight: 800,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 4px 10px rgba(254,199,1,0.35)",
+                }}
+              >
+                🎁
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div
-                  key={h.id}
                   style={{
-                    padding: "10px 14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    borderTop: "1px solid rgba(254,199,1,0.1)",
+                    fontSize: fs(13),
+                    fontWeight: 700,
+                    color: fg,
+                    lineHeight: 1.3,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: "vertical",
                   }}
                 >
-                  {/* Icon chip */}
-                  <div
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 10,
-                      flexShrink: 0,
-                      background: `linear-gradient(135deg, ${h.color}, ${h.gradEnd})`,
-                      color: "#fff",
-                      fontSize: fs(15),
-                      fontWeight: 800,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: `0 4px 10px ${h.color}40`,
-                    }}
-                  >
-                    {h.icon}
-                  </div>
-                  {/* Title + source */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: fs(13),
-                        fontWeight: 700,
-                        color: fg,
-                        lineHeight: 1.3,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 1,
-                        WebkitBoxOrient: "vertical",
-                      }}
-                    >
-                      {h.title}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: fs(10),
-                        color: muted,
-                        marginTop: 2,
-                        display: "flex",
-                        gap: 6,
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <span>{h.source}</span>
-                      <span>·</span>
-                      <span>{h.date.split(" ").slice(1).join(" ") || h.date}</span>
-                    </div>
-                  </div>
-                  {/* Points */}
-                  <div
-                    style={{
-                      fontSize: fs(14),
-                      fontWeight: 900,
-                      lineHeight: 1,
-                      color: "#987701",
-                      fontFamily: "var(--font-serif)",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    +{h.points}
-                    <span
-                      style={{
-                        fontSize: fs(10),
-                        fontWeight: 700,
-                        marginLeft: 2,
-                        opacity: 0.8,
-                      }}
-                    >
-                      ★
-                    </span>
-                  </div>
+                  {r.bonus}
                 </div>
-              );
-            })}
-          </div>
-        );
-      })()}
+                <div
+                  style={{
+                    fontSize: fs(10),
+                    color: muted,
+                    marginTop: 2,
+                    display: "flex",
+                    gap: 6,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span>{r.task_title}</span>
+                  <span>·</span>
+                  <span>{r.earned_at.slice(0, 10)}</span>
+                  <span>·</span>
+                  <span style={{ color: r.status === "claimed" ? "#2E9B65" : muted }}>
+                    {r.status === "claimed" ? "已領取" : "待領取"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

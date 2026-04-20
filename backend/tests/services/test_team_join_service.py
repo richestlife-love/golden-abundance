@@ -3,11 +3,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import TeamMembershipRow
-from backend.services.team import (
+from backend.services.team import create_led_team
+from backend.services.team_join import (
     JoinConflict,
     approve_join_request,
     create_join_request,
-    create_led_team,
     leave_team,
     reject_join_request,
 )

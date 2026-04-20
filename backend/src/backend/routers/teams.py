@@ -17,14 +17,16 @@ from backend.contract import (
 from backend.db.models import JoinRequestRow, TeamRow, UserRow
 from backend.db.session import get_session
 from backend.services.team import (
+    row_to_contract_team,
+    search_team_refs,
+    user_to_ref,
+)
+from backend.services.team_join import (
     JoinConflict,
     approve_join_request,
     create_join_request,
     leave_team,
     reject_join_request,
-    row_to_contract_team,
-    search_team_refs,
-    user_to_ref,
 )
 
 router = APIRouter(prefix="/teams", tags=["teams"])

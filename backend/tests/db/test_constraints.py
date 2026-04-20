@@ -74,3 +74,74 @@ async def test_pending_index_allows_mixed_statuses(session: AsyncSession) -> Non
         )
     ).scalar_one()
     assert count == 2
+
+
+@pytest.mark.parametrize(
+    ("stmt", "params"),
+    [
+        (
+            "INSERT INTO teams (id, display_id, name, topic, leader_id, cap, points, week_points, created_at)"
+            " VALUES (gen_random_uuid(), 'T-CAP', 'x', 't', :leader, 0, 0, 0, now())",
+            {},
+        ),
+        (
+            "INSERT INTO teams (id, display_id, name, topic, leader_id, cap, points, week_points, created_at)"
+            " VALUES (gen_random_uuid(), 'T-PTS', 'x', 't', :leader, 6, -1, 0, now())",
+            {},
+        ),
+        (
+            "INSERT INTO teams (id, display_id, name, topic, leader_id, cap, points, week_points, created_at)"
+            " VALUES (gen_random_uuid(), 'T-WK', 'x', 't', :leader, 6, 0, -1, now())",
+            {},
+        ),
+    ],
+    ids=["cap-zero", "points-negative", "week-points-negative"],
+)
+async def test_teams_check_constraints(session: AsyncSession, stmt: str, params: dict) -> None:
+    leader = UserRow(display_id="ULCK", email="lck@example.com", profile_complete=True)  # ty: ignore[missing-argument]
+    session.add(leader)
+    await session.flush()
+    with pytest.raises(IntegrityError):
+        await session.execute(text(stmt), {"leader": leader.id, **params})
+        await session.flush()
+    await session.rollback()
+
+
+@pytest.mark.parametrize(
+    ("col", "value"),
+    [("points", -1), ("est_minutes", -1)],
+)
+async def test_task_defs_check_constraints(session: AsyncSession, col: str, value: int) -> None:
+    stmt = text(
+        "INSERT INTO task_defs (id, display_id, title, summary, description, tag, color,"
+        f"                       points, est_minutes, is_challenge, created_at)"
+        " VALUES (gen_random_uuid(), 'TCK', 'x', 'x', 'x', '探索', '#000000',"
+        f"        {value if col == 'points' else 0}, {value if col == 'est_minutes' else 0},"
+        "        false, now())"
+    )
+    with pytest.raises(IntegrityError):
+        await session.execute(stmt)
+        await session.flush()
+    await session.rollback()
+
+
+async def test_task_progress_progress_unit_interval(session: AsyncSession) -> None:
+    """``progress`` must be within [0, 1] when set."""
+    user = UserRow(display_id="UPRG", email="prg@example.com", profile_complete=True)  # ty: ignore[missing-argument]
+    session.add(user)
+    await session.flush()
+    td_insert = text(
+        "INSERT INTO task_defs (id, display_id, title, summary, description, tag, color,"
+        "                       points, est_minutes, is_challenge, created_at)"
+        " VALUES (:tid, 'TPRG', 'x', 'x', 'x', '探索', '#000000', 0, 0, false, now())"
+    )
+    td_id = uuid4()
+    await session.execute(td_insert, {"tid": td_id})
+    stmt = text(
+        "INSERT INTO task_progress (id, user_id, task_def_id, status, progress, updated_at)"
+        " VALUES (gen_random_uuid(), :uid, :tid, 'in_progress', 1.5, now())"
+    )
+    with pytest.raises(IntegrityError):
+        await session.execute(stmt, {"uid": user.id, "tid": td_id})
+        await session.flush()
+    await session.rollback()

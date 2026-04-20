@@ -16,7 +16,7 @@ from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, Column, DateTime, Index, String, UniqueConstraint, text
+from sqlalchemy import JSON, CheckConstraint, Column, DateTime, Index, String, UniqueConstraint, text
 from sqlmodel import Field, SQLModel
 
 
@@ -46,6 +46,11 @@ class UserRow(SQLModel, table=True):
 
 class TeamRow(SQLModel, table=True):
     __tablename__ = "teams"
+    __table_args__ = (
+        CheckConstraint("cap >= 1", name="ck_teams_cap_positive"),
+        CheckConstraint("points >= 0", name="ck_teams_points_nonneg"),
+        CheckConstraint("week_points >= 0", name="ck_teams_week_points_nonneg"),
+    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     display_id: str = Field(index=True, unique=True, max_length=16)
@@ -97,6 +102,10 @@ class JoinRequestRow(SQLModel, table=True):
 
 class TaskDefRow(SQLModel, table=True):
     __tablename__ = "task_defs"
+    __table_args__ = (
+        CheckConstraint("points >= 0", name="ck_task_defs_points_nonneg"),
+        CheckConstraint("est_minutes >= 0", name="ck_task_defs_est_minutes_nonneg"),
+    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     display_id: str = Field(index=True, unique=True, max_length=16)
@@ -129,7 +138,10 @@ class TaskDefRequiresRow(SQLModel, table=True):
 
 class TaskStepDefRow(SQLModel, table=True):
     __tablename__ = "task_step_defs"
-    __table_args__ = (UniqueConstraint("task_def_id", "order", name="uq_step_order"),)
+    __table_args__ = (
+        UniqueConstraint("task_def_id", "order", name="uq_step_order"),
+        CheckConstraint('"order" >= 0', name="ck_task_step_defs_order_nonneg"),
+    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     task_def_id: UUID = Field(foreign_key="task_defs.id", index=True)
@@ -139,7 +151,10 @@ class TaskStepDefRow(SQLModel, table=True):
 
 class TaskProgressRow(SQLModel, table=True):
     __tablename__ = "task_progress"
-    __table_args__ = (UniqueConstraint("user_id", "task_def_id", name="uq_progress_user_task"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "task_def_id", name="uq_progress_user_task"),
+        CheckConstraint("progress >= 0 AND progress <= 1", name="ck_task_progress_progress_unit"),
+    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     user_id: UUID = Field(foreign_key="users.id", index=True)

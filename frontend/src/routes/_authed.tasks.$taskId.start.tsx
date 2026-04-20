@@ -1,52 +1,35 @@
-import { createRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createRoute, notFound, useNavigate } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import InterestForm from "../screens/InterestForm";
 import TicketForm from "../screens/TicketForm";
 import TeamForm from "../screens/TeamForm";
-import { useAppState } from "../state/AppStateContext";
 import { authedRoute } from "./_authed";
+import { myTasksQueryOptions } from "../queries/me";
+import type { components } from "../api/schema";
 
-const SUPPORTED_TASK_IDS = new Set(["1", "2", "3"]);
+type Task = components["schemas"]["Task"];
+
+const SUPPORTED_TASK_DISPLAY_IDS = new Set(["T1", "T2", "T3"]);
 
 function StartRoute() {
   const navigate = useNavigate();
   const { taskId } = taskStartRoute.useParams();
-  const id = Number(taskId);
-  const { completeTask, joinTeam } = useAppState();
-  const goDetail = (forId: number) =>
-    navigate({ to: "/tasks/$taskId", params: { taskId: String(forId) } });
+  const { data: tasks } = useSuspenseQuery(myTasksQueryOptions());
+  const task = tasks.find((t: Task) => t.display_id === taskId);
+  if (!task) throw notFound();
+  const goDetail = () =>
+    navigate({ to: "/tasks/$taskId", params: { taskId: task.display_id } });
 
-  if (id === 1) {
-    return (
-      <InterestForm
-        onCancel={() => goDetail(1)}
-        onSubmit={() => {
-          completeTask(1);
-          goDetail(1);
-        }}
-      />
-    );
+  if (task.form_type === "interest") {
+    return <InterestForm onCancel={goDetail} onSubmit={goDetail} />;
   }
-  if (id === 2) {
-    return (
-      <TicketForm
-        onCancel={() => goDetail(2)}
-        onSubmit={() => {
-          completeTask(2);
-          goDetail(2);
-        }}
-      />
-    );
+  if (task.form_type === "ticket") {
+    return <TicketForm onCancel={goDetail} onSubmit={goDetail} />;
   }
-  // id === 3 — guaranteed by beforeLoad's SUPPORTED_TASK_IDS check.
-  return (
-    <TeamForm
-      onCancel={() => navigate({ to: "/me" })}
-      onSubmit={(team) => {
-        joinTeam(team);
-        navigate({ to: "/me" });
-      }}
-    />
-  );
+  if (task.is_challenge) {
+    return <TeamForm onCancel={() => navigate({ to: "/me" })} onSubmit={() => navigate({ to: "/me" })} />;
+  }
+  throw notFound();
 }
 
 // Sibling of taskDetailRoute (not child): taskDetailRoute's component
@@ -55,12 +38,9 @@ function StartRoute() {
 export const taskStartRoute = createRoute({
   getParentRoute: () => authedRoute,
   path: "/tasks/$taskId/start",
-  beforeLoad: ({ location, params }) => {
-    if (!SUPPORTED_TASK_IDS.has(params.taskId)) {
-      throw redirect({ to: "/tasks/$taskId", params });
-    }
-    if (!location.state.fromDetail) {
-      throw redirect({ to: "/tasks/$taskId", params });
+  beforeLoad: ({ params }) => {
+    if (!SUPPORTED_TASK_DISPLAY_IDS.has(params.taskId)) {
+      throw notFound();
     }
   },
   component: StartRoute,

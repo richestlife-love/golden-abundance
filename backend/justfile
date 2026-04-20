@@ -13,7 +13,7 @@ contract-validate:
 
 # Run the FastAPI dev server on http://localhost:8000 with reload
 dev port="8000":
-  uv run fastapi dev src/backend/server.py --port {{port}}
+  uv run fastapi dev --port {{port}}
 
 # Start local Postgres (docker compose)
 db-up:

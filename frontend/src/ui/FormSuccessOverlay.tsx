@@ -1,6 +1,6 @@
 import { fs } from "../utils";
 import { useEffect } from "react";
-import type { SuccessData } from "../types";
+import type { SuccessData } from "./UIStateProvider";
 
 type Props = SuccessData & { onDone: () => void };
 

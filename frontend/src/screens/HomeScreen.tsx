@@ -1,5 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useAppState } from "../state/AppStateContext";
+import { useMe } from "../hooks/useMe";
+import { useMyTasks } from "../hooks/useMyTasks";
+import { useAuth } from "../auth/session";
 import { getEffectiveStatus, fs } from "../utils";
 import BottomNav from "../ui/BottomNav";
 import { BabyIcon, CrownIcon, MedalIcon, StarIcon } from "../ui/Icon";
@@ -8,13 +10,15 @@ import TaskCard from "./TaskCard";
 
 export default function HomeScreen() {
   const navigate = useNavigate();
-  const { user, tasks, handleSignOut } = useAppState();
-  const onSignOut = () => {
-    handleSignOut();
+  const { data: user } = useMe();
+  const { data: tasks } = useMyTasks();
+  const { signOut } = useAuth();
+  const onSignOut = async () => {
+    await signOut();
     navigate({ to: "/" });
   };
-  const onOpenTask = (id: number) =>
-    navigate({ to: "/tasks/$taskId", params: { taskId: String(id) } });
+  const onOpenTask = (displayId: string) =>
+    navigate({ to: "/tasks/$taskId", params: { taskId: displayId } });
 
   const bg = "var(--bg)";
   const activeTasks = tasks.filter((t) => {
@@ -28,7 +32,7 @@ export default function HomeScreen() {
   const fg = "var(--fg)";
 
   // Star points + tier progress (mirrors MyRewards tier thresholds)
-  const totalPoints = (tasks || [])
+  const totalPoints = tasks
     .filter((t) => t.status === "completed")
     .reduce((s, t) => s + t.points, 0);
   const displayPoints = useCountUp(totalPoints);
@@ -56,6 +60,8 @@ export default function HomeScreen() {
   const homeProgressPct = homeNextTier
     ? Math.min(1, Math.max(0, (totalPoints - homePrevReq) / Math.max(1, homeNextReq - homePrevReq)))
     : 1;
+
+  const avatarSolid = user.avatar_url ?? "#fec701";
 
   return (
     <div
@@ -112,7 +118,7 @@ export default function HomeScreen() {
               width: 42,
               height: 42,
               borderRadius: "50%",
-              background: `linear-gradient(135deg, ${user?.avatar || "#fec701"}, ${user?.avatar || "#fec701"}CC)`,
+              background: `linear-gradient(135deg, ${avatarSolid}, ${avatarSolid}CC)`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -126,7 +132,7 @@ export default function HomeScreen() {
               font: "inherit",
             }}
           >
-            {(user?.name || "你")[0]}
+            {(user.name || "你")[0]}
           </button>
         </div>
 
@@ -229,7 +235,7 @@ export default function HomeScreen() {
                   lineHeight: 1,
                 }}
               >
-                {user?.name || "朋友"}
+                {user.name || "朋友"}
               </div>
               {/* Tier below name */}
               {(() => {

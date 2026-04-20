@@ -1,20 +1,32 @@
 import { createRoute, notFound } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import TaskDetailScreen from "../screens/TaskDetailScreen";
-import { TASKS } from "../data";
 import { authedRoute } from "./_authed";
+import { myTasksQueryOptions } from "../queries/me";
+import { taskQueryOptions } from "../queries/tasks";
+import { qk } from "../queries/keys";
+import type { components } from "../api/schema";
+
+type Task = components["schemas"]["Task"];
 
 function TaskDetailRouteComponent() {
-  const { taskId } = taskDetailRoute.useParams();
-  return <TaskDetailScreen taskId={taskId} />;
+  const { taskId: displayId } = taskDetailRoute.useParams();
+  const myTasks = useSuspenseQuery(myTasksQueryOptions());
+  const summary = myTasks.data.find((t: Task) => t.display_id === displayId);
+  if (!summary) throw notFound(); // belt-and-braces; loader already checked
+  const { data: task } = useSuspenseQuery(taskQueryOptions(summary.id));
+  return <TaskDetailScreen task={task} myTasks={myTasks.data} />;
 }
 
 export const taskDetailRoute = createRoute({
   getParentRoute: () => authedRoute,
   path: "/tasks/$taskId",
-  beforeLoad: ({ params }) => {
-    if (!TASKS.some((t) => t.id === Number(params.taskId))) {
-      throw notFound();
-    }
+  loader: async ({ params, context }) => {
+    await context.queryClient.ensureQueryData(myTasksQueryOptions());
+    const list = context.queryClient.getQueryData<Task[]>(qk.myTasks) ?? [];
+    const task = list.find((t) => t.display_id === params.taskId);
+    if (!task) throw notFound();
+    await context.queryClient.ensureQueryData(taskQueryOptions(task.id));
   },
   component: TaskDetailRouteComponent,
 });

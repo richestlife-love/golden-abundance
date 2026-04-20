@@ -1,19 +1,23 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useAppState } from "../state/AppStateContext";
-import { getEffectiveStatus, fs } from "../utils";
-import type { Task } from "../types";
+import { getEffectiveStatus, daysUntil, fs } from "../utils";
+import type { components } from "../api/schema";
 
-export default function TaskDetailScreen({ taskId }: { taskId: string }) {
+type Task = components["schemas"]["Task"];
+
+interface Props {
+  task: Task;
+  myTasks: Task[];
+}
+
+export default function TaskDetailScreen({ task: t, myTasks: tasks }: Props) {
   const navigate = useNavigate();
-  const { tasks } = useAppState();
-  const id = Number(taskId);
   const onBack = () => navigate({ to: "/tasks" });
-  const onOpenTask = (nextId: number) =>
-    navigate({ to: "/tasks/$taskId", params: { taskId: String(nextId) } });
-  const onStartTask = (forId: number) =>
+  const onOpenTask = (displayId: string) =>
+    navigate({ to: "/tasks/$taskId", params: { taskId: displayId } });
+  const onStartTask = (displayId: string) =>
     navigate({
       to: "/tasks/$taskId/start",
-      params: { taskId: String(forId) },
+      params: { taskId: displayId },
       state: { fromDetail: true },
     });
   const onGoMe = () => navigate({ to: "/me" });
@@ -24,27 +28,11 @@ export default function TaskDetailScreen({ taskId }: { taskId: string }) {
   const muted = "var(--muted)";
   const fg = "var(--fg)";
 
-  const t = tasks.find((x) => x.id === id);
-  if (!t) {
-    return (
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          background: bg,
-          color: "var(--fg)",
-          overflow: "hidden",
-        }}
-      >
-        <div style={{ padding: 20, color: fg }}>找不到任務</div>
-      </div>
-    );
-  }
-
   const { status, unmet } = getEffectiveStatus(t, tasks);
+  const daysLeft = daysUntil(t.due_at);
+  const dueDisplay = t.due_at ? t.due_at.slice(0, 10) : null;
   const icon = t.tag === "探索" ? "✦" : t.tag === "社区" ? "◉" : "❋";
-  const urgent = status === "todo" && t.daysLeft != null && t.daysLeft > 0 && t.daysLeft <= 7;
+  const urgent = status === "todo" && daysLeft != null && daysLeft > 0 && daysLeft <= 7;
 
   const statusChip =
     status === "completed"
@@ -57,12 +45,10 @@ export default function TaskDetailScreen({ taskId }: { taskId: string }) {
             ? { label: "未解鎖", color: "#655001", bg: "rgba(100,80,1,0.15)" }
             : { label: "待開始", color: "#655001", bg: "rgba(254,199,1,0.18)" };
 
-  // Is this the team task (task 3)?
-  const isTeamTask = t.id === 3;
-  const teamState = t.teamProgress || null;
+  const isTeamTask = t.is_challenge;
+  const teamState = t.team_progress ?? null;
   const teamHasTeam = teamState != null;
 
-  // CTA config by state
   const cta =
     status === "completed"
       ? { label: "✓ 已完成", disabled: true, tone: "success" }
@@ -78,26 +64,25 @@ export default function TaskDetailScreen({ taskId }: { taskId: string }) {
                 ? { label: `前往前置任務`, disabled: false, tone: "secondary" }
                 : { label: "開始任務", disabled: false, tone: "primary" };
 
-  const completedSteps = (t.steps || []).filter((s) => s.done).length;
-  const totalSteps = (t.steps || []).length;
+  const completedSteps = (t.steps ?? []).filter((s) => s.done).length;
+  const totalSteps = (t.steps ?? []).length;
   const stepProgress = totalSteps > 0 ? completedSteps / totalSteps : 0;
 
   const onCta = () => {
     if (cta.disabled) return;
     if (status === "locked" && unmet.length > 0) {
-      onOpenTask(unmet[0]);
+      const first = tasks.find((x) => x.id === unmet[0]);
+      if (first) onOpenTask(first.display_id);
       return;
     }
-    // Team task — route to 我的 page for team management
     if (isTeamTask) {
       onGoMe();
       return;
     }
-    // Route to the correct form based on task id
-    onStartTask(t.id);
+    onStartTask(t.display_id);
   };
 
-  const prereqTasks = (t.requires || [])
+  const prereqTasks = (t.requires ?? [])
     .map((rid) => tasks.find((x) => x.id === rid))
     .filter((p): p is Task => p !== undefined);
 
@@ -278,7 +263,7 @@ export default function TaskDetailScreen({ taskId }: { taskId: string }) {
             >
               {statusChip.label}
             </div>
-            {t.due && (
+            {dueDisplay && (
               <div
                 style={{
                   display: "inline-flex",
@@ -294,11 +279,11 @@ export default function TaskDetailScreen({ taskId }: { taskId: string }) {
                 }}
               >
                 <span style={{ fontSize: fs(10) }}>⏱</span>
-                截止 {t.due}
-                {urgent ? ` · 剩 ${t.daysLeft} 天` : ""}
+                截止 {dueDisplay}
+                {urgent ? ` · 剩 ${daysLeft} 天` : ""}
               </div>
             )}
-            {!t.due && status !== "completed" && status !== "expired" && (
+            {!dueDisplay && status !== "completed" && status !== "expired" && (
               <div
                 style={{
                   display: "inline-flex",
@@ -550,7 +535,7 @@ export default function TaskDetailScreen({ taskId }: { taskId: string }) {
                       key={p.id}
                       type="button"
                       aria-label={`開啟前置任務 ${p.title}`}
-                      onClick={() => onOpenTask(p.id)}
+                      onClick={() => onOpenTask(p.display_id)}
                       style={{
                         color: "inherit",
                         font: "inherit",
@@ -610,7 +595,7 @@ export default function TaskDetailScreen({ taskId }: { taskId: string }) {
             </div>
           )}
 
-          {/* Team progress (task 3) */}
+          {/* Team progress (team challenge task) */}
           {isTeamTask && status !== "expired" && status !== "locked" && (
             <div
               style={{
@@ -819,7 +804,7 @@ export default function TaskDetailScreen({ taskId }: { taskId: string }) {
                 />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {(t.steps || []).map((s, i) => (
+                {(t.steps ?? []).map((s, i) => (
                   <div
                     key={i}
                     style={{
@@ -894,7 +879,7 @@ export default function TaskDetailScreen({ taskId }: { taskId: string }) {
             >
               {t.description}
             </div>
-            {t.estMinutes && (
+            {t.est_minutes && (
               <div
                 style={{
                   marginTop: 10,
@@ -907,7 +892,7 @@ export default function TaskDetailScreen({ taskId }: { taskId: string }) {
                   color: muted,
                 }}
               >
-                <span>⏲</span> 預估需時約 {t.estMinutes} 分鐘
+                <span>⏲</span> 預估需時約 {t.est_minutes} 分鐘
               </div>
             )}
           </div>

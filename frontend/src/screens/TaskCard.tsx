@@ -1,5 +1,5 @@
-import type { Task } from "../types";
-import { getEffectiveStatus, fs } from "../utils";
+import type { components } from "../api/schema";
+import { getEffectiveStatus, daysUntil, fs } from "../utils";
 import {
   CheckIcon,
   CircleIcon,
@@ -12,6 +12,8 @@ import {
   StarIcon,
 } from "../ui/Icon";
 
+type Task = components["schemas"]["Task"];
+
 type Props = {
   t: Task;
   allTasks: Task[];
@@ -20,7 +22,7 @@ type Props = {
   muted: string;
   fg: string;
   index?: number; // default 0
-  onOpen: (id: number) => void;
+  onOpen: (displayId: string) => void;
 };
 
 export default function TaskCard({
@@ -34,7 +36,9 @@ export default function TaskCard({
   onOpen,
 }: Props) {
   const { status, unmet } = getEffectiveStatus(t, allTasks);
-  const urgent = status === "todo" && t.daysLeft != null && t.daysLeft > 0 && t.daysLeft <= 7;
+  const daysLeft = daysUntil(t.due_at);
+  const dueDisplay = t.due_at ? t.due_at.slice(0, 10) : null;
+  const urgent = status === "todo" && daysLeft != null && daysLeft > 0 && daysLeft <= 7;
   const TagIcon = t.tag === "探索" ? SparkleIcon : t.tag === "社区" ? CircleIcon : FlowerIcon;
 
   const statusChip =
@@ -85,7 +89,7 @@ export default function TaskCard({
     <button
       type="button"
       aria-label={`開啟任務 ${t.title}`}
-      onClick={() => onOpen(t.id)}
+      onClick={() => onOpen(t.display_id)}
       style={{
         color: "inherit",
         font: "inherit",
@@ -181,7 +185,7 @@ export default function TaskCard({
             }}
           >
             <div style={{ fontSize: fs(11), color: muted }}>
-              {t.due ? `截止 ${t.due}` : "無截止日"}
+              {dueDisplay ? `截止 ${dueDisplay}` : "無截止日"}
             </div>
             <div
               style={{
@@ -211,10 +215,10 @@ export default function TaskCard({
             }}
           >
             <CheckIcon size={11} />
-            {t.due ? `已於 ${t.due} 前完成` : "已完成"}
+            {dueDisplay ? `已於 ${dueDisplay} 前完成` : "已完成"}
           </div>
         ) : status === "expired" ? (
-          <div style={{ fontSize: fs(11), color: muted }}>於 {t.due} 過期</div>
+          <div style={{ fontSize: fs(11), color: muted }}>於 {dueDisplay} 過期</div>
         ) : (
           <div
             style={{
@@ -225,9 +229,9 @@ export default function TaskCard({
             }}
           >
             <div style={{ fontSize: fs(11), color: muted }}>
-              {t.due ? `截止 ${t.due}` : "無截止日"}
+              {dueDisplay ? `截止 ${dueDisplay}` : "無截止日"}
             </div>
-            {t.due && typeof t.daysLeft === "number" && (
+            {dueDisplay && typeof daysLeft === "number" && (
               <div
                 style={{
                   display: "inline-flex",
@@ -242,7 +246,7 @@ export default function TaskCard({
                 }}
               >
                 <ClockIcon size={10} />
-                {urgent ? `剩 ${t.daysLeft} 天` : `${t.daysLeft} 天`}
+                {urgent ? `剩 ${daysLeft} 天` : `${daysLeft} 天`}
               </div>
             )}
           </div>

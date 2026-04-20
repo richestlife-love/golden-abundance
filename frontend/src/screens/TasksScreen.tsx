@@ -1,16 +1,18 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useAppState } from "../state/AppStateContext";
+import { useMyTasks } from "../hooks/useMyTasks";
 import BottomNav from "../ui/BottomNav";
 import TaskCard from "./TaskCard";
 import { getEffectiveStatus, fs } from "../utils";
-import type { Task } from "../types";
+import type { components } from "../api/schema";
+
+type Task = components["schemas"]["Task"];
 
 export default function TasksScreen() {
   const navigate = useNavigate();
-  const { tasks } = useAppState();
-  const onOpenTask = (id: number) =>
-    navigate({ to: "/tasks/$taskId", params: { taskId: String(id) } });
+  const { data: tasks } = useMyTasks();
+  const onOpenTask = (displayId: string) =>
+    navigate({ to: "/tasks/$taskId", params: { taskId: displayId } });
 
   const bg = "var(--bg)";
   const cardBg = "var(--card)";

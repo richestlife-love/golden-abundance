@@ -91,9 +91,9 @@ async def paginate_keyset(
     stmt = stmt.order_by(*(s.col.desc() for s in sort)).limit(limit + 1)
 
     rows = (await session.execute(stmt)).all()
-    page = rows[:limit]
+    page = list(rows[:limit])
     next_cursor: str | None = None
     if len(rows) > limit and page:
         last_values = extract(page[-1])
         next_cursor = encode_cursor([s.to_json(v) for s, v in zip(sort, last_values, strict=True)])
-    return page, next_cursor  # ty: ignore[invalid-return-type]
+    return page, next_cursor

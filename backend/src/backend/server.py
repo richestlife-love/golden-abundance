@@ -38,10 +38,10 @@ def create_app() -> FastAPI:
     app.include_router(tasks.router, prefix=API_V1)
     app.include_router(teams.router, prefix=API_V1)
 
-    async def _invalid_cursor_handler(_: Request, exc: InvalidCursorError) -> JSONResponse:
+    async def _invalid_cursor_handler(_: Request, exc: Exception) -> JSONResponse:
         return JSONResponse(status_code=400, content={"detail": str(exc) or "Invalid cursor"})
 
-    app.add_exception_handler(InvalidCursorError, _invalid_cursor_handler)  # ty: ignore[invalid-argument-type]
+    app.add_exception_handler(InvalidCursorError, _invalid_cursor_handler)
     return app
 
 

@@ -1568,6 +1568,7 @@ git status
 - `RenameTeamSheet` to `usePatchTeam` (optimistic)
 - Sign-out button real wiring (`useAuth().signOut()` is already wired in HomeScreen via Task D1; other surfaces follow in 4c)
 - Leave-team button to `useLeaveTeam`
+- Backend: extract `services.user.complete_profile(session, user, ProfileCreate)` from the inline block in `routers/me.py::complete_profile` so the router and the 4a demo seed share one `ProfileCreate`-validated code path. Prereq for 4c Task B1's `ProfileSetupForm → useCompleteProfile` wire-in if we want the seed + production path to exercise the same validation layer (Phase 4a seed currently duplicates the assignment logic).
 - Removing the `simulateJoinApproved` button in favor of a real approve call against a seeded request
 - Deleting `AppStateContext.tsx` outright
 - 401 interceptor end-to-end test (loader → 401 → router.navigate → toast)

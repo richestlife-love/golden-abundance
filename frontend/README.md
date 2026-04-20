@@ -1,6 +1,53 @@
 # Frontend
 
-React 18 + TypeScript + Vite. See the [root README](../README.md) for run recipes.
+React 18 + TypeScript + Vite.
+
+## Running
+
+Prereqs: [`just`](https://github.com/casey/just), `pnpm`, Node 20+, Docker (for the backend's Postgres), and [`uv`](https://github.com/astral-sh/uv) (used by `gen-types` to load the FastAPI app in-process).
+
+Recipes are grouped by where you run them from. Cross-stack recipes live at the repo root; backend-only recipes live under `backend/`; frontend-only commands are `pnpm` scripts you run from `frontend/`.
+
+### Daily dev loop — from the repo root
+
+```sh
+just dev
+```
+
+Boots backend (`:8000`) + frontend (`:5173`) in parallel; Ctrl-C kills both. Vite proxies `/api/*` to the backend, so `fetch('/api/v1/me')` just works. **Requires** the backend DB already up, migrated, and seeded — see the one-time setup below.
+
+### After a backend contract change — from the repo root
+
+```sh
+just gen-types            # rewrites frontend/src/api/schema.d.ts from the in-process FastAPI OpenAPI
+just gen-demo-accounts    # rewrites frontend/src/dev/demo-accounts.json from backend.seed.DEMO_USERS
+```
+
+`gen-types` needs neither a running server nor a DB — it imports the FastAPI app and dumps OpenAPI in-process. `schema.d.ts` is gitignored; CI must run this before any `tsc`/`vite build` step. `demo-accounts.json` is checked in — regenerate and commit after changing `DEMO_USERS`.
+
+### One-time / after-DB-schema-change setup — from `backend/`
+
+```sh
+cd backend
+just db-up        # docker compose up Postgres
+just migrate      # alembic upgrade head
+just seed-reset   # truncate seed tables + reseed demo users, tasks, news
+```
+
+`seed-reset` is refused when `APP_ENV=prod`. Use it (instead of `just seed`) when seed *content* has changed — `seed` is idempotent but skip-on-conflict, so it won't update rows that already exist. Run `just --list` inside `backend/` to see the full recipe set (`ci`, `test`, `makemigration`, etc.).
+
+### Frontend-only commands — from `frontend/`
+
+For quick loops that don't touch the backend:
+
+```sh
+cd frontend
+pnpm dev            # Vite only (no backend; API calls 404 at the proxy)
+pnpm test           # Vitest run once
+pnpm test --watch   # Vitest watch mode
+pnpm build          # tsc -b + vite build (requires src/api/schema.d.ts — run `just gen-types` from root first)
+pnpm lint           # eslint
+```
 
 ## Layout
 

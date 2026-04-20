@@ -228,5 +228,3 @@ async def search_team_refs(
         for team, leader in page
     ]
     return Paginated[ContractTeamRef](items=items, next_cursor=next_cursor)
-
-

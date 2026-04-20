@@ -38,3 +38,8 @@ test *args:
 # Populate dev database with task definitions and news items (idempotent)
 seed:
   uv run python -m backend.seed
+
+# Truncate seed-owned tables and re-seed. APP_ENV=prod is refused.
+seed-reset:
+  uv run python -m backend.seed_reset
+  uv run python -m backend.seed

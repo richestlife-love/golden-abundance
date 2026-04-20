@@ -1,11 +1,12 @@
 """Idempotent dev seed. Creates task definitions (T1-T4), a few
-news items, and nothing else. Users sign in via /auth/google and
-complete their own profile + team.
+news items, and the six @demo.gal demo users (Phase 4a). Users that
+sign in via /auth/google complete their own profile + team via the
+same code path.
 
 Run with: `just -f backend/justfile seed` (after `just db-up` + `just migrate`).
-Running sequentially twice is safe — existing rows (by display_id / title) are skipped.
-Concurrent invocations are not coordinated; one may lose on the unique constraint,
-which is acceptable for a dev seed.
+Running sequentially twice is safe — existing rows (by display_id / title /
+email) are skipped. Concurrent invocations are not coordinated; one may lose
+on the unique constraint, which is acceptable for a dev seed.
 """
 
 import asyncio
@@ -20,7 +21,73 @@ from backend.db.models import (
     TaskDefRequiresRow,
     TaskDefRow,
     TaskStepDefRow,
+    UserRow,
 )
+from backend.services.team import create_led_team
+from backend.services.user import upsert_user_by_email
+
+DEMO_USERS: list[dict[str, str]] = [
+    {
+        "email": "jet@demo.gal",
+        "zh_name": "金杰",
+        "en_name": "Jet Kan",
+        "nickname": "Jet",
+        "phone": "912345678",
+        "phone_code": "+886",
+        "country": "TW",
+        "location": "台北",
+    },
+    {
+        "email": "ami@demo.gal",
+        "zh_name": "林詠瑜",
+        "en_name": "Ami Lin",
+        "nickname": "Ami",
+        "phone": "912345679",
+        "phone_code": "+886",
+        "country": "TW",
+        "location": "台北",
+    },
+    {
+        "email": "alex@demo.gal",
+        "zh_name": "陳志豪",
+        "en_name": "Alex Chen",
+        "nickname": "Alex",
+        "phone": "912345680",
+        "phone_code": "+886",
+        "country": "TW",
+        "location": "新北",
+    },
+    {
+        "email": "mei@demo.gal",
+        "zh_name": "王美玲",
+        "en_name": "Mei Wang",
+        "nickname": "Mei",
+        "phone": "912345681",
+        "phone_code": "+886",
+        "country": "TW",
+        "location": "台中",
+    },
+    {
+        "email": "kai@demo.gal",
+        "zh_name": "黃凱文",
+        "en_name": "Kai Huang",
+        "nickname": "Kai",
+        "phone": "912345682",
+        "phone_code": "+886",
+        "country": "TW",
+        "location": "高雄",
+    },
+    {
+        "email": "yu@demo.gal",
+        "zh_name": "張詩宇",
+        "en_name": "Yu Chang",
+        "nickname": "Yu",
+        "phone": "912345683",
+        "phone_code": "+886",
+        "country": "TW",
+        "location": "台南",
+    },
+]
 
 
 async def _upsert_task_defs(session: AsyncSession) -> dict[str, TaskDefRow]:
@@ -133,6 +200,42 @@ async def _upsert_news(session: AsyncSession) -> None:
     await session.flush()
 
 
+async def _upsert_demo_users(session: AsyncSession) -> dict[str, UserRow]:
+    """Seed the six @demo.gal demo users via the real sign-in flow.
+
+    Idempotent: existing rows (by email) are skipped; returns a dict
+    of ``{email: UserRow}`` spanning both pre-existing and newly
+    created demo users. Mirrors ``routers/me.py::complete_profile`` —
+    flips ``profile_complete=True`` and calls ``create_led_team`` in
+    the same transaction so each demo user has a led team ready for
+    downstream A2 fan-out.
+    """
+    existing = {
+        u.email: u for u in (await session.execute(select(UserRow))).scalars().all() if u.email.endswith("@demo.gal")
+    }
+    out: dict[str, UserRow] = dict(existing)
+    for spec in DEMO_USERS:
+        if spec["email"] in existing:
+            continue
+        user = await upsert_user_by_email(session, email=spec["email"])
+        user.zh_name = spec["zh_name"]
+        user.en_name = spec.get("en_name")
+        user.nickname = spec.get("nickname")
+        user.phone = spec["phone"]
+        user.phone_code = spec["phone_code"]
+        user.line_id = spec.get("line_id")
+        user.telegram_id = spec.get("telegram_id")
+        user.country = spec["country"]
+        user.location = spec["location"]
+        user.profile_complete = True
+        session.add(user)
+        await session.flush()
+        await create_led_team(session, user)
+        out[spec["email"]] = user
+    await session.flush()
+    return out
+
+
 async def run() -> None:
     # get_session_maker() resolves lazily against whatever engine
     # backend.db.engine is currently bound to (production by default;
@@ -141,6 +244,7 @@ async def run() -> None:
     async with get_session_maker()() as session:
         await _upsert_task_defs(session)
         await _upsert_news(session)
+        await _upsert_demo_users(session)
         await session.commit()
     print("seed: done")
 

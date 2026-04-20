@@ -12,18 +12,17 @@ const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
  * jumps to `target` immediately instead of animating.
  */
 export function useCountUp(target: number, durationMs = 900): number {
-  const [value, setValue] = useState(0);
+  // Computed during render so the initial state is correct without a
+  // synchronous setState in the effect (react-hooks/set-state-in-effect).
+  const skipAnimation =
+    typeof window === "undefined" ||
+    target === 0 ||
+    !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  const [value, setValue] = useState(skipAnimation ? target : 0);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      setValue(target);
-      return;
-    }
-    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (reduced || target === 0) {
-      setValue(target);
-      return;
-    }
+    if (skipAnimation) return;
     let raf = 0;
     const start = performance.now();
     const tick = (now: number) => {
@@ -33,7 +32,7 @@ export function useCountUp(target: number, durationMs = 900): number {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [target, durationMs]);
+  }, [target, durationMs, skipAnimation]);
 
-  return value;
+  return skipAnimation ? target : value;
 }

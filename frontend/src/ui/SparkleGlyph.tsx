@@ -7,13 +7,7 @@ type Props = {
   delay?: number;
 };
 
-export default function SparkleGlyph({
-  x,
-  y,
-  sizeCss = 18,
-  color = "#fff",
-  delay = 0,
-}: Props) {
+export default function SparkleGlyph({ x, y, sizeCss = 18, color = "#fff", delay = 0 }: Props) {
   return (
     <svg
       width={sizeCss}

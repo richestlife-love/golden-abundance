@@ -21,10 +21,7 @@ def render_label(spec: dict[str, str]) -> str:
 
 
 def main() -> int:
-    payload = [
-        {"email": spec["email"], "label": render_label(spec)}
-        for spec in DEMO_USERS
-    ]
+    payload = [{"email": spec["email"], "label": render_label(spec)} for spec in DEMO_USERS]
     json.dump(payload, sys.stdout, ensure_ascii=False, indent=2)
     sys.stdout.write("\n")
     return 0

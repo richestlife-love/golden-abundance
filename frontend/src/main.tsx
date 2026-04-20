@@ -6,9 +6,10 @@ import { AppStateProvider } from "./state/AppStateContext";
 import { AuthProvider } from "./auth/session";
 import { UIStateProvider } from "./ui/UIStateProvider";
 import { queryClient } from "./queryClient";
-import { createAppRouter } from "./router";
+import { createAppRouter, setRouterRef } from "./router";
 
 const router = createAppRouter({ queryClient });
+setRouterRef(router);
 
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("root element not found");

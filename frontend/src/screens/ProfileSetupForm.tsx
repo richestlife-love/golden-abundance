@@ -5,11 +5,13 @@ import FieldLabel from "../ui/FieldLabel";
 import TextInput from "../ui/TextInput";
 import ChipGroup from "../ui/ChipGroup";
 import SubmitButton from "../ui/SubmitButton";
+import type { components } from "../api/schema";
 
-// Legacy camelCase shape the form internals still consume. Plan 4c rewrites
-// this component against `ProfileCreate` / `ProfileUpdate` from schema.d.ts
-// and wires `onSubmit` to `useCompleteProfile` / `usePatchMe`; at that point
-// this local alias goes away.
+type ProfileCreate = components["schemas"]["ProfileCreate"];
+
+// Display-only shape the form reads from `user`/`initial`. The camelCase
+// keys are internal to the component — submit emits snake_case
+// `ProfileCreate` so the route can thread it straight into the mutation.
 type ProfileInput = {
   id?: string;
   email?: string;
@@ -32,7 +34,9 @@ type Props = {
   subtitle?: string;
   submitLabel?: string;
   onCancel: () => void;
-  onSubmit: (profile: Partial<ProfileInput>) => void;
+  onSubmit: (profile: ProfileCreate) => void | Promise<void>;
+  isSubmitting?: boolean;
+  error?: string | null;
 };
 
 export default function ProfileSetupForm({
@@ -43,6 +47,8 @@ export default function ProfileSetupForm({
   title = "完善個人資料",
   subtitle = "初次加入，請填寫基本資訊，稍後可於「我的」中修改",
   submitLabel = "完成註冊",
+  isSubmitting = false,
+  error = null,
 }: Props) {
   const bg = "var(--bg)";
   const muted = "var(--muted)";
@@ -200,24 +206,43 @@ export default function ProfileSetupForm({
       subtitle={subtitle}
       onCancel={onCancel}
       footer={
-        <SubmitButton
-          label={submitLabel}
-          onClick={() =>
-            onSubmit({
-              zhName: zhName.trim(),
-              enName: enName.trim(),
-              nickname: nickname.trim(),
-              phone: phone.trim(),
-              phoneCode: phoneCode,
-              lineId: lineId.trim(),
-              telegramId: telegramId.trim(),
-              country: country,
-              location: location,
-            })
-          }
-          disabled={!valid}
-          color="#fec701"
-        />
+        <>
+          {error && (
+            <div
+              role="alert"
+              style={{
+                padding: "10px 14px",
+                borderRadius: 12,
+                background: "rgba(200,60,60,0.12)",
+                border: "1px solid rgba(200,60,60,0.35)",
+                color: "#a14646",
+                fontSize: fs(13),
+                marginBottom: 10,
+                fontWeight: 600,
+              }}
+            >
+              {error}
+            </div>
+          )}
+          <SubmitButton
+            label={isSubmitting ? "送出中..." : submitLabel}
+            onClick={() =>
+              onSubmit({
+                zh_name: zhName.trim(),
+                en_name: enName.trim() || null,
+                nickname: nickname.trim() || null,
+                phone: phone.trim(),
+                phone_code: phoneCode,
+                line_id: lineId.trim() || null,
+                telegram_id: telegramId.trim() || null,
+                country,
+                location,
+              })
+            }
+            disabled={!valid || isSubmitting}
+            color="#fec701"
+          />
+        </>
       }
     >
       {/* Welcome card with avatar */}

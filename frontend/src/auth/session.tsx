@@ -4,6 +4,7 @@ import * as authApi from "../api/auth";
 import { setSessionExpiredHandler } from "../api/client";
 import { qk } from "../queries/keys";
 import { pushToast } from "../ui/toasts";
+import { getRouterRef } from "../router";
 import { tokenStore } from "./token";
 
 export interface SignOutOpts {
@@ -32,29 +33,49 @@ async function performLogoutBestEffort(token: string): Promise<void> {
   }
 }
 
-// Module-level QueryClient holder — set by AuthProvider when it mounts,
-// so the 401 interceptor can clear the cache without a React context.
+// Module-level QueryClient + signOut — both live outside React so the 401
+// interceptor (registered at module-load time) and module-level signOut can
+// fire without waiting for AuthProvider to mount.
 let activeQueryClient: QueryClient | null = null;
 export function _setActiveQueryClient(qc: QueryClient | null): void {
   activeQueryClient = qc;
 }
 
-// Registered at module-import time — before AuthProvider mounts. The
-// handler deliberately does NOT call signOut(): signOut lives on the
-// AuthProvider closure (React state + inFlightSignOut guard), which may
-// not exist yet when a 401 fires (e.g. during a pre-mount loader).
-// Consequence until plan 4c wires setRouterRef: useAuth().isSignedIn
-// stays stale after a 401, and concurrent loader-401s bypass the
-// inFlightSignOut dedup (each fires tokenStore.clear + qc.clear + toast
-// independently). Plan 4c mirrors _setActiveQueryClient with
-// _setActiveRouter(router) and routes both user- and
-// expired-initiated logouts through signOut so state + dedup + nav all
-// converge.
-setSessionExpiredHandler(({ returnTo }) => {
-  tokenStore.clear();
-  pushToast({ kind: "info", message: "您的工作階段已過期，請重新登入" });
-  activeQueryClient?.clear();
-  void returnTo;
+export async function signOut(opts: SignOutOpts = {}): Promise<void> {
+  if (inFlightSignOut) return;
+  inFlightSignOut = true;
+  try {
+    const token = tokenStore.get();
+    if (token) void performLogoutBestEffort(token);
+    if (opts.reason === "expired") {
+      pushToast({ kind: "info", message: "您的工作階段已過期，請重新登入" });
+    }
+    tokenStore.clear();
+    const router = getRouterRef();
+    if (router) {
+      await router.navigate({
+        to: "/sign-in",
+        search: opts.returnTo ? { returnTo: opts.returnTo } : {},
+      });
+    }
+    // Cache clear last so any in-flight queries don't refetch with the
+    // (now-cleared) token mid-teardown.
+    activeQueryClient?.clear();
+  } finally {
+    inFlightSignOut = false;
+  }
+}
+
+setSessionExpiredHandler(({ returnTo: fromClient }) => {
+  // Prefer the router's location (stays accurate when memory history
+  // is in play — e.g. tests); fall back to the client.ts reading of
+  // window.location for the rare case where no router is registered.
+  const router = getRouterRef();
+  const returnTo =
+    router?.state.location.pathname != null
+      ? router.state.location.pathname + (router.state.location.searchStr ?? "")
+      : fromClient;
+  void signOut({ reason: "expired", returnTo });
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -76,29 +97,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [qc],
   );
 
-  const signOut = useCallback(
-    async (opts: SignOutOpts = {}) => {
-      if (inFlightSignOut) return;
-      inFlightSignOut = true;
-      try {
-        const token = tokenStore.get();
-        if (token) void performLogoutBestEffort(token);
-        tokenStore.clear();
-        setSignedIn(false);
-        if (opts.reason === "expired") {
-          pushToast({ kind: "info", message: "您的工作階段已過期，請重新登入" });
-        }
-        // Cache clear last so any in-flight queries don't refetch with the
-        // (now-cleared) token mid-teardown.
-        qc.clear();
-      } finally {
-        inFlightSignOut = false;
-      }
-    },
-    [qc],
-  );
+  const signOutFromCtx = useCallback(async (opts: SignOutOpts = {}) => {
+    await signOut(opts);
+    setSignedIn(false);
+  }, []);
 
-  return <Ctx.Provider value={{ isSignedIn: signedIn, signIn, signOut }}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={{ isSignedIn: signedIn, signIn, signOut: signOutFromCtx }}>
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export function useAuth(): AuthCtx {

@@ -22,4 +22,16 @@ export default tseslint.config(
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
     },
   },
+  {
+    // TanStack Router routes co-export their route factory alongside the
+    // component. Same shape for the UI state provider (context + provider
+    // component live together). Disable the fast-refresh-only warning here
+    // — HMR just does a full reload for these files, which is acceptable.
+    files: [
+      "src/routes/**/*.tsx",
+      "src/ui/UIStateProvider.tsx",
+      "src/auth/session.tsx",
+    ],
+    rules: { "react-refresh/only-export-components": "off" },
+  },
 );

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as api from "../api/tasks";
 import { qk } from "../queries/keys";
 import type { components } from "../api/schema";
+import { pushSuccess } from "../ui/useUIState";
 
 type SubmitBody =
   | components["schemas"]["InterestFormBody"]
@@ -12,7 +13,14 @@ export function useSubmitTask() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: SubmitBody }) => api.submitTask(id, body),
-    onSuccess: (_data, { id }) => {
+    onSuccess: (data, { id }) => {
+      if (data.reward) {
+        pushSuccess({
+          color: data.task.color,
+          points: data.task.points,
+          bonus: data.reward.bonus,
+        });
+      }
       qc.invalidateQueries({ queryKey: qk.task(id) });
       qc.invalidateQueries({ queryKey: qk.myTasks });
       qc.invalidateQueries({ queryKey: qk.myRewards });

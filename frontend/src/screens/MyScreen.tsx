@@ -6,7 +6,12 @@ import { useMe } from "../hooks/useMe";
 import { useMyTasks } from "../hooks/useMyTasks";
 import { useMyTeams } from "../hooks/useMyTeams";
 import { useAuth } from "../auth/session";
-import { useAppState } from "../state/AppStateContext";
+import {
+  useApproveJoinRequest,
+  useLeaveTeam,
+  usePatchTeam,
+  useRejectJoinRequest,
+} from "../mutations/teams";
 import BottomNav from "../ui/BottomNav";
 import TeamCard from "./TeamCard";
 
@@ -18,14 +23,10 @@ export default function MyScreen() {
   const ledTeam = myTeams.led ?? null;
   const joinedTeam = myTeams.joined ?? null;
   const { signOut } = useAuth();
-  const {
-    approveRequest,
-    rejectRequest,
-    renameTeam,
-    leaveJoinedTeam,
-    leaveLedTeam,
-    simulateJoinApproved,
-  } = useAppState();
+  const approve = useApproveJoinRequest();
+  const reject = useRejectJoinRequest();
+  const leave = useLeaveTeam();
+  const patchTeam = usePatchTeam();
 
   const bg = "var(--bg)";
   const fg = "var(--fg)";
@@ -112,9 +113,8 @@ export default function MyScreen() {
             <button
               type="button"
               aria-label="登出"
-              onClick={async () => {
-                await signOut();
-                navigate({ to: "/" });
+              onClick={() => {
+                void signOut();
               }}
               title="登出"
               style={{
@@ -668,49 +668,16 @@ export default function MyScreen() {
                   </button>
                 </div>
               ) : (
-                <>
-                  {/* Demo-only dev toggle: pending→approved simulation now runs
-                      through a throw-stub in AppStateContext until plan 4c
-                      wires a real useApproveJoinRequest mutation. Kept for UI
-                      parity but harmless if joinedTeam only surfaces approved
-                      members. */}
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      marginBottom: 8,
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={simulateJoinApproved}
-                      title="Demo：模擬隊長核准申請"
-                      style={{
-                        padding: "3px 9px",
-                        borderRadius: 999,
-                        border: "1px dashed rgba(254,210,52,0.45)",
-                        background: "transparent",
-                        color: muted,
-                        fontSize: fs(10),
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        fontFamily: "inherit",
-                      }}
-                    >
-                      ▶ 模擬核准
-                    </button>
-                  </div>
-                  <TeamCard
-                    team={joinedTeam}
-                    total={joinedTotal}
-                    cap={teamCap}
-                    variant="joined"
-                    fg={fg}
-                    muted={muted}
-                    onCancelRequest={leaveJoinedTeam}
-                    onLeaveTeam={leaveJoinedTeam}
-                  />
-                </>
+                <TeamCard
+                  team={joinedTeam}
+                  total={joinedTotal}
+                  cap={teamCap}
+                  variant="joined"
+                  fg={fg}
+                  muted={muted}
+                  onCancelRequest={() => leave.mutate(joinedTeam.id)}
+                  onLeaveTeam={() => leave.mutate(joinedTeam.id)}
+                />
               )}
             </div>
           )}
@@ -786,10 +753,16 @@ export default function MyScreen() {
                   variant="led"
                   fg={fg}
                   muted={muted}
-                  onApproveRequest={approveRequest}
-                  onRejectRequest={rejectRequest}
-                  onRenameTeam={renameTeam}
-                  onLeaveTeam={leaveLedTeam}
+                  onApproveRequest={(reqId) =>
+                    approve.mutate({ teamId: ledTeam.id, reqId })
+                  }
+                  onRejectRequest={(reqId) =>
+                    reject.mutate({ teamId: ledTeam.id, reqId })
+                  }
+                  onRenameTeam={(alias) =>
+                    patchTeam.mutate({ teamId: ledTeam.id, body: { alias } })
+                  }
+                  onLeaveTeam={() => leave.mutate(ledTeam.id)}
                 />
               )}
             </div>

@@ -57,3 +57,16 @@ declare module "@tanstack/react-router" {
 }
 
 export type AppRouter = AnyRouter;
+
+// Module-level router holder — mirrors `_setActiveQueryClient` in auth/session
+// so the 401 interceptor / module-level signOut can `router.navigate(...)`
+// without a React context. `main.tsx` wires the singleton; tests that stand
+// up their own router via `renderRoute` skip this (navigation is a no-op in
+// that case, which is fine because the test router isn't mounted here).
+let routerRef: ReturnType<typeof createAppRouter> | null = null;
+export function setRouterRef(r: ReturnType<typeof createAppRouter> | null): void {
+  routerRef = r;
+}
+export function getRouterRef(): ReturnType<typeof createAppRouter> | null {
+  return routerRef;
+}

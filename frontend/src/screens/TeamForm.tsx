@@ -4,8 +4,9 @@ import FormShell from "../ui/FormShell";
 import FieldLabel from "../ui/FieldLabel";
 import SubmitButton from "../ui/SubmitButton";
 
-// Demo-only list of searchable teams. Plan 4c replaces this with a real
-// `teamsInfiniteQueryOptions` call + useCreateJoinRequest mutation.
+// Demo-only list of searchable teams. The display_id values here are
+// synthetic; when selected, `onSubmit` receives them verbatim so the
+// wiring lives upstream. Real teams search (spec §5.3) lands post-Phase 4.
 const DEMO_TEAMS = [
   {
     id: "T-MING2024",
@@ -39,10 +40,11 @@ const DEMO_TEAMS = [
 
 type Props = {
   onCancel: () => void;
-  onSubmit: () => void;
+  onSubmit: (teamId: string) => void | Promise<void>;
+  isSubmitting?: boolean;
 };
 
-export default function TeamForm({ onCancel, onSubmit }: Props) {
+export default function TeamForm({ onCancel, onSubmit, isSubmitting = false }: Props) {
   const bg = "var(--bg)";
   const fg = "var(--fg)";
   const muted = "var(--muted)";
@@ -84,9 +86,11 @@ export default function TeamForm({ onCancel, onSubmit }: Props) {
       onCancel={onCancel}
       footer={
         <SubmitButton
-          label={valid ? "送出加入申請" : "請先選擇團隊"}
-          onClick={onSubmit}
-          disabled={!valid}
+          label={isSubmitting ? "送出中..." : valid ? "送出加入申請" : "請先選擇團隊"}
+          onClick={() => {
+            if (pendingJoin) void onSubmit(pendingJoin);
+          }}
+          disabled={!valid || isSubmitting}
           color="#6dae4a"
         />
       }

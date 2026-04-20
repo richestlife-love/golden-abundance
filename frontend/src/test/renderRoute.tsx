@@ -4,9 +4,8 @@ import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "../auth/session";
 import { UIStateProvider } from "../ui/UIStateProvider";
-import { AppStateProvider } from "../state/AppStateContext";
 import { tokenStore } from "../auth/token";
-import { createAppRouter } from "../router";
+import { createAppRouter, setRouterRef } from "../router";
 import { makeTestQueryClient } from "./queryClient";
 
 export interface RenderRouteOpts {
@@ -26,14 +25,16 @@ export function renderRoute(path: string, opts: RenderRouteOpts = {}): RenderRou
     queryClient,
     history: createMemoryHistory({ initialEntries: [path] }),
   });
+  // Register with the module-level router ref so 401s + signOut()
+  // can navigate through the test's router (no-op if the test never
+  // triggers either).
+  setRouterRef(router);
   const dom = render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppStateProvider>
-          <UIStateProvider>
-            <RouterProvider router={router} />
-          </UIStateProvider>
-        </AppStateProvider>
+        <UIStateProvider>
+          <RouterProvider router={router} />
+        </UIStateProvider>
       </AuthProvider>
     </QueryClientProvider>,
   );

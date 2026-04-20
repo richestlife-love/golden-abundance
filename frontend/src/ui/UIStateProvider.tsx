@@ -1,5 +1,6 @@
 import { createContext, useCallback, useEffect, useState, type ReactNode } from "react";
 import { setToastSink, type Toast } from "./toasts";
+import { setSuccessSink } from "./useUIState";
 
 export interface SuccessData {
   color: string;
@@ -37,6 +38,11 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setToastSink(enqueue);
     return () => setToastSink(null);
   }, [enqueue]);
+
+  useEffect(() => {
+    setSuccessSink((p) => setSuccessData(p));
+    return () => setSuccessSink(null);
+  }, []);
 
   return (
     <UIStateCtx.Provider value={{ successData, setSuccessData, toasts, dismissToast }}>

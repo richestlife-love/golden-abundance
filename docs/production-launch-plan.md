@@ -24,7 +24,7 @@ See the [design spec](superpowers/specs/2026-04-19-api-contract-design.md).
 
 ## Phase 4 — Wire frontend to backend
 - [x] Add TanStack Query for data fetching, cache, loading/error states (Phase 4a)
-- [ ] Replace in-file mock arrays with real fetches (Phase 4b read-side, Phase 4c write-side)
+- [x] Replace in-file mock arrays with real fetches (Phase 4b read-side, Phase 4c write-side)
 
 ## Phase 5 — Persistence
 - [x] Add Postgres via SQLModel
@@ -90,7 +90,7 @@ Surfaced during Phase 3 (TanStack Router migration). Most items are design trade
 - **`router.invalidate()` on every auth-state change** — [`../frontend/src/main.tsx`](../frontend/src/main.tsx)'s `AppShell` re-evaluates all route guards whenever `user` or `profileComplete` changes. Fine today; Phase 6 (real auth with token refresh) should audit whether invalidation should be more targeted (e.g., invalidate only routes under `_authed`).
 
 ### Lint
-- **`react-refresh/only-export-components` warnings on route + context modules** — 11 warnings across `src/routes/*.tsx` (including `__root.tsx`), `src/main.tsx`, `src/state/AppStateContext.tsx`, and `src/test/renderRoute.tsx`, caused by modules exporting both a component and a route object (or a provider + a hook). Low priority. Either disable the rule for `src/routes/**` + `src/state/**` in ESLint config, or split the route object into a sibling `*.route.ts` file and the hook into a sibling `*.hooks.ts`.
+- ~~**`react-refresh/only-export-components` warnings on route + context modules** — 11 warnings across `src/routes/*.tsx` (including `__root.tsx`), `src/main.tsx`, `src/state/AppStateContext.tsx`, and `src/test/renderRoute.tsx`, caused by modules exporting both a component and a route object (or a provider + a hook). Low priority. Either disable the rule for `src/routes/**` + `src/state/**` in ESLint config, or split the route object into a sibling `*.route.ts` file and the hook into a sibling `*.hooks.ts`.~~ **Resolved by Phase 4c:** `src/state/` was deleted alongside `AppStateContext`; `renderRoute` dropped `AppStateProvider`; the remaining `routes/**/*.tsx` + `ui/UIStateProvider.tsx` + `auth/session.tsx` co-exports are glob-suppressed in [`frontend/eslint.config.js`](../frontend/eslint.config.js) ([commit `834de9d`](https://github.com/anthropics/)).
 
 ### Mixed-script source text
 - **Traditional / Simplified Chinese mismatch across UI copy** — `LandingScreen`, `BottomNav`, `RewardsScreen` render Simplified (开启, 首页, 任务, 排行, 我的); `GoogleAuthScreen`, `data.ts` task titles, `ProfileSetupForm` labels render Traditional (選擇帳號, 組隊挑戰, 編輯個人資料). Test assertions had to grep the source per call to know which variant to match. Pick one script for the Chinese UI (likely Simplified given `LandingScreen`/`BottomNav` lead) and sweep the remaining files.
@@ -234,3 +234,33 @@ Surfaced during Phase 4b (auth guards on `tokenStore` + read-side TanStack Query
 - **D1+D2+D3 bundled into one commit** (`6370226`) — the `TaskCard` type change (camelCase `task: Task (client)` → snake_case `task: Task (schema)`) cascades to HomeScreen + TasksScreen + TaskDetailScreen. Splitting per the plan's "one screen per commit" would have left a broken intermediate commit. Future migrations with shared-component type changes should expect the same bundling requirement.
 - **camelCase grep guard has local-variable false positives** — `grep -rn 'zhName|weekPoints|ledTotal|joinedTotal|isChallenge|...' frontend/src/` returns 6 hits on local variables (`MyScreen.ledTotal/joinedTotal`, `TeamCard.weekPoints`, `RankScreen.isChallenge`, `ProfileSetupForm.zhName`) that are not server fields. Server-field purge is complete; the heuristic over-matches.
 - **Manual smoke (F2) not performed in the automated run** — requires live backend (`just -f backend/justfile db-up && migrate && seed-reset && just dev`). Implementer should exercise the 7-screen walkthrough in the plan's F2 before closing out 4b.
+
+## Tech debt / review findings (Phase 4c)
+
+Surfaced during Phase 4c (write-side migration + cleanup — every form/button routed through a real mutation; `AppStateContext` deleted; router-aware `signOut`; end-to-end 401 interceptor test). Items below are either out-of-scope for Phase 4 or only become actionable once later phases expose them.
+
+### Auth / session
+- **Token storage in `localStorage`** — vulnerable to XSS; deliberate Phase-4 choice per spec §4.2. Phase 6 should revisit when real Google OAuth lands (httpOnly cookie storage + refresh-token rotation are the natural pair).
+- **No refresh-token rotation** — access-token TTL is the entire session. Already flagged under Phase 5b auth/security; reiterated here because 4c's `signOut` navigation path assumes single-token sessions.
+
+### Optimistic-mutation gaps
+- **`qk.team(uuid)` invalidated but never patched optimistically** — [`frontend/src/mutations/teams.ts`](../frontend/src/mutations/teams.ts)'s approve/reject/patch hooks patch only `qk.myTeams.led` because Phase 3/4 has no team-detail route subscriber. When a team-detail deep link ships, extend each `onMutate` to also patch `qk.team(teamId)` when present in the cache.
+
+### Invalidation architecture
+- **Default-invalidate map is inlined per-hook, not shared.** Spec §6.1 describes the map as a table; 4a landed the inlined version and 4c's optimistic upgrades layered on top without consolidating. A shared `INVALIDATE_MAP: Record<MutationName, QueryKey[]>` + `onSuccessFactory(name)` would collapse ~40 lines of `qc.invalidateQueries({...})` calls across `mutations/{me,tasks,teams}.ts`, make [`mutations/__tests__/me.test.tsx`](../frontend/src/mutations/__tests__/me.test.tsx)'s table-driven assertion a direct import rather than a hand-maintained duplicate, and give the optimistic-mutation `onSettled` hooks a single source of truth. Low-risk post-4c refactor — no behavior change, just deduplication.
+
+### Error surfacing
+- **`useSubmitTask` + `useCreateJoinRequest` have no `onError` default toast** — the approve/reject/patch trio got localized `pushToast` calls in 4c, but submit + join-request failures only surface via `mutation.error`. Spec §6.3 asks for 409-aware copy on both; add a shared `onError` factory when the shared invalidate map (above) lands.
+
+### Demo flow ergonomics
+- **Seed reaches at most 3/6 on T3** — completing T3 requires extra manual approvals after the two seeded pending requests clear (spec §7.1). Add a `just seed-extra-team-members` recipe if this becomes a bottleneck for product demos.
+- **`TeamForm` still filters a hardcoded 4-team list** — [`frontend/src/screens/TeamForm.tsx`](../frontend/src/screens/TeamForm.tsx) emits `display_id` strings like `T-MING2024` into `useCreateJoinRequest.mutate(...)`; the backend has no matching rows so the real flow 404s. Real `teamsInfiniteQueryOptions` + a search endpoint land post-Phase-4.
+
+### Router ref coupling
+- **`setRouterRef` singleton is global** — [`frontend/src/router.ts`](../frontend/src/router.ts). Harmless today (single router per app + vitest isolates module state per file), but a future multi-window / SSR setup would need a per-request router resolver. Document or re-scope then.
+
+### Toast UX
+- **Inline toast container in `__root.tsx` is text-only** — minimal colored div with click-to-dismiss. Replace with a real toast component (positioning, fade, auto-dismiss, ARIA live-region tuning) when frontend polish lands.
+
+### signOut in test wrapper
+- **`renderRoute` registers the memory router via `setRouterRef` but never unregisters** — [`frontend/src/test/renderRoute.tsx`](../frontend/src/test/renderRoute.tsx). Each test overrides the previous ref; fine because vitest isolates modules per file. If a future test suite needs strict teardown (e.g., asserting no leftover navigation after teardown), add a `setRouterRef(null)` step in setup.ts's `afterEach`.

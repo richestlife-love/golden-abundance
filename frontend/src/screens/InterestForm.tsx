@@ -6,12 +6,21 @@ import TextInput from "../ui/TextInput";
 import ChipGroup from "../ui/ChipGroup";
 import SubmitButton from "../ui/SubmitButton";
 
+export interface InterestFormBody {
+  name: string;
+  phone: string;
+  interests: string[];
+  skills?: string[];
+  availability: string[];
+}
+
 type Props = {
   onCancel: () => void;
-  onSubmit: () => void;
+  onSubmit: (body: InterestFormBody) => void | Promise<void>;
+  isSubmitting?: boolean;
 };
 
-export default function InterestForm({ onCancel, onSubmit }: Props) {
+export default function InterestForm({ onCancel, onSubmit, isSubmitting = false }: Props) {
   const bg = "var(--bg)";
   const muted = "var(--muted)";
   const cardBg = "rgba(255,255,255,0.6)";
@@ -39,7 +48,20 @@ export default function InterestForm({ onCancel, onSubmit }: Props) {
       subtitle="填寫個人資訊、興趣與可投入時段"
       onCancel={onCancel}
       footer={
-        <SubmitButton label="提交表單" onClick={onSubmit} disabled={!valid} color="#fec701" />
+        <SubmitButton
+          label={isSubmitting ? "送出中..." : "提交表單"}
+          onClick={() =>
+            onSubmit({
+              name: name.trim(),
+              phone: phone.trim(),
+              interests,
+              skills: skills.length > 0 ? skills : undefined,
+              availability,
+            })
+          }
+          disabled={!valid || isSubmitting}
+          color="#fec701"
+        />
       }
     >
       <div style={card}>

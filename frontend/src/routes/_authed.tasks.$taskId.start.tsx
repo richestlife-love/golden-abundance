@@ -3,6 +3,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import InterestForm from "../screens/InterestForm";
 import TicketForm from "../screens/TicketForm";
 import TeamForm from "../screens/TeamForm";
+import { useSubmitTask } from "../mutations/tasks";
+import { useCreateJoinRequest } from "../mutations/teams";
 import { authedRoute } from "./_authed";
 import { myTasksQueryOptions } from "../queries/me";
 import type { components } from "../api/schema";
@@ -18,16 +20,56 @@ function StartRoute() {
   const task = tasks.find((t: Task) => t.display_id === taskId);
   if (!task) throw notFound();
   const goDetail = () => navigate({ to: "/tasks/$taskId", params: { taskId: task.display_id } });
+  const goMe = () => navigate({ to: "/me" });
+  const submit = useSubmitTask();
+  const join = useCreateJoinRequest();
 
   if (task.form_type === "interest") {
-    return <InterestForm onCancel={goDetail} onSubmit={goDetail} />;
+    return (
+      <InterestForm
+        onCancel={goDetail}
+        isSubmitting={submit.isPending}
+        onSubmit={async (body) => {
+          try {
+            await submit.mutateAsync({ id: task.id, body: { form_type: "interest", ...body } });
+            goDetail();
+          } catch {
+            // error remains on submit.error; form stays open so user can retry
+          }
+        }}
+      />
+    );
   }
   if (task.form_type === "ticket") {
-    return <TicketForm onCancel={goDetail} onSubmit={goDetail} />;
+    return (
+      <TicketForm
+        onCancel={goDetail}
+        isSubmitting={submit.isPending}
+        onSubmit={async (body) => {
+          try {
+            await submit.mutateAsync({ id: task.id, body: { form_type: "ticket", ...body } });
+            goDetail();
+          } catch {
+            // error remains on submit.error; form stays open so user can retry
+          }
+        }}
+      />
+    );
   }
   if (task.is_challenge) {
     return (
-      <TeamForm onCancel={() => navigate({ to: "/me" })} onSubmit={() => navigate({ to: "/me" })} />
+      <TeamForm
+        onCancel={goMe}
+        isSubmitting={join.isPending}
+        onSubmit={async (teamId) => {
+          try {
+            await join.mutateAsync(teamId);
+            goMe();
+          } catch {
+            // error remains on join.error; form stays open so user can retry
+          }
+        }}
+      />
     );
   }
   throw notFound();

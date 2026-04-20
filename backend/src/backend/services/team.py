@@ -102,7 +102,8 @@ async def create_led_team(session: AsyncSession, user: UserRow) -> TeamRow:
 
 async def row_to_contract_team(session: AsyncSession, team: TeamRow, *, caller_id: UUID) -> ContractTeam:
     leader = await session.get(UserRow, team.leader_id)
-    assert leader is not None  # FK-guaranteed
+    if leader is None:
+        raise RuntimeError(f"FK violation: TeamRow(id={team.id}).leader_id={team.leader_id} has no matching UserRow")
 
     memberships = (
         (
@@ -151,7 +152,10 @@ async def row_to_contract_team(session: AsyncSession, team: TeamRow, *, caller_i
         requests = []
         for jr in join_rows:
             requester = await session.get(UserRow, jr.user_id)
-            assert requester is not None  # FK-guaranteed
+            if requester is None:
+                raise RuntimeError(
+                    f"FK violation: JoinRequestRow(id={jr.id}).user_id={jr.user_id} has no matching UserRow"
+                )
             requests.append(
                 ContractJoinRequest(
                     id=jr.id,

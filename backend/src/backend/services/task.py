@@ -136,7 +136,8 @@ async def row_to_contract_task(
     ):
         status = "expired"
     elif task_def.is_challenge:
-        assert team_progress is not None
+        if team_progress is None:
+            raise RuntimeError("unreachable: is_challenge branch requires team_progress")
         if team_progress.total >= team_progress.cap:
             status = "completed"
         elif team_progress.total > 0:
@@ -147,7 +148,8 @@ async def row_to_contract_task(
         status = progress_row.status if progress_row else "todo"
 
     if task_def.is_challenge:
-        assert team_progress is not None
+        if team_progress is None:
+            raise RuntimeError("unreachable: is_challenge branch requires team_progress")
         progress_value: float | None = min(team_progress.total / team_progress.cap, 1.0)
     else:
         progress_value = progress_row.progress if progress_row else None

@@ -34,3 +34,7 @@ makemigration MSG:
 # Run pytest only
 test *args:
   uv run pytest {{args}}
+
+# Populate dev database with task definitions and news items (idempotent)
+seed:
+  uv run python -m backend.seed

@@ -76,7 +76,6 @@ Items surfaced in a 2026-04-20 code review. Address before or during Phase 4 (wi
 - **Hardcoded mock join requests** — the 林詠瑜 / 陳志豪 / 王美玲 pending-request seed lives inside `handleProfileComplete` at [`AppStateContext.tsx:125-127`](../frontend/src/state/AppStateContext.tsx#L125). Move to `data.ts` as a `DEMO_REQUESTS` export, or gate behind `import.meta.env.DEV` so the demo seed doesn't ship to prod.
 - **`simulateJoinApproved` is demo-only, runtime-visible** — Phase 3 replaced the `onSimulateJoinApproved` prop with a context method. The call site in `MyScreen` carries an inline `// demo-only` comment. Still needs a build-flag gate (`import.meta.env.DEV`) so the demo button can't fire in prod builds.
 - **`RankScreen.tsx` is ~43KB** — almost entirely mock leaderboard + challenge data at roughly [lines 136-870](../frontend/src/screens/RankScreen.tsx#L136). Extract to `src/data/mock-rankings.ts` now; Phase 4 replaces this with fetch calls anyway, and doing the split first makes that diff legible instead of tangled with the fetch migration.
-- ~~**`tasksProp || TASKS` fallbacks**~~ — **resolved in Phase 3.** Screens now read `tasks` from `useAppState()`; the prop-drilled fallback is gone.
 
 ### Identity
 - **`userIdFromEmail`** — [`AppStateContext.tsx:35-45`](../frontend/src/state/AppStateContext.tsx#L35) derives a user id from the email local part (first 4–6 chars uppercased). Collision-prone (e.g. `jet.a@…` and `jet.b@…` collapse to the same id), and that id is then used as the root of the team id (`T-${idSuffix}`), so the collision propagates. Replace with server-issued UUIDs at Phase 4.
@@ -110,8 +109,6 @@ Surfaced during Phase 5a (backend foundation — FastAPI + SQLModel + Alembic + 
 - **`TaskProgressRow` has `updated_at` but no `created_at`** — once any update fires, the original enrollment time is lost. Add `created_at` if a service needs to query "when did the user start this task".
 
 ### Tooling hygiene
-- ~~**Coverage gate temporarily 60%**~~ — resolved in Phase 5b: gate is back to 90 in [`backend/pyproject.toml`](../backend/pyproject.toml) and the auth-layer tests bring total coverage to ~97%.
-- **`testcontainers[postgresql]>=4.9` extra is obsolete** — [`backend/pyproject.toml`](../backend/pyproject.toml). testcontainers v4 bundles Postgres support unconditionally; `uv sync` warns `package does not have an extra named 'postgresql'` on every run. Rewrite to `testcontainers>=4.9`.
 - **Alembic `path_separator` deprecation warning** — once per pytest run. Fix: add `path_separator = os` under `[alembic]` in [`backend/alembic.ini`](../backend/alembic.ini).
 
 ## Tech debt / review findings (Phase 5b)

@@ -18,10 +18,10 @@ function SignInRoute() {
       onCancel={() => navigate({ to: "/" })}
       onSelectAccount={async (email) => {
         await signIn(email);
-        if (search.returnTo) {
-          navigate({ to: search.returnTo });
-        }
-        // Otherwise the _authed guard / index redirect handles routing.
+        // Navigate back through the index guard so the me redirect chain
+        // (/home vs /welcome) picks the right destination — avoids a stale
+        // /sign-in screen after a successful token exchange.
+        navigate({ to: search.returnTo ?? "/" });
       }}
     />
   );

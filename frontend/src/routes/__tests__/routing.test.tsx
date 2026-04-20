@@ -103,24 +103,22 @@ describe("task routes", () => {
 
 describe("landing CTA", () => {
   it("guest → /sign-in", async () => {
+    // Guest sees the landing page; clicking the CTA navigates to /sign-in.
     const { router } = renderRoute("/");
     await waitFor(() => expect(screen.getByText("金富有志工")).toBeInTheDocument());
     await userEvent.click(screen.getByRole("button", { name: /开启/ }));
     await expectScreen(router, "/sign-in", "選擇帳號");
   });
 
-  it("authed + complete → /home", async () => {
+  it("authed + complete visiting / → /home (auto redirect)", async () => {
+    // Index guard redirects authed+complete users away from the landing page.
     const { router } = renderRoute("/", { token: TOKEN });
-    await waitFor(() => expect(screen.getByText("金富有志工")).toBeInTheDocument());
-    await userEvent.click(screen.getByRole("button", { name: /开启/ }));
     await expectScreen(router, "/home", "首页");
   });
 
-  it("authed + incomplete → /welcome", async () => {
+  it("authed + incomplete visiting / → /welcome (auto redirect)", async () => {
     useIncompleteUser();
     const { router } = renderRoute("/", { token: TOKEN });
-    await waitFor(() => expect(screen.getByText("金富有志工")).toBeInTheDocument());
-    await userEvent.click(screen.getByRole("button", { name: /开启/ }));
     await expectScreen(router, "/welcome", "完善個人資料");
   });
 });

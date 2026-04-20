@@ -140,10 +140,15 @@ describe("guard sweep", () => {
     await expectScreen(router, "/welcome", "完善個人資料");
   });
 
-  // TODO(plan 4c): wire router.navigate into signOut so _authed re-evaluates
-  // the guard and redirects to /sign-in after sign-out. Until then, signOut
-  // clears the token but the already-rendered /home component keeps showing.
-  it.skip("signing out while on /home redirects to /sign-in", async () => {});
+  it("signing out while on /home redirects to /sign-in", async () => {
+    const { router } = renderRoute("/home", { token: TOKEN });
+    await expectScreen(router, "/home", "首页");
+    const user = userEvent.setup();
+    await user.click(screen.getByLabelText("登出"));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/sign-in"));
+    const { tokenStore } = await import("../../auth/token");
+    expect(tokenStore.get()).toBeNull();
+  });
 });
 
 describe("not found", () => {

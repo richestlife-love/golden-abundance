@@ -2,18 +2,23 @@ import { fs } from "../utils";
 import { useState } from "react";
 import type { MouseEvent, KeyboardEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useMe } from "../hooks/useMe";
+import { useMyTasks } from "../hooks/useMyTasks";
+import { useMyTeams } from "../hooks/useMyTeams";
+import { useAuth } from "../auth/session";
 import { useAppState } from "../state/AppStateContext";
 import BottomNav from "../ui/BottomNav";
 import TeamCard from "./TeamCard";
 
 export default function MyScreen() {
   const navigate = useNavigate();
+  const { data: user } = useMe();
+  const { data: tasks } = useMyTasks();
+  const { data: myTeams } = useMyTeams();
+  const ledTeam = myTeams.led ?? null;
+  const joinedTeam = myTeams.joined ?? null;
+  const { signOut } = useAuth();
   const {
-    user,
-    ledTeam,
-    joinedTeam,
-    tasks,
-    handleSignOut,
     approveRequest,
     rejectRequest,
     renameTeam,
@@ -28,25 +33,25 @@ export default function MyScreen() {
   const cardBg = "var(--card)";
   const cardBorder = "1px solid var(--card-strong)";
 
-  const totalPoints = (tasks || [])
+  const totalPoints = tasks
     .filter((t) => t.status === "completed")
     .reduce((s, t) => s + t.points, 0);
 
-  const teamTask = (tasks || []).find((t) => t.id === 3);
-  const teamCap = (teamTask && teamTask.cap) || 6;
-  const ledTotal = ledTeam ? ledTeam.members.length + 1 : 0;
-  const joinedTotal = joinedTeam
-    ? (joinedTeam.currentCount || 0) + (joinedTeam.status === "approved" ? 1 : 0)
-    : 0;
+  const teamTask = tasks.find((t) => t.is_challenge);
+  const teamCap = teamTask?.cap ?? 6;
+  const ledTotal = ledTeam ? (ledTeam.members?.length ?? 0) + 1 : 0;
+  // Schema's myTeams.joined only surfaces approved membership; outstanding
+  // requests live on the leader's requests[] (out of scope for the joined
+  // card). Total = members count + self.
+  const joinedTotal = joinedTeam ? (joinedTeam.members?.length ?? 0) + 1 : 0;
   const [teamTab, setTeamTab] = useState(ledTeam && !joinedTeam ? "leader" : "member");
   const [userIdCopied, setUserIdCopied] = useState(false);
   const copyUserId = async (e: MouseEvent | KeyboardEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    if (!user?.id) return;
     if (!navigator.clipboard) return;
     try {
-      await navigator.clipboard.writeText(user.id);
+      await navigator.clipboard.writeText(user.display_id);
       setUserIdCopied(true);
       setTimeout(() => setUserIdCopied(false), 1800);
     } catch {
@@ -57,7 +62,7 @@ export default function MyScreen() {
   const onBuildTeam = () =>
     navigate({
       to: "/tasks/$taskId/start",
-      params: { taskId: "3" },
+      params: { taskId: "T3" },
       state: { fromDetail: true },
     });
 
@@ -107,8 +112,8 @@ export default function MyScreen() {
             <button
               type="button"
               aria-label="登出"
-              onClick={() => {
-                handleSignOut();
+              onClick={async () => {
+                await signOut();
                 navigate({ to: "/" });
               }}
               title="登出"
@@ -293,7 +298,7 @@ export default function MyScreen() {
                   border: "2px solid rgba(255,255,255,0.9)",
                 }}
               >
-                {user?.name ? user.name[0] : "志"}
+                {user.name ? user.name[0] : "志"}
               </div>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -316,9 +321,9 @@ export default function MyScreen() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {user?.name || "志工"}
+                  {user.name || "志工"}
                 </div>
-                {user?.id && (
+                {user.display_id && (
                   <span
                     role="button"
                     tabIndex={0}
@@ -348,7 +353,7 @@ export default function MyScreen() {
                       transition: "all 0.18s ease",
                     }}
                   >
-                    {user.id}
+                    {user.display_id}
                     {userIdCopied ? (
                       <svg
                         width="11"
@@ -390,7 +395,7 @@ export default function MyScreen() {
                   whiteSpace: "nowrap",
                 }}
               >
-                {user?.email || "volunteer@example.com"}
+                {user.email || "volunteer@example.com"}
               </div>
             </div>
             <div
@@ -664,35 +669,37 @@ export default function MyScreen() {
                 </div>
               ) : (
                 <>
-                  {joinedTeam.status === "pending" && (
-                    <div
+                  {/* Demo-only dev toggle: pending→approved simulation now runs
+                      through a throw-stub in AppStateContext until plan 4c
+                      wires a real useApproveJoinRequest mutation. Kept for UI
+                      parity but harmless if joinedTeam only surfaces approved
+                      members. */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={simulateJoinApproved}
+                      title="Demo：模擬隊長核准申請"
                       style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        marginBottom: 8,
+                        padding: "3px 9px",
+                        borderRadius: 999,
+                        border: "1px dashed rgba(254,210,52,0.45)",
+                        background: "transparent",
+                        color: muted,
+                        fontSize: fs(10),
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        fontFamily: "inherit",
                       }}
                     >
-                      <button
-                        type="button"
-                        // demo-only; remove when Phase 4 wires real team-membership events from the backend
-                        onClick={simulateJoinApproved}
-                        title="Demo：模擬隊長核准申請"
-                        style={{
-                          padding: "3px 9px",
-                          borderRadius: 999,
-                          border: "1px dashed rgba(254,210,52,0.45)",
-                          background: "transparent",
-                          color: muted,
-                          fontSize: fs(10),
-                          fontWeight: 700,
-                          cursor: "pointer",
-                          fontFamily: "inherit",
-                        }}
-                      >
-                        ▶ 模擬核准
-                      </button>
-                    </div>
-                  )}
+                      ▶ 模擬核准
+                    </button>
+                  </div>
                   <TeamCard
                     team={joinedTeam}
                     total={joinedTotal}
@@ -752,7 +759,7 @@ export default function MyScreen() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => navigate({ to: "/tasks/$taskId", params: { taskId: "3" } })}
+                    onClick={() => navigate({ to: "/tasks/$taskId", params: { taskId: "T3" } })}
                     style={{
                       padding: "8px 14px",
                       borderRadius: 999,

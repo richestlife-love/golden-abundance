@@ -1,8 +1,10 @@
-import { fs } from "../utils";
+import { avatarBg, fs } from "../utils";
 import { useEffect, useState } from "react";
 import RenameTeamSheet from "./RenameTeamSheet";
 import ShareSheet from "./ShareSheet";
-import type { Team } from "../types";
+import type { components } from "../api/schema";
+
+type Team = components["schemas"]["Team"];
 
 type Props = {
   team: Team;
@@ -27,7 +29,6 @@ export default function TeamCard({
   variant,
   onApproveRequest,
   onRejectRequest,
-  onCancelRequest,
   onLeaveTeam,
   onRenameTeam,
 }: Props) {
@@ -83,10 +84,13 @@ export default function TeamCard({
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [leaveConfirmOpen]);
+  // Use display_id for shareable team codes (team.id is a UUID that's neither
+  // typeable nor memorable).
+  const shareCode = team.display_id;
   const copyId = async () => {
     if (!navigator.clipboard) return;
     try {
-      await navigator.clipboard.writeText(team.id);
+      await navigator.clipboard.writeText(shareCode);
       setIdCopied(true);
       setTimeout(() => setIdCopied(false), 1800);
     } catch {
@@ -94,7 +98,7 @@ export default function TeamCard({
     }
   };
   const shareUrl = "golden-abundance.vercel.app";
-  const shareMessage = `嗨！我在「金富有」建立了志工團隊，一起來加入吧 ✨\n\n團隊編號：${team.id}\n開啟 App：${shareUrl}\n\n進入 App 後，點「我的 › 搜尋加入」輸入編號 ${team.id} 即可申請。`;
+  const shareMessage = `嗨！我在「金富有」建立了志工團隊，一起來加入吧 ✨\n\n團隊編號：${shareCode}\n開啟 App：${shareUrl}\n\n進入 App 後，點「我的 › 搜尋加入」輸入編號 ${shareCode} 即可申請。`;
   const copyShare = async () => {
     if (!navigator.clipboard) return;
     try {
@@ -105,159 +109,11 @@ export default function TeamCard({
       // permission denied or another failure — skip confirmation
     }
   };
-  // Pending member waiting for approval
-  if (team.role === "member" && team.status === "pending") {
-    return (
-      <div
-        style={{
-          padding: "18px 18px",
-          borderRadius: 20,
-          background: "linear-gradient(135deg, #E4F3D0, #D4EAC0)",
-          border: rc.borderStrong,
-          boxShadow: rc.shadow,
-          display: "flex",
-          flexDirection: "column",
-          gap: 14,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 14,
-              background: "linear-gradient(135deg, #A8D680, #6dae4a)",
-              color: "#fff",
-              fontSize: fs(22),
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              animation: "pulse 2s ease-in-out infinite",
-            }}
-          >
-            ⏳
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: fs(15),
-                fontWeight: 800,
-                color: fg,
-                lineHeight: 1.2,
-              }}
-            >
-              等待組長審核中
-            </div>
-          </div>
-        </div>
 
-        <div
-          style={{
-            padding: "10px 10px 10px 14px",
-            borderRadius: 14,
-            background: "rgba(255,255,255,0.75)",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            border: rc.borderSoft,
-          }}
-        >
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 999,
-              background: team.leader.avatar,
-              color: "#fff",
-              fontSize: fs(13),
-              fontWeight: 700,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            {team.leader.name[0]}
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: fs(13), fontWeight: 700, color: fg }}>{team.leader.name}</div>
-            <button
-              type="button"
-              onClick={copyId}
-              title={idCopied ? "已複製" : "點擊複製編號"}
-              style={{
-                padding: 0,
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                fontSize: fs(11),
-                color: idCopied ? "#2E9B65" : muted,
-                marginTop: 2,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                fontFamily: "monospace",
-              }}
-            >
-              {team.id}
-              {idCopied ? (
-                <svg
-                  width="11"
-                  height="11"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              ) : (
-                <svg
-                  width="11"
-                  height="11"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{ opacity: 0.7 }}
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-              )}
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => onCancelRequest?.()}
-            style={{
-              padding: "7px 12px",
-              borderRadius: 10,
-              border: rc.borderStrong,
-              cursor: "pointer",
-              background: "transparent",
-              color: muted,
-              fontSize: fs(12),
-              fontWeight: 600,
-              fontFamily: "inherit",
-              flexShrink: 0,
-            }}
-          >
-            撤回申請
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Full team view (leader OR approved member)
+  // Full team view (leader OR approved member). Phase 3's "pending join
+  // request" state is gone: `myTeams.joined` only returns approved teams;
+  // outstanding requests live on the leader's `team.requests` list.
   const complete = total >= cap;
-  // Deterministic pseudo-points per member, based on name
   const memberPoints = (name: string) => {
     let h = 0;
     for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
@@ -267,19 +123,23 @@ export default function TeamCard({
     {
       id: team.leader.id,
       name: team.leader.name,
-      avatar: team.leader.avatar,
+      avatarUrl: team.leader.avatar_url,
       isLeader: true,
     },
-    ...team.members.map((m) => ({ ...m, isLeader: false })),
+    ...(team.members ?? []).map((m) => ({
+      id: m.id,
+      name: m.name,
+      avatarUrl: m.avatar_url,
+      isLeader: false,
+    })),
   ];
 
-  const requests = team.role === "leader" ? team.requests || [] : [];
+  const requests = team.role === "leader" ? (team.requests ?? []) : [];
 
-  // Unified approved-team view (leader & member share same layout)
   const isLeader = team.role === "leader";
   const teamPoints = team.points != null ? team.points : total * 180 + 240;
-  const teamRank = team.rank || 3;
-  const weekPoints = team.weekPoints != null ? team.weekPoints : Math.round(teamPoints * 0.18);
+  const teamRank = team.rank ?? 3;
+  const weekPoints = team.week_points != null ? team.week_points : Math.round(teamPoints * 0.18);
 
   return (
     <>
@@ -295,7 +155,7 @@ export default function TeamCard({
           flexDirection: "column",
         }}
       >
-        {/* Banner — unified layout for leader & member */}
+        {/* Banner */}
         <div
           style={{
             padding: "18px 18px 16px",
@@ -305,7 +165,6 @@ export default function TeamCard({
             overflow: "hidden",
           }}
         >
-          {/* Decorative starfield motif */}
           <svg
             width="100%"
             height="100%"
@@ -331,7 +190,6 @@ export default function TeamCard({
                 <circle r={r * 0.3} fill="#fff" />
               </g>
             ))}
-            {/* thin constellation line */}
             <path
               d={`M 300 58 L 345 75 L 378 92 L 352 42 L 328 22`}
               stroke={isMemberCard ? "#6dae4a" : "#fec701"}
@@ -351,7 +209,6 @@ export default function TeamCard({
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
-              {/* Role label */}
               <div
                 style={{
                   display: "inline-flex",
@@ -504,7 +361,7 @@ export default function TeamCard({
                   gap: 5,
                 }}
               >
-                {team.id}
+                {shareCode}
                 {idCopied ? (
                   <svg
                     width="12"
@@ -562,7 +419,6 @@ export default function TeamCard({
               width: "100%",
             }}
           >
-            {/* decorative sparkle trail */}
             <svg
               style={{
                 position: "absolute",
@@ -898,7 +754,6 @@ export default function TeamCard({
                       : "none",
                   }}
                 >
-                  {/* rank badge */}
                   <div
                     style={{
                       width: 20,
@@ -930,7 +785,7 @@ export default function TeamCard({
                       width: 36,
                       height: 36,
                       borderRadius: 999,
-                      background: m.avatar,
+                      background: avatarBg(m.avatarUrl, m.name),
                       color: "#fff",
                       fontSize: fs(14),
                       fontWeight: 700,
@@ -1046,7 +901,7 @@ export default function TeamCard({
                       width: 30,
                       height: 30,
                       borderRadius: 999,
-                      background: req.avatar,
+                      background: avatarBg(req.user.avatar_url, req.user.name),
                       color: "#fff",
                       fontSize: fs(12),
                       fontWeight: 700,
@@ -1056,7 +911,7 @@ export default function TeamCard({
                       justifyContent: "center",
                     }}
                   >
-                    {req.name[0]}
+                    {req.user.name[0]}
                   </div>
                   <div
                     style={{
@@ -1067,7 +922,7 @@ export default function TeamCard({
                       color: fg,
                     }}
                   >
-                    {req.name}
+                    {req.user.name}
                   </div>
                   <button
                     type="button"

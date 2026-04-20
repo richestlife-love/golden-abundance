@@ -1,6 +1,8 @@
 import { fs } from "../utils";
 import { useEffect, useRef } from "react";
-import type { Team } from "../types";
+import type { components } from "../api/schema";
+
+type Team = components["schemas"]["Team"];
 
 type Props = {
   team: Team;

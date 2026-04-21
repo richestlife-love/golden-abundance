@@ -41,6 +41,8 @@ class Settings(BaseSettings):
         ],
     )
     app_env: Literal["dev", "test", "prod"] = "dev"
+    sentry_dsn: str | None = Field(default=None)
+    app_release: str | None = Field(default=None)
 
     @field_validator("cors_origins", mode="before")
     @classmethod

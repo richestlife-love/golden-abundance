@@ -79,6 +79,11 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Generate frontend OpenAPI types
+        # Pins the prod-env guard in backend/src/backend/config.py off — importing
+        # backend.server runs create_app() at module scope, which calls
+        # get_settings(); APP_ENV=prod without SUPABASE_URL would raise.
+        env:
+          APP_ENV: test
         run: |
           uv run --project backend python -c 'import json; from backend.server import app; print(json.dumps(app.openapi()))' > /tmp/ga-openapi.json
           pnpm dlx openapi-typescript /tmp/ga-openapi.json -o frontend/src/api/schema.d.ts

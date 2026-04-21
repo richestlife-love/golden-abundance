@@ -26,9 +26,9 @@ from backend.db.models import (
 
 
 async def _seed_two_teams_and_user(session: AsyncSession) -> tuple[TeamRow, TeamRow, UserRow]:
-    leader_a = UserRow(display_id="ULDA", email="lda@example.com", profile_complete=True)
-    leader_b = UserRow(display_id="ULDB", email="ldb@example.com", profile_complete=True)
-    requester = UserRow(display_id="UREQ", email="req@example.com", profile_complete=True)
+    leader_a = UserRow(id=uuid4(), display_id="ULDA", email="lda@example.com", profile_complete=True)
+    leader_b = UserRow(id=uuid4(), display_id="ULDB", email="ldb@example.com", profile_complete=True)
+    requester = UserRow(id=uuid4(), display_id="UREQ", email="req@example.com", profile_complete=True)
     session.add_all([leader_a, leader_b, requester])
     await session.flush()
     team_a = TeamRow(display_id="T-TA", name="A", leader_id=leader_a.id)
@@ -104,7 +104,7 @@ async def test_pending_index_allows_mixed_statuses(session: AsyncSession) -> Non
     ids=["cap-zero", "points-negative", "week-points-negative"],
 )
 async def test_teams_check_constraints(session: AsyncSession, stmt: str, params: dict) -> None:
-    leader = UserRow(display_id="ULCK", email="lck@example.com", profile_complete=True)
+    leader = UserRow(id=uuid4(), display_id="ULCK", email="lck@example.com", profile_complete=True)
     session.add(leader)
     await session.flush()
     # Async-session CHECK violations may surface at either execute or flush
@@ -151,7 +151,7 @@ async def test_timestamp_server_defaults_populate_on_raw_insert(session: AsyncSe
 
 async def test_task_progress_progress_unit_interval(session: AsyncSession) -> None:
     """``progress`` must be within [0, 1] when set."""
-    user = UserRow(display_id="UPRG", email="prg@example.com", profile_complete=True)
+    user = UserRow(id=uuid4(), display_id="UPRG", email="prg@example.com", profile_complete=True)
     session.add(user)
     await session.flush()
     td_insert = text(

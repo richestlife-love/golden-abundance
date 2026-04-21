@@ -13,7 +13,6 @@ from typing import Any
 
 from pydantic import TypeAdapter, ValidationError
 
-from backend.contract.auth import AuthResponse, GoogleAuthRequest
 from backend.contract.common import Paginated
 from backend.contract.leaderboard import TeamLeaderboardEntry, UserLeaderboardEntry
 from backend.contract.news import NewsItem
@@ -38,8 +37,6 @@ FIXTURES_DIR = Path(__file__).parent / "examples"
 # regardless of whether the underlying type is a BaseModel, a generic
 # like ``Paginated[NewsItem]``, or a container like ``list[Reward]``.
 FIXTURES: dict[str, TypeAdapter[Any]] = {
-    "auth_google_request.json": TypeAdapter(GoogleAuthRequest),
-    "auth_google_response.json": TypeAdapter(AuthResponse),
     "user.json": TypeAdapter(User),
     "profile_create.json": TypeAdapter(ProfileCreate),
     "rewards_list.json": TypeAdapter(list[Reward]),

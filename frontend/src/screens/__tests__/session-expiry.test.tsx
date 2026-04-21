@@ -8,7 +8,6 @@ import { http, HttpResponse } from "msw";
 import { screen, waitFor } from "@testing-library/react";
 import { server } from "../../test/msw/server";
 import { renderRoute } from "../../test/renderRoute";
-import { tokenStore } from "../../auth/token";
 
 describe("401 interceptor — session expiry", () => {
   it("redirects to /sign-in?returnTo=<prev> and shows toast on 401", async () => {
@@ -17,13 +16,12 @@ describe("401 interceptor — session expiry", () => {
     // is enough to trigger the interceptor path.
     server.use(http.get("/api/v1/me", () => new HttpResponse(null, { status: 401 })));
 
-    const { router } = renderRoute("/me", { token: "expired-token" });
+    const { router } = renderRoute("/me", { session: "signed-in" });
 
     await waitFor(() => expect(router.state.location.pathname).toBe("/sign-in"));
     expect(router.state.location.search).toMatchObject({
       returnTo: expect.stringContaining("/me"),
     });
-    expect(tokenStore.get()).toBeNull();
     await waitFor(() => expect(screen.getByText(/工作階段已過期/)).toBeInTheDocument());
   });
 });

@@ -6,19 +6,21 @@ test_approve_grants_challenge_reward_at_cap. These tests cover the two
 no-op branches that integration tests don't exercise in the default seed.
 """
 
+from uuid import uuid4
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import RewardRow, TaskDefRow
 from backend.services.reward import maybe_grant_challenge_rewards
-from backend.services.user import upsert_user_by_email
+from backend.services.user import upsert_user_by_supabase_identity
 
 
 async def test_maybe_grant_noop_when_no_bonused_challenges(session: AsyncSession) -> None:
     """Empty challenge catalog must short-circuit before the team-total
     query — no rewards created, no exception.
     """
-    user = await upsert_user_by_email(session, email="nochal@example.com")
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="nochal@example.com")
     await session.flush()
 
     await maybe_grant_challenge_rewards(session, user=user)
@@ -47,7 +49,7 @@ async def test_maybe_grant_skips_challenge_when_team_under_cap(session: AsyncSes
             form_type=None,
         ),
     )
-    user = await upsert_user_by_email(session, email="lone@example.com")
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="lone@example.com")
     await session.flush()
 
     await maybe_grant_challenge_rewards(session, user=user)

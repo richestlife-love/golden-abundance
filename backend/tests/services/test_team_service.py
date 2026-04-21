@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import TeamMembershipRow
@@ -7,13 +9,13 @@ from backend.services.team import (
     search_team_refs,
     user_to_ref,
 )
-from backend.services.user import upsert_user_by_email
+from backend.services.user import upsert_user_by_supabase_identity
 
 
 async def test_create_led_team_sets_name_and_topic(
     session: AsyncSession,
 ) -> None:
-    user = await upsert_user_by_email(session, email="jet@example.com")
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
     user.zh_name = "簡傑特"
     await session.flush()
 
@@ -29,7 +31,7 @@ async def test_create_led_team_sets_name_and_topic(
 async def test_row_to_contract_team_as_leader_sees_requests(
     session: AsyncSession,
 ) -> None:
-    user = await upsert_user_by_email(session, email="jet@example.com")
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
     await session.flush()
     team = await create_led_team(session, user)
     await session.commit()
@@ -42,8 +44,8 @@ async def test_row_to_contract_team_as_leader_sees_requests(
 async def test_row_to_contract_team_as_outsider_hides_requests(
     session: AsyncSession,
 ) -> None:
-    leader = await upsert_user_by_email(session, email="leader@example.com")
-    outsider = await upsert_user_by_email(session, email="out@example.com")
+    leader = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="leader@example.com")
+    outsider = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="out@example.com")
     await session.flush()
     team = await create_led_team(session, leader)
     await session.commit()
@@ -54,8 +56,8 @@ async def test_row_to_contract_team_as_outsider_hides_requests(
 
 
 async def test_row_to_contract_team_as_member(session: AsyncSession) -> None:
-    leader = await upsert_user_by_email(session, email="leader@example.com")
-    member = await upsert_user_by_email(session, email="mem@example.com")
+    leader = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="leader@example.com")
+    member = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="mem@example.com")
     await session.flush()
     team = await create_led_team(session, leader)
     session.add(TeamMembershipRow(team_id=team.id, user_id=member.id))
@@ -70,9 +72,9 @@ async def test_row_to_contract_team_as_member(session: AsyncSession) -> None:
 async def test_search_team_refs_filters_by_leader_display_id(
     session: AsyncSession,
 ) -> None:
-    jet = await upsert_user_by_email(session, email="jet@example.com")
+    jet = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
     jet.zh_name = "簡傑特"
-    wei = await upsert_user_by_email(session, email="wei@example.com")
+    wei = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="wei@example.com")
     wei.zh_name = "偉"
     await session.flush()
     await create_led_team(session, jet)
@@ -95,9 +97,9 @@ async def test_search_team_refs_filters_by_q_on_name(
     session: AsyncSession,
 ) -> None:
     """Q does an ILIKE match against name OR alias."""
-    jet = await upsert_user_by_email(session, email="jet@example.com")
+    jet = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
     jet.zh_name = "簡傑特"
-    wei = await upsert_user_by_email(session, email="wei@example.com")
+    wei = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="wei@example.com")
     wei.zh_name = "偉"
     await session.flush()
     jet_team = await create_led_team(session, jet)
@@ -129,8 +131,8 @@ async def test_search_team_refs_filters_by_q_on_name(
 
 async def test_search_team_refs_filters_by_topic(session: AsyncSession) -> None:
     """Topic is an exact-match filter (not ILIKE)."""
-    jet = await upsert_user_by_email(session, email="jet@example.com")
-    wei = await upsert_user_by_email(session, email="wei@example.com")
+    jet = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
+    wei = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="wei@example.com")
     await session.flush()
     jet_team = await create_led_team(session, jet)
     jet_team.topic = "長者陪伴"
@@ -151,7 +153,7 @@ async def test_search_team_refs_filters_by_topic(session: AsyncSession) -> None:
 
 async def test_user_to_ref_does_not_leak_pii(session: AsyncSession) -> None:
     """UserRef must not expose email/phone/line_id/etc. to other team members."""
-    user = await upsert_user_by_email(session, email="jet@example.com")
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
     user.phone = "0912345678"
     user.line_id = "private-line-id"
     user.zh_name = "簡傑特"

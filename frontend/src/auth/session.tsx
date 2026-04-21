@@ -1,11 +1,16 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
-import * as authApi from "../api/auth";
 import { setSessionExpiredHandler } from "../api/client";
-import { qk } from "../queries/keys";
 import { pushToast } from "../ui/toasts";
 import { getRouterRef } from "../router";
-import { tokenStore } from "./token";
+import { getSupabaseClient } from "../lib/supabase";
 
 export interface SignOutOpts {
   reason?: "expired" | "user";
@@ -14,7 +19,7 @@ export interface SignOutOpts {
 
 interface AuthCtx {
   isSignedIn: boolean;
-  signIn: (email: string) => Promise<void>;
+  signIn: (returnTo?: string) => Promise<void>;
   signOut: (opts?: SignOutOpts) => Promise<void>;
 }
 
@@ -22,20 +27,9 @@ const Ctx = createContext<AuthCtx | null>(null);
 
 let inFlightSignOut = false;
 
-async function performLogoutBestEffort(token: string): Promise<void> {
-  try {
-    await fetch("/api/v1/auth/logout", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-  } catch {
-    // best-effort; ignore network failures
-  }
-}
-
-// Module-level QueryClient + signOut — both live outside React so the 401
-// interceptor (registered at module-load time) and module-level signOut can
-// fire without waiting for AuthProvider to mount.
+// Module-level QueryClient holder, preserved from Phase 4c so the 401
+// interceptor + module-level signOut fire without needing AuthProvider
+// to be mounted.
 let activeQueryClient: QueryClient | null = null;
 export function _setActiveQueryClient(qc: QueryClient | null): void {
   activeQueryClient = qc;
@@ -45,12 +39,13 @@ export async function signOut(opts: SignOutOpts = {}): Promise<void> {
   if (inFlightSignOut) return;
   inFlightSignOut = true;
   try {
-    const token = tokenStore.get();
-    if (token) void performLogoutBestEffort(token);
+    const supabase = getSupabaseClient();
+    await supabase.auth.signOut();
+
     if (opts.reason === "expired") {
       pushToast({ kind: "info", message: "您的工作階段已過期，請重新登入" });
     }
-    tokenStore.clear();
+
     const router = getRouterRef();
     if (router) {
       await router.navigate({
@@ -58,7 +53,7 @@ export async function signOut(opts: SignOutOpts = {}): Promise<void> {
         search: opts.returnTo ? { returnTo: opts.returnTo } : {},
       });
     }
-    // Cache clear last so any in-flight queries don't refetch with the
+    // Cache clear last so in-flight queries don't refetch with the
     // (now-cleared) token mid-teardown.
     activeQueryClient?.clear();
   } finally {
@@ -67,9 +62,6 @@ export async function signOut(opts: SignOutOpts = {}): Promise<void> {
 }
 
 setSessionExpiredHandler(({ returnTo: fromClient }) => {
-  // Prefer the router's location (stays accurate when memory history
-  // is in play — e.g. tests); fall back to the client.ts reading of
-  // window.location for the rare case where no router is registered.
   const router = getRouterRef();
   const returnTo =
     router?.state.location.pathname != null
@@ -80,22 +72,46 @@ setSessionExpiredHandler(({ returnTo: fromClient }) => {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
-  const [signedIn, setSignedIn] = useState<boolean>(() => !!tokenStore.get());
+  // Initial state is async — `signedIn` is false for one render cycle even
+  // when Supabase has a persisted session. Routes don't depend on this
+  // (they call getSession() directly in beforeLoad), so the brief mismatch
+  // is invisible to users.
+  const [signedIn, setSignedIn] = useState<boolean>(false);
 
   useEffect(() => {
     _setActiveQueryClient(qc);
     return () => _setActiveQueryClient(null);
   }, [qc]);
 
-  const signIn = useCallback(
-    async (email: string) => {
-      const res = await authApi.postGoogleAuth({ id_token: email });
-      tokenStore.set(res.access_token);
-      qc.setQueryData(qk.me, res.user);
-      setSignedIn(true);
-    },
-    [qc],
-  );
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    let cancelled = false;
+
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled) setSignedIn(!!data.session);
+    });
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSignedIn(!!session);
+    });
+
+    return () => {
+      cancelled = true;
+      data.subscription.unsubscribe();
+    };
+  }, []);
+
+  const signIn = useCallback(async (returnTo?: string) => {
+    const supabase = getSupabaseClient();
+    const callback = new URL(`${window.location.origin}/auth/callback`);
+    if (returnTo) callback.searchParams.set("returnTo", returnTo);
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: callback.toString() },
+    });
+    // Browser redirects; nothing to do here. Post-callback flow lives in
+    // routes/auth.callback.tsx.
+  }, []);
 
   const signOutFromCtx = useCallback(async (opts: SignOutOpts = {}) => {
     await signOut(opts);

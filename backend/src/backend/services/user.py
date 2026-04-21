@@ -1,11 +1,13 @@
-"""User service: upsert-by-email on sign-in + DB→contract mapping.
+"""User service: upsert-by-Supabase-identity + DB→contract mapping.
 
-Note: ``profile_complete`` stays ``False`` until ``POST /me/profile``
-runs. That flow is in Section D — this module only covers sign-in
-creation.
+``UserRow.id`` holds Supabase's ``auth.users.id`` UUID. ``current_user``
+calls ``upsert_user_by_supabase_identity`` on its first request for a
+given ``sub`` so freshly-signed-up users get an app-side row the moment
+they hit any authed endpoint.
 """
 
-from sqlalchemy import select
+from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.contract import User as ContractUser
@@ -13,24 +15,39 @@ from backend.db.models import UserRow
 from backend.services.display_id import generate_user_display_id
 
 
-async def upsert_user_by_email(session: AsyncSession, *, email: str) -> UserRow:
-    """Upsert a UserRow by email; returns existing row or creates a new one.
+async def upsert_user_by_supabase_identity(
+    session: AsyncSession,
+    *,
+    auth_user_id: UUID,
+    email: str,
+) -> UserRow:
+    """Return the existing ``UserRow`` for ``auth_user_id`` or create one.
 
     Caller is responsible for committing — this function only ``flush()``es
-    so the new row has a PK. Concurrent sign-ups with the same email can
-    still raise ``IntegrityError`` on the unique email/display_id columns;
-    the race is documented in ``display_id.py`` and deferred to Phase 6.
+    so the new row has relationships but sits in the session's identity
+    map.
+
+    Two failure modes surface as ``IntegrityError`` from ``flush()`` and
+    are **not** handled here (see the plan's "Known deferrals" section):
+
+    - Concurrent first-sign-in requests for the same ``auth_user_id``
+      racing on unique ``display_id`` generation.
+    - A Supabase user deleted + recreated (same email, new ``sub``)
+      colliding with the existing ``UserRow.email`` unique constraint.
     """
-    # Belt-and-braces: callers should pre-normalize but we do it here too.
     email = email.lower()
-    existing = await session.execute(select(UserRow).where(UserRow.email == email))
-    row = existing.scalar_one_or_none()
-    if row is not None:
-        return row
+    existing = await session.get(UserRow, auth_user_id)
+    if existing is not None:
+        return existing
     display_id = await generate_user_display_id(session, email=email)
-    row = UserRow(display_id=display_id, email=email, profile_complete=False)
+    row = UserRow(
+        id=auth_user_id,
+        display_id=display_id,
+        email=email,
+        profile_complete=False,
+    )
     session.add(row)
-    await session.flush()  # give row an id without committing
+    await session.flush()
     return row
 
 

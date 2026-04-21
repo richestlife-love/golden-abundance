@@ -1,12 +1,14 @@
+from uuid import uuid4
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import TaskProgressRow
 from backend.services.task import list_caller_tasks, row_to_contract_task
-from backend.services.user import upsert_user_by_email
+from backend.services.user import upsert_user_by_supabase_identity
 
 
 async def test_task_status_todo_by_default(session: AsyncSession, seeded_task_defs) -> None:
-    user = await upsert_user_by_email(session, email="jet@example.com")
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
     await session.flush()
 
     task = await row_to_contract_task(session, seeded_task_defs["T1"], caller=user)
@@ -15,14 +17,14 @@ async def test_task_status_todo_by_default(session: AsyncSession, seeded_task_de
 
 
 async def test_task_status_locked_when_prereq_unmet(session: AsyncSession, seeded_task_defs) -> None:
-    user = await upsert_user_by_email(session, email="jet@example.com")
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
     await session.flush()
     task = await row_to_contract_task(session, seeded_task_defs["T2"], caller=user)
     assert task.status == "locked"
 
 
 async def test_task_status_unlocks_when_prereq_completed(session: AsyncSession, seeded_task_defs) -> None:
-    user = await upsert_user_by_email(session, email="jet@example.com")
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
     await session.flush()
     session.add(
         TaskProgressRow(
@@ -38,7 +40,7 @@ async def test_task_status_unlocks_when_prereq_completed(session: AsyncSession, 
 
 
 async def test_task_status_expired_for_past_due(session: AsyncSession, seeded_task_defs) -> None:
-    user = await upsert_user_by_email(session, email="jet@example.com")
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
     await session.flush()
     task = await row_to_contract_task(session, seeded_task_defs["T4"], caller=user)
     assert task.status == "expired"
@@ -48,11 +50,11 @@ async def test_challenge_task_computes_team_progress(session: AsyncSession, seed
     from backend.db.models import TeamMembershipRow
     from backend.services.team import create_led_team
 
-    user = await upsert_user_by_email(session, email="jet@example.com")
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
     await session.flush()
     team = await create_led_team(session, user)
     for email in ("a@example.com", "b@example.com"):
-        m = await upsert_user_by_email(session, email=email)
+        m = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email=email)
         await session.flush()
         session.add(TeamMembershipRow(team_id=team.id, user_id=m.id))
     await session.commit()
@@ -70,11 +72,11 @@ async def test_challenge_at_cap_is_completed(session: AsyncSession, seeded_task_
     from backend.db.models import TeamMembershipRow
     from backend.services.team import create_led_team
 
-    user = await upsert_user_by_email(session, email="jet@example.com")
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
     await session.flush()
     team = await create_led_team(session, user)
     for i in range(5):
-        m = await upsert_user_by_email(session, email=f"m{i}@example.com")
+        m = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email=f"m{i}@example.com")
         await session.flush()
         session.add(TeamMembershipRow(team_id=team.id, user_id=m.id))
     await session.commit()
@@ -96,19 +98,19 @@ async def test_challenge_joined_total_wins_when_higher(session: AsyncSession, se
     from backend.db.models import TeamMembershipRow
     from backend.services.team import create_led_team
 
-    caller = await upsert_user_by_email(session, email="caller@example.com")
-    other_leader = await upsert_user_by_email(session, email="leader@example.com")
+    caller = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="caller@example.com")
+    other_leader = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="leader@example.com")
     await session.flush()
     own_team = await create_led_team(session, caller)
     other_team = await create_led_team(session, other_leader)
 
-    extra = await upsert_user_by_email(session, email="own@example.com")
+    extra = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="own@example.com")
     await session.flush()
     session.add(TeamMembershipRow(team_id=own_team.id, user_id=extra.id))
 
     session.add(TeamMembershipRow(team_id=other_team.id, user_id=caller.id))
     for i in range(3):
-        m = await upsert_user_by_email(session, email=f"other{i}@example.com")
+        m = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email=f"other{i}@example.com")
         await session.flush()
         session.add(TeamMembershipRow(team_id=other_team.id, user_id=m.id))
     await session.commit()
@@ -121,7 +123,7 @@ async def test_challenge_joined_total_wins_when_higher(session: AsyncSession, se
 
 
 async def test_list_caller_tasks_returns_all(session: AsyncSession, seeded_task_defs) -> None:
-    user = await upsert_user_by_email(session, email="jet@example.com")
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
     await session.flush()
     tasks = await list_caller_tasks(session, caller=user)
     assert len(tasks) == 4

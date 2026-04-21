@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,12 +13,12 @@ from backend.services.team_join import (
     leave_team,
     reject_join_request,
 )
-from backend.services.user import upsert_user_by_email
+from backend.services.user import upsert_user_by_supabase_identity
 
 
 async def _make_leader_and_outsider(session: AsyncSession):
-    leader = await upsert_user_by_email(session, email="leader@example.com")
-    outsider = await upsert_user_by_email(session, email="out@example.com")
+    leader = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="leader@example.com")
+    outsider = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="out@example.com")
     await session.flush()
     team = await create_led_team(session, leader)
     await session.commit()
@@ -54,7 +56,7 @@ async def test_create_join_request_rejects_if_already_joined_elsewhere(
     session: AsyncSession,
 ) -> None:
     _, outsider, team = await _make_leader_and_outsider(session)
-    other_leader = await upsert_user_by_email(session, email="other@example.com")
+    other_leader = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="other@example.com")
     await session.flush()
     other_team = await create_led_team(session, other_leader)
     session.add(TeamMembershipRow(team_id=other_team.id, user_id=outsider.id))

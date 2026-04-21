@@ -27,7 +27,7 @@ def _utcnow() -> datetime:
 class UserRow(SQLModel, table=True):
     __tablename__ = "users"
 
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    id: UUID = Field(primary_key=True)
     display_id: str = Field(index=True, unique=True, max_length=16)
     email: str = Field(index=True, unique=True, max_length=320)
     zh_name: str | None = Field(default=None, max_length=64)

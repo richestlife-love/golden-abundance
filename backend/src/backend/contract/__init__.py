@@ -4,13 +4,14 @@ and the FastAPI backend. See `endpoints.md` for the endpoint catalog and
 
 Usage::
 
-    from backend.contract import User, Task, Team, AuthResponse, Paginated
+    from backend.contract import User, Task, Team, Paginated
 
-`TokenClaims` is intentionally not re-exported — it describes the JWT
-payload shape for documentation only and is not a request/response body.
+Auth shapes: ``SupabaseClaims`` is the server-side view of a
+Supabase-issued JWT payload. No request/response auth shapes are
+exported — the backend never issues tokens; it only verifies them.
 """
 
-from backend.contract.auth import AuthResponse, GoogleAuthRequest
+from backend.contract.auth import SupabaseClaims
 from backend.contract.common import Paginated, TeamRef, UserRef
 from backend.contract.leaderboard import (
     LeaderboardPeriod,
@@ -38,8 +39,6 @@ from backend.contract.team import (
 from backend.contract.user import ProfileCreate, ProfileUpdate, User
 
 __all__ = [
-    "AuthResponse",
-    "GoogleAuthRequest",
     "InterestFormBody",
     "JoinRequest",
     "LeaderboardPeriod",
@@ -51,6 +50,7 @@ __all__ = [
     "ProfileUpdate",
     "Reward",
     "SubmitBody",
+    "SupabaseClaims",
     "Task",
     "TaskStep",
     "TaskSubmissionResponse",

@@ -10,13 +10,16 @@ clean.
 """
 
 import asyncio
-import os
 import pathlib
-from collections.abc import AsyncIterator, Iterator
+import time
+from collections.abc import AsyncIterator, Callable, Iterator
 from datetime import UTC, datetime
+from uuid import UUID, uuid4
 
 import pytest
 import pytest_asyncio
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
@@ -34,7 +37,11 @@ from backend.server import create_app
 _BACKEND_DIR = pathlib.Path(__file__).parent.parent
 
 POSTGRES_IMAGE = "postgres:17-alpine"
-TEST_JWT_SECRET = "test-only-secret-32-chars-minimum"
+
+SUPABASE_TEST_URL = "https://test-ref.supabase.co"
+SUPABASE_TEST_AUD = "authenticated"
+SUPABASE_TEST_ISS = f"{SUPABASE_TEST_URL}/auth/v1"
+SUPABASE_TEST_KID = "test-kid-2026"
 
 
 @pytest.fixture(autouse=True)
@@ -66,8 +73,7 @@ async def engine(
     with pytest.MonkeyPatch.context() as mp:
         mp.setenv("DATABASE_URL", url)
         mp.setenv("APP_ENV", "test")
-        if "JWT_SECRET" not in os.environ:
-            mp.setenv("JWT_SECRET", TEST_JWT_SECRET)
+        mp.setenv("SUPABASE_URL", SUPABASE_TEST_URL)
         get_settings.cache_clear()
         get_engine.cache_clear()
         get_session_maker.cache_clear()
@@ -196,3 +202,128 @@ async def seeded_task_defs(session: AsyncSession) -> dict[str, TaskDefRow]:
     await session.commit()
 
     return {"T1": t1, "T2": t2, "T3": t3, "T4": t4}
+
+
+# -------------------------------------------------------------------
+# Phase 6a fixtures: RSA keypair + Supabase-shaped JWT minter
+# -------------------------------------------------------------------
+
+
+@pytest.fixture(scope="session")
+def rsa_test_keypair() -> tuple[str, str]:
+    """Generate a fresh 2048-bit RSA keypair for the test session.
+
+    Returns (private_pem, public_pem). 2048 bits is overkill for test
+    signing speed but matches the keyspace Supabase uses in prod.
+    """
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    private_pem = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    ).decode()
+    public_pem = (
+        key.public_key()
+        .public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+        .decode()
+    )
+    return private_pem, public_pem
+
+
+@pytest.fixture
+def mint_access_token(rsa_test_keypair: tuple[str, str]) -> Callable[..., str]:
+    """Mint an RS256-signed JWT mimicking Supabase's claim shape.
+
+    Call as ``mint_access_token(user_id=UUID(...), email="e@x.com")``.
+    Optional keyword overrides (``exp``, ``iat``, ``aud``, ``iss``, ``kid``)
+    let tests forge expired / mis-issued tokens for negative-path coverage.
+    """
+    private_pem, _public_pem = rsa_test_keypair
+
+    def _mint(
+        *,
+        user_id: UUID | None = None,
+        email: str = "test@example.com",
+        exp: int | None = None,
+        iat: int | None = None,
+        aud: str = SUPABASE_TEST_AUD,
+        iss: str = SUPABASE_TEST_ISS,
+        kid: str = SUPABASE_TEST_KID,
+    ) -> str:
+        import jwt as pyjwt
+
+        now = int(time.time())
+        payload = {
+            "sub": str(user_id or uuid4()),
+            "email": email,
+            "aud": aud,
+            "iss": iss,
+            "iat": iat if iat is not None else now,
+            "exp": exp if exp is not None else now + 3600,
+            "role": "authenticated",
+        }
+        return pyjwt.encode(payload, private_pem, algorithm="RS256", headers={"kid": kid})
+
+    return _mint
+
+
+@pytest.fixture(autouse=True)
+def _bind_sign_in_mint(mint_access_token: Callable[..., str]) -> Iterator[None]:
+    """Inject ``mint_access_token`` into ``tests.helpers`` for the test.
+
+    ``sign_in`` / ``sign_in_and_complete`` read from a module-level slot
+    instead of receiving the mint fn as a kwarg on every call site; this
+    fixture populates and clears that slot per-test. Autouse because
+    every router integration test uses the helpers, and a missed import
+    would otherwise surface as a cryptic RuntimeError mid-test.
+    """
+    from tests import helpers
+
+    helpers._MINT_FN = mint_access_token
+    try:
+        yield
+    finally:
+        helpers._MINT_FN = None
+
+
+@pytest.fixture(autouse=True)
+def stub_jwks(
+    rsa_test_keypair: tuple[str, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Route Supabase JWKS lookups to the session's test public key.
+
+    Applied autouse because every integration test that mints a token
+    needs it; opting out is as simple as not minting a token. The
+    stubbed client returns an object with the expected ``.key``
+    attribute on ``get_signing_key_from_jwt`` so PyJWT's verifier can
+    proceed without a real network fetch.
+
+    No explicit teardown: ``monkeypatch`` is function-scoped and
+    automatically undoes both ``setenv`` and ``setattr`` after the test.
+    """
+    _private_pem, public_pem = rsa_test_keypair
+
+    monkeypatch.setenv("SUPABASE_URL", SUPABASE_TEST_URL)
+    # Defensive: `_reset_settings_cache` (autouse, defined earlier in this
+    # file) also clears the cache around every test. Pytest fixture ordering
+    # between sibling autouse fixtures is undefined, so we clear again here
+    # after setenv to guarantee the next `get_settings()` call re-reads env.
+    get_settings.cache_clear()
+
+    pub_key = serialization.load_pem_public_key(public_pem.encode())
+
+    class _StubJWKClient:
+        def get_signing_key_from_jwt(self, _token: str) -> object:
+            class _Key:
+                key = pub_key
+
+            return _Key()
+
+    monkeypatch.setattr(
+        "backend.auth.supabase._jwks_client",
+        lambda: _StubJWKClient(),
+    )

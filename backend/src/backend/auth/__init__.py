@@ -1,5 +1,6 @@
-"""Authentication helpers: HS256 JWT + stub Google ID-token verifier.
+"""Authentication helpers: Supabase JWKS-based JWT verification.
 
-Real Google JWKS verification lands in Phase 6; in Phase 5 the stub
-treats the raw id_token as the authenticated email address.
+Real OAuth flow is owned by the frontend's Supabase SDK; the backend
+only verifies incoming ``Authorization: Bearer`` tokens against
+Supabase's published JWKS.
 """

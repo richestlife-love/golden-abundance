@@ -5,7 +5,3 @@ mod frontend
 gen-types:
     uv run --project backend python -c 'import json; from backend.server import app; print(json.dumps(app.openapi()))' > /tmp/ga-openapi.json
     pnpm dlx openapi-typescript /tmp/ga-openapi.json -o frontend/src/api/schema.d.ts
-
-# Generate frontend demo-account picker JSON from backend.seed.DEMO_USERS (writes frontend/src/dev/demo-accounts.json, checked in).
-gen-demo-accounts:
-    uv run --project backend python -m backend.scripts.dump_demo_accounts > frontend/src/dev/demo-accounts.json

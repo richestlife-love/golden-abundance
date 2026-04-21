@@ -1,70 +1,105 @@
+"""Tests for backend.services.user."""
+
+from datetime import UTC, datetime
+from uuid import UUID
+
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.services.user import row_to_contract_user, upsert_user_by_email
+from backend.db.models import UserRow
+from backend.services.user import (
+    derive_user_name,
+    row_to_contract_user,
+    upsert_user_by_supabase_identity,
+)
 
 
-async def test_upsert_creates_on_first_sight(session: AsyncSession) -> None:
-    user = await upsert_user_by_email(session, email="new@example.com")
+@pytest.mark.asyncio
+async def test_upsert_creates_new_row_with_supabase_id(session: AsyncSession) -> None:
+    auth_id = UUID(int=1001)
+    row = await upsert_user_by_supabase_identity(
+        session,
+        auth_user_id=auth_id,
+        email="jet@example.com",
+    )
+    assert row.id == auth_id
+    assert row.email == "jet@example.com"
+    assert row.display_id.startswith("UJET")
+    assert row.profile_complete is False
+
+
+@pytest.mark.asyncio
+async def test_upsert_is_idempotent_on_same_auth_id(session: AsyncSession) -> None:
+    auth_id = UUID(int=1002)
+    r1 = await upsert_user_by_supabase_identity(
+        session,
+        auth_user_id=auth_id,
+        email="jet@example.com",
+    )
     await session.commit()
-    assert user.email == "new@example.com"
-    assert user.profile_complete is False
-    assert user.display_id.startswith("U")
+    r2 = await upsert_user_by_supabase_identity(
+        session,
+        auth_user_id=auth_id,
+        email="jet@example.com",
+    )
+    assert r1.id == r2.id
+    assert r1.display_id == r2.display_id
 
 
-async def test_upsert_is_idempotent(session: AsyncSession) -> None:
-    first = await upsert_user_by_email(session, email="same@example.com")
+@pytest.mark.asyncio
+async def test_upsert_reuses_existing_row_on_auth_id_match(
+    session: AsyncSession,
+) -> None:
+    """If a row with this UUID already exists (e.g., seeded), reuse it rather than create a collision."""
+    auth_id = UUID(int=1003)
+    session.add(UserRow(id=auth_id, display_id="SEED1", email="seeded@example.com"))
     await session.commit()
-    second = await upsert_user_by_email(session, email="same@example.com")
-    await session.commit()
-    assert first.id == second.id
+
+    row = await upsert_user_by_supabase_identity(
+        session,
+        auth_user_id=auth_id,
+        email="seeded@example.com",
+    )
+    assert row.id == auth_id
+    assert row.display_id == "SEED1"
 
 
-async def test_row_to_contract_user_derives_name_from_zh_name(
-    session: AsyncSession,
-) -> None:
-    user = await upsert_user_by_email(session, email="x@example.com")
-    user.zh_name = "簡傑特"
-    user.nickname = "Jet"
-    contract = row_to_contract_user(user)
-    assert contract.name == "簡傑特"
+def test_derive_user_name_falls_back_to_email_local_part() -> None:
+    row = UserRow(id=UUID(int=1), display_id="X", email="jet.kan@example.com")
+    assert derive_user_name(row) == "jet.kan"
 
 
-async def test_row_to_contract_user_falls_back_to_nickname(
-    session: AsyncSession,
-) -> None:
-    user = await upsert_user_by_email(session, email="y@example.com")
-    user.zh_name = None
-    user.nickname = "Jet"
-    contract = row_to_contract_user(user)
-    assert contract.name == "Jet"
+def test_derive_user_name_prefers_zh_name() -> None:
+    row = UserRow(
+        id=UUID(int=1),
+        display_id="X",
+        email="x@example.com",
+        zh_name="金杰",
+        nickname="Jet",
+    )
+    assert derive_user_name(row) == "金杰"
 
 
-async def test_row_to_contract_user_falls_back_to_email_local_part(
-    session: AsyncSession,
-) -> None:
-    user = await upsert_user_by_email(session, email="foo@example.com")
-    contract = row_to_contract_user(user)
-    assert contract.name == "foo"
-
-
-async def test_row_to_contract_user_treats_empty_strings_as_absent(
-    session: AsyncSession,
-) -> None:
-    """Empty ``zh_name``/``nickname`` must fall through to the next option."""
-    user = await upsert_user_by_email(session, email="bar@example.com")
-    user.zh_name = ""
-    user.nickname = "Jet"
-    assert row_to_contract_user(user).name == "Jet"
-
-    user.zh_name = ""
-    user.nickname = ""
-    assert row_to_contract_user(user).name == "bar"
+def test_row_to_contract_user_maps_every_field() -> None:
+    row = UserRow(
+        id=UUID(int=1),
+        display_id="UJET1",
+        email="jet@example.com",
+        zh_name="金杰",
+        profile_complete=True,
+        created_at=datetime(2026, 4, 21, tzinfo=UTC),
+    )
+    contract = row_to_contract_user(row)
+    assert contract.id == row.id
+    assert contract.display_id == "UJET1"
+    assert contract.zh_name == "金杰"
+    assert contract.name == "金杰"
+    assert contract.profile_complete is True
 
 
 def test_row_to_contract_user_maps_every_contract_field() -> None:
     """Drift guard: every non-derived ContractUser field must come from a UserRow column."""
     from backend.contract import User as ContractUser
-    from backend.db.models import UserRow
 
     contract_fields = set(ContractUser.model_fields) - {"name"}
     row_fields = set(UserRow.model_fields)

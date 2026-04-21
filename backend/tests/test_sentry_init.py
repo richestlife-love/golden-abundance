@@ -1,7 +1,26 @@
-"""Smoke that Sentry init only fires when SENTRY_DSN is set."""
+"""Smoke that Sentry init only fires when SENTRY_DSN is set.
+
+sentry_sdk.init() mutates process-global state (binds a client on the
+isolation scope, installs integration monkey-patches). The autouse fixture
+below closes the client after each test so event flushing stops and
+subsequent test modules don't observe a stale bound client. Integration
+monkey-patches installed by init() persist for the process lifetime but
+are inert once the client is closed.
+"""
+
+from collections.abc import Iterator
+
+import pytest
+import sentry_sdk
 
 from backend.config import get_settings
 from backend.server import create_app
+
+
+@pytest.fixture(autouse=True)
+def _reset_sentry_client() -> Iterator[None]:
+    yield
+    sentry_sdk.get_client().close()
 
 
 def test_create_app_without_sentry_dsn_does_not_init(monkeypatch) -> None:
@@ -16,8 +35,6 @@ def test_create_app_without_sentry_dsn_does_not_init(monkeypatch) -> None:
 
 def test_create_app_with_sentry_dsn_installs_hub(monkeypatch) -> None:
     """With a DSN set, sentry_sdk has a bound client after init."""
-    import sentry_sdk
-
     monkeypatch.setenv(
         "SENTRY_DSN",
         "https://public@o0.ingest.sentry.io/0",  # valid-shape fake; SDK accepts without network round-trip
@@ -25,14 +42,9 @@ def test_create_app_with_sentry_dsn_installs_hub(monkeypatch) -> None:
     monkeypatch.setenv("APP_RELEASE", "test-release-7b")
     get_settings.cache_clear()
 
-    try:
-        create_app()
-        client = sentry_sdk.get_client()
-        assert client is not None
-        # Client.dsn's string form has been normalized across sdk versions;
-        # match the prefix rather than the literal DSN string.
-        assert str(client.dsn).startswith("https://public@")
-    finally:
-        # sentry_sdk.init() is process-global; close so subsequent tests
-        # aren't observing leaked state from this one.
-        sentry_sdk.get_client().close()
+    create_app()
+    client = sentry_sdk.get_client()
+    assert client is not None
+    # Client.dsn's string form has been normalized across sdk versions;
+    # match the prefix rather than the literal DSN string.
+    assert str(client.dsn).startswith("https://public@")

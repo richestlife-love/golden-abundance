@@ -26,6 +26,8 @@ Runtime config is read from the environment (prefer a `.env` file; see `.env.exa
 | `SUPABASE_JWT_AUD` | Audience claim enforced on incoming JWTs. Defaults to Supabase's `"authenticated"`. |
 | `CORS_ORIGINS` | Comma-separated (or JSON array) list of allowed origins. |
 | `APP_ENV` | One of `dev`, `test`, `prod`. Drives boot-safety checks and guards destructive recipes (e.g. `seed-reset`). |
+| `SENTRY_DSN` | Sentry DSN for backend error reporting. Optional — `sentry_sdk.init()` is skipped when absent, so local dev and test runs are free of Sentry traffic. |
+| `APP_RELEASE` | Release tag sent to Sentry alongside error events. Railway injects this as `${{RAILWAY_GIT_COMMIT_SHA}}`; optional in dev. |
 
 `get_settings()` is cached with `lru_cache(1)`; tests reset the cache via an autouse fixture so `monkeypatch.setenv` keeps working.
 

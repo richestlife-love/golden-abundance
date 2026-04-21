@@ -36,7 +36,7 @@ Intentional gaps in the current codebase. Listing them explicitly so reviewers k
 - **Feature flags / A/B** — none.
 - **Push notifications** — none.
 - **Offline / service worker** — none.
-- **Monitoring / metrics / error reporting** — Sentry is scoped for Phase 7b (backend + frontend). No tracing, no structured logs beyond platform stdout.
+- **Distributed tracing / structured logs / session replay** — Sentry error reporting (backend + frontend) shipped in Phase 7b (`backend/src/backend/server.py` + `frontend/src/main.tsx`); source-map uploads configured via `@sentry/vite-plugin`. No distributed tracing spans beyond the SDK's default `traces_sample_rate=0.1`, no structured logs beyond platform stdout, no Sentry Replay.
 - **Rate limiting** — none on backend endpoints beyond Supabase Auth's built-in throttles.
 
 ## Localization

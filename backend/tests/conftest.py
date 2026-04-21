@@ -271,6 +271,25 @@ def mint_access_token(rsa_test_keypair: tuple[str, str]) -> Callable[..., str]:
 
 
 @pytest.fixture(autouse=True)
+def _bind_sign_in_mint(mint_access_token: Callable[..., str]) -> Iterator[None]:
+    """Inject ``mint_access_token`` into ``tests.helpers`` for the test.
+
+    ``sign_in`` / ``sign_in_and_complete`` read from a module-level slot
+    instead of receiving the mint fn as a kwarg on every call site; this
+    fixture populates and clears that slot per-test. Autouse because
+    every router integration test uses the helpers, and a missed import
+    would otherwise surface as a cryptic RuntimeError mid-test.
+    """
+    from tests import helpers
+
+    helpers._MINT_FN = mint_access_token
+    try:
+        yield
+    finally:
+        helpers._MINT_FN = None
+
+
+@pytest.fixture(autouse=True)
 def stub_jwks(
     rsa_test_keypair: tuple[str, str],
     monkeypatch: pytest.MonkeyPatch,

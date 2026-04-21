@@ -32,7 +32,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Golden Abundance API",
         version="0.1.0",
-        description="Phase 5 backend — see backend/src/backend/contract/endpoints.md",
+        description="Phase 7 backend — see backend/src/backend/contract/endpoints.md",
     )
     app.add_middleware(
         CORSMiddleware,

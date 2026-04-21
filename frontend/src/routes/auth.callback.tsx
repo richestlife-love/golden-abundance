@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { rootRoute } from "./__root";
 import { getSupabaseClient } from "../lib/supabase";
 import { parseReturnTo } from "../lib/returnTo";
+import { pushToast } from "../ui/toasts";
 
 interface CallbackSearch {
   returnTo?: string;
@@ -23,7 +24,18 @@ function AuthCallbackRoute() {
         window.location.search,
       );
       if (cancelled) return;
-      navigate({ to: error ? "/sign-in" : (search.returnTo ?? "/") });
+      if (error) {
+        // Surface the failure so the user isn't left staring at a spinner
+        // that vanishes into /sign-in without explanation. TODO(phase-7b):
+        // also send to Sentry with the supabase error code as a tag.
+        pushToast({
+          kind: "error",
+          message: `登入失敗：${error.message || "請再試一次"}`,
+        });
+        navigate({ to: "/sign-in" });
+        return;
+      }
+      navigate({ to: search.returnTo ?? "/" });
     })();
     return () => {
       cancelled = true;

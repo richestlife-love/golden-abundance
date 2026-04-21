@@ -6,23 +6,29 @@ import { AuthProvider } from "../auth/session";
 import { UIStateProvider } from "../ui/UIStateProvider";
 import { createAppRouter, setRouterRef } from "../router";
 import { makeTestQueryClient } from "./queryClient";
-import { makeFakeSupabase, makeSession } from "./supabase-mock";
+import { makeFakeSupabase, makeSession, type FakeSupabaseHandle } from "./supabase-mock";
 import { setSupabaseClientForTesting } from "../lib/supabase";
 
 export interface RenderRouteOpts {
   /** Seed a Supabase session before mounting. Defaults to "signed-out". */
   session?: "signed-in" | "signed-out";
+  /** Hook to configure the fake Supabase client before the tree renders
+   *  (e.g. arm `nextExchangeError` so the callback route's first effect
+   *  fails). Runs after `session` seeding. */
+  configureFake?: (fake: FakeSupabaseHandle) => void;
 }
 
 export interface RenderRouteResult {
   router: ReturnType<typeof createAppRouter>;
   dom: ReturnType<typeof render>;
+  fake: FakeSupabaseHandle;
 }
 
 export function renderRoute(path: string, opts: RenderRouteOpts = {}): RenderRouteResult {
   const fake = makeFakeSupabase();
   setSupabaseClientForTesting(fake.client);
   if (opts.session === "signed-in") fake.setSession(makeSession());
+  opts.configureFake?.(fake);
 
   const queryClient = makeTestQueryClient();
   const router = createAppRouter({
@@ -42,7 +48,7 @@ export function renderRoute(path: string, opts: RenderRouteOpts = {}): RenderRou
       </AuthProvider>
     </QueryClientProvider>,
   );
-  return { router, dom };
+  return { router, dom, fake };
 }
 
 export async function expectScreen(

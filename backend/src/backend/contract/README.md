@@ -13,8 +13,6 @@ from backend.contract import (
     Paginated, UserRef, TeamRef,
     # User
     User, ProfileCreate, ProfileUpdate,
-    # Auth
-    GoogleAuthRequest, AuthResponse,
     # Task
     Task, TaskStep, TeamChallengeProgress,
     InterestFormBody, TicketFormBody, SubmitBody,
@@ -28,16 +26,16 @@ from backend.contract import (
 )
 ```
 
-`TokenClaims` (JWT payload shape) is intentionally **not** re-exported —
-it describes what the backend should encode in the access token for
-documentation purposes only. Import it from `backend.contract.auth` if
-you need the schema.
+Auth is owned by Supabase (frontend SDK); the backend exposes
+`SupabaseClaims` via `backend.contract` for type-hinting JWT payloads it
+receives, but no request/response auth shape is re-exported because the
+backend never issues tokens.
 
 ## Modules
 
 | File             | Contents                                                                         |
 |------------------|----------------------------------------------------------------------------------|
-| `auth.py`        | `GoogleAuthRequest`, `AuthResponse`, `TokenClaims`                               |
+| `auth.py`        | `SupabaseClaims`                                                                 |
 | `common.py`      | `UserRef`, `TeamRef`, `Paginated[T]`                                             |
 | `news.py`        | `NewsItem`                                                                       |
 | `leaderboard.py` | `UserLeaderboardEntry`, `TeamLeaderboardEntry`, `LeaderboardPeriod`              |

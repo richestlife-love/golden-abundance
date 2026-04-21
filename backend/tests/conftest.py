@@ -10,7 +10,6 @@ clean.
 """
 
 import asyncio
-import os
 import pathlib
 import time
 from collections.abc import AsyncIterator, Iterator
@@ -38,7 +37,6 @@ from backend.server import create_app
 _BACKEND_DIR = pathlib.Path(__file__).parent.parent
 
 POSTGRES_IMAGE = "postgres:17-alpine"
-TEST_JWT_SECRET = "test-only-secret-32-chars-minimum"
 
 SUPABASE_TEST_URL = "https://test-ref.supabase.co"
 SUPABASE_TEST_AUD = "authenticated"
@@ -75,8 +73,7 @@ async def engine(
     with pytest.MonkeyPatch.context() as mp:
         mp.setenv("DATABASE_URL", url)
         mp.setenv("APP_ENV", "test")
-        if "JWT_SECRET" not in os.environ:
-            mp.setenv("JWT_SECRET", TEST_JWT_SECRET)
+        mp.setenv("SUPABASE_URL", SUPABASE_TEST_URL)
         get_settings.cache_clear()
         get_engine.cache_clear()
         get_session_maker.cache_clear()

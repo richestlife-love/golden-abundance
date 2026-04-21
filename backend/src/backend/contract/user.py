@@ -14,9 +14,7 @@ from backend.contract.common import StrictModel
 
 
 class User(StrictModel):
-    """Authenticated caller's profile. Returned by GET /me and embedded
-    in AuthResponse.user on sign-in.
-    """
+    """Authenticated caller's profile. Returned by GET /me."""
 
     id: UUID
     display_id: str = Field(pattern=r"^U[A-Z0-9]{3,7}$")

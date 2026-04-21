@@ -8,16 +8,12 @@ model names re-exported from `backend.contract`.
 
 ## Auth
 
-### `POST /auth/google`
-- Auth: —
-- Body: `GoogleAuthRequest`
-- 200: `AuthResponse`
-- 401: invalid/expired `id_token`
-
-### `POST /auth/logout`
-- Auth: B
-- Body: none
-- 204 — best-effort; tokens expire naturally (no server-side revocation list)
+Auth is owned entirely by Supabase (frontend SDK). The backend has no
+login or logout endpoint; it verifies incoming `Authorization: Bearer`
+JWTs against Supabase's JWKS on every authed request. First call for a
+never-seen `sub` auto-materializes a `UserRow` with
+`profile_complete=False`. See `backend/auth/supabase.py` and the
+`SupabaseClaims` contract model.
 
 ## Me
 

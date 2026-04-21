@@ -1,16 +1,19 @@
 """FastAPI dependency that resolves the current UserRow from a Bearer
-token. Raises 401 on missing, malformed, expired, or unknown-user tokens.
+token. Raises 401 on missing, malformed, expired, or JWKS-mismatched
+tokens. On first authed request for a never-seen Supabase ``sub``, the
+matching ``UserRow`` is upserted so downstream routes always have an
+app-side row to work against.
 """
 
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.auth.jwt import decode_token
+from backend.auth.supabase import verify_supabase_jwt
 from backend.db.models import UserRow
 from backend.db.session import get_session
+from backend.services.user import upsert_user_by_supabase_identity
 
 _UNAUTHORIZED = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -26,15 +29,21 @@ async def current_user(
     if not authorization or not authorization.lower().startswith("bearer "):
         raise _UNAUTHORIZED
     token = authorization.split(" ", 1)[1].strip()
+
     try:
-        claims = decode_token(token)
+        claims = verify_supabase_jwt(token)
     except ValueError as exc:
         raise _UNAUTHORIZED from exc
-    try:
-        user_id = UUID(claims["sub"])
-    except (KeyError, ValueError) as exc:
-        raise _UNAUTHORIZED from exc
-    user = await session.get(UserRow, user_id)
+
+    user = await session.get(UserRow, claims.sub)
     if user is None:
-        raise _UNAUTHORIZED
+        user = await upsert_user_by_supabase_identity(
+            session,
+            auth_user_id=claims.sub,
+            email=str(claims.email),
+        )
+        # Commit inside the dep so a freshly-materialized UserRow persists
+        # even if the downstream handler fails. This is the only commit
+        # current_user performs; the cached-user path is read-only.
+        await session.commit()
     return user

@@ -37,3 +37,27 @@ def test_cors_origins_parses_comma_separated(
         "http://a.example",
         "http://b.example",
     ]
+
+
+def test_settings_requires_supabase_url_in_prod(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("APP_ENV", "prod")
+    monkeypatch.delenv("SUPABASE_URL", raising=False)
+    monkeypatch.setenv("JWT_SECRET", "x" * 32)  # transitional while JWT_SECRET still exists
+
+    get_settings.cache_clear()
+    with pytest.raises(RuntimeError, match="SUPABASE_URL"):
+        get_settings()
+
+
+def test_settings_derives_jwks_url_from_supabase_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("SUPABASE_URL", "https://abc.supabase.co")
+    monkeypatch.setenv("JWT_SECRET", "x" * 32)
+    get_settings.cache_clear()
+    settings = get_settings()
+    assert settings.supabase_jwks_url == "https://abc.supabase.co/auth/v1/.well-known/jwks.json"
+    assert settings.supabase_issuer == "https://abc.supabase.co/auth/v1"
+    assert settings.supabase_jwt_aud == "authenticated"

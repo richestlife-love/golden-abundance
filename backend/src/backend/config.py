@@ -5,18 +5,16 @@ process-wide cached instance so FastAPI deps can depend on it without
 re-reading the environment on every call.
 
 Boot safety: ``get_settings()`` refuses to return a production-env
-instance still using the baked-in dev ``JWT_SECRET`` — a deploy that
-forgets to set ``JWT_SECRET`` fails fast at app import rather than
-silently issuing tokens signed with a public secret.
+instance missing ``SUPABASE_URL`` — a deploy that forgets to set it
+fails fast at app import rather than silently accepting unverified
+tokens.
 """
 
-from functools import lru_cache
+from functools import cached_property, lru_cache
 from typing import Literal
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-_DEV_JWT_SECRET = "dev-only-change-me-please-in-prod"
 
 
 class Settings(BaseSettings):
@@ -31,29 +29,40 @@ class Settings(BaseSettings):
         default="postgresql+psycopg://app:app@localhost:5432/app",
         description="SQLAlchemy URL (psycopg3 driver).",
     )
-    jwt_secret: str = Field(default=_DEV_JWT_SECRET, min_length=32)
-    jwt_ttl_seconds: int = Field(default=86400, ge=60)
+    supabase_url: str | None = Field(
+        default=None,
+        description="Supabase project base URL, e.g. https://<ref>.supabase.co. Required when APP_ENV=prod.",
+    )
+    supabase_jwt_aud: str = Field(default="authenticated")
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:5173",
             "http://localhost:8000",
         ],
     )
+    app_env: Literal["dev", "test", "prod"] = "dev"
 
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _parse_cors_origins(cls, v: object) -> object:
-        """Accept either JSON array or comma-separated env-var form."""
         if isinstance(v, str):
             return [s.strip() for s in v.split(",") if s.strip()]
         return v
 
-    app_env: Literal["dev", "test", "prod"] = "dev"
+    @cached_property
+    def supabase_issuer(self) -> str:
+        if self.supabase_url is None:
+            raise RuntimeError("SUPABASE_URL is not configured")
+        return f"{self.supabase_url.rstrip('/')}/auth/v1"
+
+    @cached_property
+    def supabase_jwks_url(self) -> str:
+        return f"{self.supabase_issuer}/.well-known/jwks.json"
 
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     settings = Settings()
-    if settings.app_env == "prod" and settings.jwt_secret == _DEV_JWT_SECRET:
-        raise RuntimeError("JWT_SECRET must be set to a non-default value when APP_ENV=prod")
+    if settings.app_env == "prod" and settings.supabase_url is None:
+        raise RuntimeError("SUPABASE_URL must be set when APP_ENV=prod")
     return settings

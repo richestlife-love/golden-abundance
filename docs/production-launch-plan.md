@@ -69,6 +69,8 @@ Phase 6 replaces the Phase 5b email-stub with real Supabase Auth:
 - [x] Provision managed Postgres
 - [x] Configure env vars per environment
 
+Code-side complete (tag `phase-7`: Dockerfile, Sentry backend + frontend, Vite source-map upload, GitHub Actions CI). Dashboard / infra steps (Google Cloud OAuth, Supabase role, Railway + Vercel projects, DNS, Sentry projects, UptimeRobot, branch protection, launch-day smoke) are tracked in [`phase-7-launch-runbook.md`](phase-7-launch-runbook.md).
+
 ## Key tradeoffs
 - **Reuse vs. rebuild** — keep components as-is; wrap new architecture around them
 - **Auth lift** — Clerk/Supabase = hours; DIY OAuth = ~a week

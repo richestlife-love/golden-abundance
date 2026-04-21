@@ -15,6 +15,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/((?!assets/|auth/callback).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ]
 }

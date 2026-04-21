@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { afterAll, afterEach, beforeAll } from "vitest";
 import { server } from "./msw/server";
+import { setSupabaseClientForTesting } from "../lib/supabase";
 
 // Node 22+ ships an experimental `localStorage` global that shadows jsdom's
 // implementation and lacks the standard Storage methods (`getItem`,
@@ -51,5 +52,6 @@ beforeAll(() => {
 afterEach(() => {
   server.resetHandlers();
   window.localStorage.clear();
+  setSupabaseClientForTesting(null);
 });
 afterAll(() => server.close());

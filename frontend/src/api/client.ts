@@ -1,5 +1,5 @@
-import { tokenStore } from "../auth/token";
 import { ApiError } from "./errors";
+import { getSupabaseClient } from "../lib/supabase";
 
 type SessionExpiredHandler = ((opts: { returnTo: string }) => void) | null;
 
@@ -11,12 +11,21 @@ export function setSessionExpiredHandler(fn: SessionExpiredHandler): void {
 
 const BASE = "/api/v1";
 
+async function currentAccessToken(): Promise<string | null> {
+  // Async localStorage read via the SDK. Sub-millisecond in practice —
+  // the SDK caches the session in memory and only touches storage on
+  // startup or cross-tab sync.
+  const supabase = getSupabaseClient();
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const token = tokenStore.get();
+  const token = await currentAccessToken();
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...((init.headers as Record<string, string>) ?? {}),
   };
+  if (init.body != null) headers["Content-Type"] = "application/json";
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const res = await fetch(`${BASE}${path}`, { ...init, headers });

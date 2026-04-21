@@ -1,17 +1,28 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "../../test/msw/server";
 import { apiFetch, setSessionExpiredHandler } from "../client";
 import { ApiError } from "../errors";
-import { tokenStore } from "../../auth/token";
+import {
+  makeFakeSupabase,
+  makeSession,
+  type FakeSupabaseHandle,
+} from "../../test/supabase-mock";
+import { setSupabaseClientForTesting } from "../../lib/supabase";
+
+let fake: FakeSupabaseHandle;
+
+beforeEach(() => {
+  fake = makeFakeSupabase();
+  setSupabaseClientForTesting(fake.client);
+});
 
 afterEach(() => {
   setSessionExpiredHandler(null);
-  tokenStore.clear();
 });
 
 describe("apiFetch", () => {
-  it("sends Authorization: Bearer when token is set", async () => {
+  it("sends Authorization: Bearer when session is active", async () => {
     let seenAuth: string | null = null;
     server.use(
       http.get("/api/v1/me", ({ request }) => {
@@ -19,12 +30,12 @@ describe("apiFetch", () => {
         return HttpResponse.json({ ok: true });
       }),
     );
-    tokenStore.set("token-abc");
+    fake.setSession(makeSession("token-abc"));
     await apiFetch("/me");
     expect(seenAuth).toBe("Bearer token-abc");
   });
 
-  it("omits Authorization when no token", async () => {
+  it("omits Authorization when no session", async () => {
     let seenAuth: string | null = "<unset>";
     server.use(
       http.get("/api/v1/me", ({ request }) => {
@@ -43,8 +54,8 @@ describe("apiFetch", () => {
   });
 
   it("returns undefined on 204", async () => {
-    server.use(http.post("/api/v1/auth/logout", () => new HttpResponse(null, { status: 204 })));
-    const data = await apiFetch<void>("/auth/logout", { method: "POST" });
+    server.use(http.post("/api/v1/ping", () => new HttpResponse(null, { status: 204 })));
+    const data = await apiFetch<void>("/ping", { method: "POST" });
     expect(data).toBeUndefined();
   });
 
@@ -76,12 +87,11 @@ describe("apiFetch", () => {
   it("calls registered session-expired handler on 401", async () => {
     const handler = vi.fn();
     setSessionExpiredHandler(handler);
+    fake.setSession(makeSession());
     server.use(http.get("/api/v1/me", () => new HttpResponse(null, { status: 401 })));
     await expect(apiFetch("/me")).rejects.toBeInstanceOf(ApiError);
     expect(handler).toHaveBeenCalledTimes(1);
-    expect(handler).toHaveBeenCalledWith({
-      returnTo: expect.any(String),
-    });
+    expect(handler).toHaveBeenCalledWith({ returnTo: expect.any(String) });
   });
 
   it("does not throw when no 401 handler is registered", async () => {

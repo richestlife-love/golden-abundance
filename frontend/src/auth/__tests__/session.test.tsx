@@ -1,21 +1,23 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { act, render, screen, waitFor } from "@testing-library/react";
-import { http, HttpResponse } from "msw";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { server } from "../../test/msw/server";
 import { AuthProvider, useAuth } from "../session";
-import { tokenStore } from "../token";
+import {
+  makeFakeSupabase,
+  makeSession,
+  type FakeSupabaseHandle,
+} from "../../test/supabase-mock";
+import { setSupabaseClientForTesting } from "../../lib/supabase";
 import { qk } from "../../queries/keys";
-import * as f from "../../test/msw/fixtures";
 
-function probe(qc: QueryClient) {
+function probe(qc: QueryClient, onSignIn?: (returnTo?: string) => void) {
   function Probe() {
     const { isSignedIn, signIn, signOut } = useAuth();
     return (
       <div>
         <div data-testid="signed">{String(isSignedIn)}</div>
-        <button onClick={() => signIn("jet@demo.ga")}>in</button>
-        <button onClick={() => signOut()}>out</button>
+        <button onClick={() => void signIn(onSignIn ? "/tasks/T1" : undefined)}>in</button>
+        <button onClick={() => void signOut()}>out</button>
       </div>
     );
   }
@@ -28,47 +30,80 @@ function probe(qc: QueryClient) {
   );
 }
 
+let fake: FakeSupabaseHandle;
+
+beforeEach(() => {
+  fake = makeFakeSupabase();
+  setSupabaseClientForTesting(fake.client);
+});
+
 afterEach(() => {
-  tokenStore.clear();
+  setSupabaseClientForTesting(null);
 });
 
 describe("AuthProvider", () => {
-  it("starts signed out when no token in localStorage", () => {
+  it("starts signed out when there is no Supabase session", async () => {
     const qc = new QueryClient();
     probe(qc);
-    expect(screen.getByTestId("signed")).toHaveTextContent("false");
+    await waitFor(() => expect(screen.getByTestId("signed")).toHaveTextContent("false"));
   });
 
-  it("starts signed in when a token already exists", () => {
-    tokenStore.set("existing");
+  it("starts signed in when Supabase already has a session", async () => {
+    fake.setSession(makeSession());
     const qc = new QueryClient();
     probe(qc);
-    expect(screen.getByTestId("signed")).toHaveTextContent("true");
+    await waitFor(() => expect(screen.getByTestId("signed")).toHaveTextContent("true"));
   });
 
-  it("signIn stores the token and seeds qk.me", async () => {
-    server.use(http.post("/api/v1/auth/google", () => HttpResponse.json(f.authResponseJet)));
+  it("signIn() calls supabase.auth.signInWithOAuth with Google + callback URL", async () => {
     const qc = new QueryClient();
     probe(qc);
     act(() => {
       screen.getByText("in").click();
     });
-    await waitFor(() => expect(screen.getByTestId("signed")).toHaveTextContent("true"));
-    expect(tokenStore.get()).toBe(f.authResponseJet.access_token);
-    expect(qc.getQueryData(qk.me)).toEqual(f.userJet);
+    await waitFor(() => expect(fake.signInCalls).toHaveLength(1));
+    expect(fake.signInCalls[0].provider).toBe("google");
+    expect(fake.signInCalls[0].redirectTo).toMatch(/\/auth\/callback$/);
   });
 
-  it("signOut clears the token and the cache", async () => {
-    tokenStore.set("existing");
+  it("signIn(returnTo) encodes returnTo in the callback URL", async () => {
     const qc = new QueryClient();
-    qc.setQueryData(qk.me, f.userJet);
+    probe(qc, () => {});
+    act(() => {
+      screen.getByText("in").click();
+    });
+    await waitFor(() => expect(fake.signInCalls).toHaveLength(1));
+    const url = new URL(fake.signInCalls[0].redirectTo!);
+    expect(url.pathname).toBe("/auth/callback");
+    expect(url.searchParams.get("returnTo")).toBe("/tasks/T1");
+  });
+
+  it("signOut() calls supabase.auth.signOut and clears qk.me", async () => {
+    fake.setSession(makeSession());
+    const qc = new QueryClient();
+    qc.setQueryData(qk.me, { id: "x" });
     probe(qc);
-    server.use(http.post("/api/v1/auth/logout", () => new HttpResponse(null, { status: 204 })));
+    await waitFor(() => expect(screen.getByTestId("signed")).toHaveTextContent("true"));
+
     act(() => {
       screen.getByText("out").click();
     });
+
     await waitFor(() => expect(screen.getByTestId("signed")).toHaveTextContent("false"));
-    expect(tokenStore.get()).toBeNull();
+    expect(fake.signOutCalls).toBe(1);
     expect(qc.getQueryData(qk.me)).toBeUndefined();
+  });
+
+  it("reacts to external auth state changes (e.g. expiry from another tab)", async () => {
+    fake.setSession(makeSession());
+    const qc = new QueryClient();
+    probe(qc);
+    await waitFor(() => expect(screen.getByTestId("signed")).toHaveTextContent("true"));
+
+    act(() => {
+      fake.setSession(null);
+    });
+
+    await waitFor(() => expect(screen.getByTestId("signed")).toHaveTextContent("false"));
   });
 });

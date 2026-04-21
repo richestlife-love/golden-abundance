@@ -1,6 +1,6 @@
 import { createRoute, redirect, useNavigate } from "@tanstack/react-router";
 import LandingScreen from "../screens/LandingScreen";
-import { tokenStore } from "../auth/token";
+import { getSupabaseClient } from "../lib/supabase";
 import { meQueryOptions } from "../queries/me";
 import { rootRoute } from "./__root";
 
@@ -14,7 +14,8 @@ export const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   beforeLoad: async ({ context }) => {
-    if (!tokenStore.get()) return;
+    const { data } = await getSupabaseClient().auth.getSession();
+    if (!data.session) return;
     const me = await context.queryClient.ensureQueryData(meQueryOptions());
     throw redirect({ to: me.profile_complete ? "/home" : "/welcome" });
   },

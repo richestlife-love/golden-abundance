@@ -1,14 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderRoute } from "../../test/renderRoute";
-import { tokenStore } from "../../auth/token";
 
 describe("GoogleAuthScreen via /sign-in", () => {
-  it("clicking a demo account signs in and lands on /home", async () => {
-    const { router } = renderRoute("/sign-in");
-    const btn = await screen.findByRole("button", { name: /金杰/ });
+  it("clicking the Google button initiates OAuth redirect", async () => {
+    renderRoute("/sign-in");
+    const btn = await screen.findByRole("button", { name: /繼續使用 Google 登入/ });
     fireEvent.click(btn);
-    await waitFor(() => expect(tokenStore.get()).toBeTruthy());
-    await waitFor(() => expect(router.state.location.pathname).toBe("/home"));
+    // The fake Supabase client records signInWithOAuth calls — since the
+    // component doesn't expose them directly, we assert the UI flips into
+    // the pending state (spinner visible, button gone). That plus the
+    // session-test coverage of signInCalls is sufficient.
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: /繼續使用 Google 登入/ }),
+      ).not.toBeInTheDocument();
+    });
   });
 });

@@ -12,7 +12,7 @@ clean.
 import asyncio
 import pathlib
 import time
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Callable, Iterator
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
@@ -293,11 +293,17 @@ def _bind_sign_in_mint(mint_access_token: Callable[..., str]) -> Iterator[None]:
 def stub_jwks(
     rsa_test_keypair: tuple[str, str],
     monkeypatch: pytest.MonkeyPatch,
-) -> Iterator[None]:
+) -> None:
     """Route Supabase JWKS lookups to the session's test public key.
 
     Applied autouse because every integration test that mints a token
-    needs it; opting out is as simple as not minting a token.
+    needs it; opting out is as simple as not minting a token. The
+    stubbed client returns an object with the expected ``.key``
+    attribute on ``get_signing_key_from_jwt`` so PyJWT's verifier can
+    proceed without a real network fetch.
+
+    No explicit teardown: ``monkeypatch`` is function-scoped and
+    automatically undoes both ``setenv`` and ``setattr`` after the test.
     """
     _private_pem, public_pem = rsa_test_keypair
 
@@ -308,26 +314,16 @@ def stub_jwks(
     # after setenv to guarantee the next `get_settings()` call re-reads env.
     get_settings.cache_clear()
 
-    # Patch the JWKS client AFTER auth/supabase.py exists (Task B2). Until
-    # then this monkeypatch target doesn't exist yet; guard with a try.
-    try:
-        from backend.auth import supabase as _supabase_mod  # noqa: F401
+    pub_key = serialization.load_pem_public_key(public_pem.encode())
 
-        pub_key = serialization.load_pem_public_key(public_pem.encode())
+    class _StubJWKClient:
+        def get_signing_key_from_jwt(self, _token: str) -> object:
+            class _Key:
+                key = pub_key
 
-        class _StubJWKClient:
-            def get_signing_key_from_jwt(self, _token: str) -> object:
-                class _Key:
-                    key = pub_key
+            return _Key()
 
-                return _Key()
-
-        monkeypatch.setattr(
-            "backend.auth.supabase._jwks_client",
-            lambda: _StubJWKClient(),
-        )
-    except ImportError:
-        # Module hasn't been written yet; no-op until Task C2.
-        pass
-
-    yield
+    monkeypatch.setattr(
+        "backend.auth.supabase._jwks_client",
+        lambda: _StubJWKClient(),
+    )

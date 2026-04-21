@@ -10,10 +10,10 @@ truth lives in seed.py.
 import json
 import sys
 
-from backend.seed import DEMO_USERS
+from backend.seed import DEMO_USERS, _DemoUser
 
 
-def render_label(spec: dict[str, str]) -> str:
+def render_label(spec: _DemoUser) -> str:
     en = spec.get("en_name")
     return f"{spec['zh_name']} ({en})" if en else spec["zh_name"]
 

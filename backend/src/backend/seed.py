@@ -13,6 +13,7 @@ on the unique constraint, which is acceptable for a dev seed.
 
 import asyncio
 from datetime import UTC, datetime, timedelta
+from typing import NotRequired, TypedDict
 from uuid import UUID
 
 from sqlalchemy import select
@@ -32,7 +33,22 @@ from backend.services.team import create_led_team
 from backend.services.team_join import JoinConflictError, create_join_request
 from backend.services.user import upsert_user_by_supabase_identity
 
-DEMO_USERS: list[dict[str, str | UUID]] = [
+
+class _DemoUser(TypedDict):
+    user_id: UUID
+    email: str
+    zh_name: str
+    en_name: NotRequired[str]
+    nickname: NotRequired[str]
+    phone: str
+    phone_code: str
+    line_id: NotRequired[str]
+    telegram_id: NotRequired[str]
+    country: str
+    location: str
+
+
+DEMO_USERS: list[_DemoUser] = [
     {
         "user_id": UUID(int=1),
         "email": "jet@demo.ga",

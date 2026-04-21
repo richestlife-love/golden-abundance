@@ -29,18 +29,18 @@ def test_verify_rejects_expired_token(mint_access_token) -> None:
 
 def test_verify_rejects_wrong_issuer(mint_access_token) -> None:
     token = mint_access_token(iss="https://evil.example.com/auth/v1")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"(?i)issuer"):
         verify_supabase_jwt(token)
 
 
 def test_verify_rejects_wrong_audience(mint_access_token) -> None:
     token = mint_access_token(aud="service_role")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"(?i)audience"):
         verify_supabase_jwt(token)
 
 
 def test_verify_rejects_malformed_token() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"."):
         verify_supabase_jwt("not.a.jwt")
 
 
@@ -60,7 +60,7 @@ def test_verify_rejects_alg_none() -> None:
         key="",
         algorithm="none",
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"."):
         verify_supabase_jwt(forged)
 
 
@@ -80,5 +80,5 @@ def test_verify_rejects_hs256_signed_token() -> None:
         key="guessed-secret",
         algorithm="HS256",
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"."):
         verify_supabase_jwt(forged)

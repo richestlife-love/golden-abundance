@@ -6,7 +6,6 @@ type Task = components["schemas"]["Task"];
 type Reward = components["schemas"]["Reward"];
 type NewsItem = components["schemas"]["NewsItem"];
 type MeTeamsResponse = components["schemas"]["MeTeamsResponse"];
-type AuthResponse = components["schemas"]["AuthResponse"];
 
 export const userJet: User = {
   id: "00000000-0000-0000-0000-000000000001",
@@ -162,11 +161,3 @@ export const tasksList: Task[] = [taskT1, taskT2, taskT3, taskT4];
 
 export const rewardsList: Reward[] = [];
 export const newsList: NewsItem[] = [];
-
-export const authResponseJet: AuthResponse = {
-  access_token: "test-token-jet",
-  token_type: "bearer",
-  expires_in: 86400,
-  user: userJet,
-  profile_complete: true,
-};

@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import ProfileSetupForm from "../screens/ProfileSetupForm";
 import { useCompleteProfile } from "../mutations/me";
 import { useAuth } from "../auth/session";
-import { tokenStore } from "../auth/token";
+import { getSupabaseClient } from "../lib/supabase";
 import { meQueryOptions } from "../queries/me";
 import { rootRoute } from "./__root";
 
@@ -40,7 +40,8 @@ export const welcomeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/welcome",
   beforeLoad: async ({ context, location }) => {
-    if (!tokenStore.get()) {
+    const { data } = await getSupabaseClient().auth.getSession();
+    if (!data.session) {
       throw redirect({
         to: "/sign-in",
         search: { returnTo: location.href },

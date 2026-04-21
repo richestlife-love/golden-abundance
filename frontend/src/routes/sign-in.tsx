@@ -1,7 +1,7 @@
 import { createRoute, redirect, useNavigate, useSearch } from "@tanstack/react-router";
 import GoogleAuthScreen from "../screens/GoogleAuthScreen";
 import { useAuth } from "../auth/session";
-import { tokenStore } from "../auth/token";
+import { getSupabaseClient } from "../lib/supabase";
 import { meQueryOptions } from "../queries/me";
 import { rootRoute } from "./__root";
 
@@ -16,12 +16,11 @@ function SignInRoute() {
   return (
     <GoogleAuthScreen
       onCancel={() => navigate({ to: "/" })}
-      onSelectAccount={async (email) => {
-        await signIn(email);
-        // Navigate back through the index guard so the me redirect chain
-        // (/home vs /welcome) picks the right destination — avoids a stale
-        // /sign-in screen after a successful token exchange.
-        navigate({ to: search.returnTo ?? "/" });
+      onSignIn={async () => {
+        // `signIn` triggers a top-level browser redirect. Control does
+        // not resume here after success; if the redirect is a no-op
+        // (e.g. provider unconfigured), the user stays on /sign-in.
+        await signIn(search.returnTo);
       }}
     />
   );
@@ -34,7 +33,8 @@ export const signInRoute = createRoute({
     returnTo: typeof raw.returnTo === "string" ? raw.returnTo : undefined,
   }),
   beforeLoad: async ({ context }) => {
-    if (!tokenStore.get()) return;
+    const { data } = await getSupabaseClient().auth.getSession();
+    if (!data.session) return;
     const me = await context.queryClient.ensureQueryData(meQueryOptions());
     throw redirect({ to: me.profile_complete ? "/home" : "/welcome" });
   },

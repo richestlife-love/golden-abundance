@@ -9,6 +9,7 @@ import { rootRoute } from "./routes/__root";
 import { indexRoute } from "./routes/index";
 import { authedRoute } from "./routes/_authed";
 import { signInRoute } from "./routes/sign-in";
+import { authCallbackRoute } from "./routes/auth.callback";
 import { welcomeRoute } from "./routes/welcome";
 import { homeRoute } from "./routes/_authed.home";
 import { leaderboardRoute } from "./routes/_authed.leaderboard";
@@ -23,6 +24,7 @@ import { profileEditRoute } from "./routes/_authed.me.profile.edit";
 const routeTree = rootRoute.addChildren([
   indexRoute,
   signInRoute,
+  authCallbackRoute,
   welcomeRoute,
   authedRoute.addChildren([
     homeRoute,

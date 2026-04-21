@@ -64,10 +64,10 @@ Phase 6 replaces the Phase 5b email-stub with real Supabase Auth:
 - **Hardening (post-6b):** `current_user` retries on `IntegrityError` for the concurrent first-sign-in race; `parseReturnTo` guards route `returnTo` params against open-redirect; `/auth/callback` surfaces exchange errors via toast; `vercel.json` rewrite now includes `/auth/callback` in the SPA fallback; `PyJWKClient` drops `cache_keys=True` so key rotations propagate within the JWKS lifespan.
 
 ## Phase 7 — Deploy
-- [ ] Deploy frontend (Vercel / Netlify)
-- [ ] Deploy backend (Railway / Fly / Render)
-- [ ] Provision managed Postgres
-- [ ] Configure env vars per environment
+- [x] Deploy frontend (Vercel / Netlify)
+- [x] Deploy backend (Railway / Fly / Render)
+- [x] Provision managed Postgres
+- [x] Configure env vars per environment
 
 ## Key tradeoffs
 - **Reuse vs. rebuild** — keep components as-is; wrap new architecture around them

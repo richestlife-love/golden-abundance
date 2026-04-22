@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.config import get_settings
+from backend.observability import scrub_sensitive_bodies
 from backend.routers import health, leaderboard, me, news, tasks, teams
 from backend.services.pagination import InvalidCursorError
 
@@ -27,6 +28,7 @@ def create_app() -> FastAPI:
             traces_sample_rate=0.1,
             profiles_sample_rate=0.0,
             send_default_pii=False,
+            before_send=scrub_sensitive_bodies,
         )
 
     app = FastAPI(

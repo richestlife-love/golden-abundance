@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     app_env: Literal["dev", "test", "prod"] = "dev"
     sentry_dsn: str | None = Field(default=None)
     app_release: str | None = Field(default=None)
+    rate_limit_disabled: bool = Field(
+        default=False,
+        description="Set to True in tests / CI to skip slowapi limits.",
+    )
 
     @field_validator("cors_origins", mode="before")
     @classmethod

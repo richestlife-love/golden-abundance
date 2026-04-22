@@ -4,7 +4,7 @@ POST /me/profile is idempotent only in the failing sense: a completed
 profile returns 409. This matches spec §1.2 (one-shot completion).
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,6 +26,7 @@ from backend.contract import (
 )
 from backend.db.models import TeamMembershipRow, TeamRow, UserRow
 from backend.db.session import get_session
+from backend.rate_limit import limiter
 from backend.services.reward import list_rewards_for
 from backend.services.task import list_caller_tasks
 from backend.services.team import create_led_team, row_to_contract_team
@@ -40,7 +41,9 @@ async def get_me(me: UserRow = Depends(current_user)) -> ContractUser:
 
 
 @router.post("/profile", response_model=MeProfileCreateResponse)
+@limiter.limit("10/minute")
 async def complete_profile(
+    request: Request,
     body: ProfileCreate,
     me: UserRow = Depends(current_user),
     session: AsyncSession = Depends(get_session),

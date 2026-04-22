@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth.dependencies import current_user
@@ -15,6 +15,7 @@ from backend.contract import (
 )
 from backend.db.models import TaskDefRow, UserRow
 from backend.db.session import get_session
+from backend.rate_limit import limiter
 from backend.services.task import (
     TaskSubmitError,
     row_to_contract_task,
@@ -37,7 +38,9 @@ async def get_task(
 
 
 @router.post("/{task_id}/submit", response_model=TaskSubmissionResponse)
+@limiter.limit("30/minute")
 async def submit(
+    request: Request,
     task_id: UUID,
     body: SubmitBody,
     me: UserRow = Depends(current_user),

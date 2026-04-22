@@ -74,6 +74,10 @@ async def engine(
         mp.setenv("DATABASE_URL", url)
         mp.setenv("APP_ENV", "test")
         mp.setenv("SUPABASE_URL", SUPABASE_TEST_URL)
+        # Rate limiting is enabled in prod but would flap tests that
+        # hit the same endpoint many times (e.g., idempotent loops).
+        # The dedicated test_rate_limit.py module opts back in.
+        mp.setenv("RATE_LIMIT_DISABLED", "1")
         get_settings.cache_clear()
         get_engine.cache_clear()
         get_session_maker.cache_clear()

@@ -4,7 +4,7 @@ separate handlers (D5 patch + E1-E3 join-request workflow).
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth.dependencies import current_user
@@ -21,6 +21,7 @@ from backend.contract import (
 )
 from backend.db.models import JoinRequestRow, TeamRow, UserRow
 from backend.db.session import get_session
+from backend.rate_limit import limiter
 from backend.services.team import (
     row_to_contract_team,
     search_team_refs,
@@ -52,7 +53,9 @@ async def _get_request_or_404(session: AsyncSession, *, req_id: UUID, team_id: U
 
 
 @router.get("", response_model=Paginated[TeamRef])
+@limiter.limit("30/minute")
 async def list_teams(
+    request: Request,
     q: str | None = None,
     topic: str | None = None,
     leader_display_id: str | None = None,

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth.dependencies import current_user
@@ -10,13 +10,16 @@ from backend.contract import (
 )
 from backend.db.models import UserRow
 from backend.db.session import get_session
+from backend.rate_limit import limiter
 from backend.services.leaderboard import leaderboard_teams, leaderboard_users
 
 router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 
 
 @router.get("/users", response_model=Paginated[UserLeaderboardEntry])
+@limiter.limit("60/minute")
 async def get_leaderboard_users(
+    request: Request,
     period: LeaderboardPeriod = "week",
     cursor: str | None = None,
     limit: int = Query(default=50, ge=1, le=100),
@@ -27,7 +30,9 @@ async def get_leaderboard_users(
 
 
 @router.get("/teams", response_model=Paginated[TeamLeaderboardEntry])
+@limiter.limit("60/minute")
 async def get_leaderboard_teams(
+    request: Request,
     period: LeaderboardPeriod = "week",
     cursor: str | None = None,
     limit: int = Query(default=50, ge=1, le=100),

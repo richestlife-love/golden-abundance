@@ -12,6 +12,11 @@ from fastapi.responses import JSONResponse
 
 from backend.config import get_settings
 from backend.observability import scrub_sensitive_bodies
+from backend.rate_limit import (
+    RateLimitExceeded,
+    rate_limit_exceeded_handler,
+    refresh_limiter_from_settings,
+)
 from backend.routers import health, leaderboard, me, news, tasks, teams
 from backend.services.pagination import InvalidCursorError
 
@@ -36,6 +41,8 @@ def create_app() -> FastAPI:
         version="0.1.0",
         description="Phase 7 backend — see backend/src/backend/contract/endpoints.md",
     )
+    app.state.limiter = refresh_limiter_from_settings()
+    app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
     # Auth is `Authorization: Bearer` only — no cookies — so
     # allow_credentials stays False. Methods and headers are enumerated
     # rather than wildcarded so a misconfigured frontend fails loudly

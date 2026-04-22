@@ -104,7 +104,6 @@ async def update_team(
         setattr(team, field_name, getattr(body, field_name))
     session.add(team)
     await session.commit()
-    await session.refresh(team)
     return await row_to_contract_team(session, team, caller_id=me.id)
 
 
@@ -124,7 +123,6 @@ async def request_to_join(
     except JoinConflictError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     await session.commit()
-    await session.refresh(req)
     return join_request_to_contract(req, me)
 
 
@@ -160,7 +158,6 @@ async def approve_request(
     req = await _get_request_or_404(session, req_id=req_id, team_id=team_id)
     await approve_join_request(session, team=team, req=req)
     await session.commit()
-    await session.refresh(team)
     return await row_to_contract_team(session, team, caller_id=me.id)
 
 

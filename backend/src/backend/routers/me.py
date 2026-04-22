@@ -89,7 +89,6 @@ async def patch_me(
         setattr(me, field_name, getattr(body, field_name))
     session.add(me)
     await session.commit()
-    await session.refresh(me)
     return row_to_contract_user(me)
 
 

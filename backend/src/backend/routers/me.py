@@ -76,34 +76,17 @@ async def complete_profile(
     )
 
 
-# Mass-assignment guard: the PATCH handler iterates this explicit
-# allowlist instead of spreading the whole model_dump. ``StrictModel``
-# with ``extra="forbid"`` already rejects unknown wire fields, but
-# pinning the list here means a future refactor that loosens the base
-# class can't silently open writes to ``profile_complete`` / ``id`` /
-# ``display_id`` (M8).
-_PROFILE_PATCHABLE: tuple[str, ...] = (
-    "zh_name",
-    "en_name",
-    "nickname",
-    "phone",
-    "phone_code",
-    "line_id",
-    "telegram_id",
-    "country",
-    "location",
-)
-
-
 @router.patch("", response_model=ContractUser)
 async def patch_me(
     body: ProfileUpdate,
     me: UserRow = Depends(current_user),
     session: AsyncSession = Depends(get_session),
 ) -> ContractUser:
-    for field_name in _PROFILE_PATCHABLE:
-        if field_name in body.model_fields_set:
-            setattr(me, field_name, getattr(body, field_name))
+    # ``ProfileUpdate`` inherits ``StrictModel(extra='forbid')`` — the
+    # field set is closed and ``id`` / ``display_id`` / ``profile_complete``
+    # cannot be smuggled in from the wire.
+    for field_name in body.model_fields_set:
+        setattr(me, field_name, getattr(body, field_name))
     session.add(me)
     await session.commit()
     await session.refresh(me)

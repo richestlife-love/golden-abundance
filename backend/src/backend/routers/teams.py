@@ -84,10 +84,6 @@ async def get_team(
     return await row_to_contract_team(session, team, caller_id=me.id)
 
 
-# Mass-assignment guard — see the parallel comment in routers/me.py.
-_TEAM_PATCHABLE: tuple[str, ...] = ("name", "alias", "topic")
-
-
 @router.patch("/{team_id}", response_model=ContractTeam)
 async def update_team(
     team_id: UUID,
@@ -101,9 +97,10 @@ async def update_team(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the team leader can update it",
         )
-    for field_name in _TEAM_PATCHABLE:
-        if field_name in body.model_fields_set:
-            setattr(team, field_name, getattr(body, field_name))
+    # ``TeamUpdate`` inherits ``StrictModel(extra='forbid')`` — the field
+    # set is closed, so no unknown columns can be written through here.
+    for field_name in body.model_fields_set:
+        setattr(team, field_name, getattr(body, field_name))
     session.add(team)
     await session.commit()
     await session.refresh(team)

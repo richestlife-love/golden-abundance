@@ -15,7 +15,7 @@ from backend.contract import User as ContractUser
 from backend.db.models import UserRow
 from backend.services.display_id import generate_user_display_id
 
-# Max retries for the display_id collision race (M2). Two concurrent
+# Max retries for the display_id collision race. Two concurrent
 # first-sign-ins with colliding email local-parts can both pick the
 # same candidate; the loser rolls back the savepoint and picks again
 # from a now-stale set. Three attempts is enough in practice — after
@@ -87,19 +87,32 @@ async def upsert_user_by_supabase_identity(
     raise last_exc
 
 
-def derive_user_name(row: UserRow) -> str:
-    """Display name fallback chain: zh_name → nickname → ``U{display_id}``.
+def derive_user_name_parts(*, zh_name: str | None, nickname: str | None, display_id: str) -> str:
+    """Display name fallback chain: ``zh_name`` → ``nickname`` → ``display_id``.
 
-    The final fallback used to be the email local-part, which leaked the
-    user's email identity (often their real name) to teammates via
-    ``UserRef.name``. Returning the opaque ``U…`` id instead protects
-    that without breaking any code that expects a non-empty string (L7).
+    The final fallback used to be the email local-part, which leaked
+    the user's email identity (often their real name) to teammates via
+    ``UserRef.name``. The opaque display_id protects that without
+    breaking callers that expect a non-empty string.
+
+    The parts form exists so callers working with projected SQL rows
+    (the leaderboard aggregate, which doesn't hydrate full ``UserRow``s)
+    can reuse the same logic without constructing a throwaway ORM
+    instance.
     """
-    if row.zh_name:
-        return row.zh_name
-    if row.nickname:
-        return row.nickname
-    return row.display_id
+    if zh_name:
+        return zh_name
+    if nickname:
+        return nickname
+    return display_id
+
+
+def derive_user_name(row: UserRow) -> str:
+    return derive_user_name_parts(
+        zh_name=row.zh_name,
+        nickname=row.nickname,
+        display_id=row.display_id,
+    )
 
 
 def row_to_contract_user(row: UserRow) -> ContractUser:

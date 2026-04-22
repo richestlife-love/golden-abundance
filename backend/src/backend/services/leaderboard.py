@@ -41,7 +41,7 @@ from backend.services.pagination import (
     decode_cursor,
     encode_cursor,
 )
-from backend.services.user import derive_user_name
+from backend.services.user import derive_user_name_parts
 
 
 def _since(period: LeaderboardPeriod) -> datetime:
@@ -161,7 +161,7 @@ async def leaderboard_users(
                 user=UserRef(
                     id=row.id,
                     display_id=row.display_id,
-                    name=_derive_name_from_cols(
+                    name=derive_user_name_parts(
                         zh_name=row.zh_name,
                         nickname=row.nickname,
                         display_id=row.display_id,
@@ -274,7 +274,7 @@ async def leaderboard_teams(
                     leader=UserRef(
                         id=row.leader_id,
                         display_id=row.leader_display_id,
-                        name=_derive_name_from_cols(
+                        name=derive_user_name_parts(
                             zh_name=row.leader_zh_name,
                             nickname=row.leader_nickname,
                             display_id=row.leader_display_id,
@@ -299,21 +299,3 @@ async def leaderboard_teams(
     return Paginated[TeamLeaderboardEntry](items=items, next_cursor=next_cursor)
 
 
-def _derive_name_from_cols(*, zh_name: str | None, nickname: str | None, display_id: str) -> str:
-    """Inline equivalent of ``services.user.derive_user_name`` for the
-    leaderboard's projected row shape (we don't hydrate a full UserRow
-    in SQL). Kept in sync with that function; if the fallback chain
-    changes, update both.
-    """
-    if zh_name:
-        return zh_name
-    if nickname:
-        return nickname
-    return display_id
-
-
-__all__ = [
-    "derive_user_name",  # re-exported so existing imports (tests) keep resolving
-    "leaderboard_teams",
-    "leaderboard_users",
-]

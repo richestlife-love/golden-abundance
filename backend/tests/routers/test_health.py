@@ -35,7 +35,7 @@ async def test_readyz_returns_503_when_engine_connect_fails(monkeypatch: pytest.
         async def __aexit__(self, *_: object) -> bool:
             return False
 
-    monkeypatch.setattr(health_mod, "get_engine", lambda: _BrokenEngine())
+    monkeypatch.setattr(health_mod, "get_engine", _BrokenEngine)
 
     app = create_app()
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:

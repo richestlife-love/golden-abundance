@@ -109,6 +109,7 @@ async def test_seed_runs_via_python_module_entrypoint(session: AsyncSession, pos
         capture_output=True,
         text=True,
         timeout=60,
+        check=False,  # we assert on returncode below so we can include stderr in the failure
     )
     assert r.returncode == 0, f"stderr: {r.stderr}"
     assert "seed: done" in r.stdout

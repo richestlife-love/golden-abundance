@@ -93,8 +93,11 @@ async def test_pending_index_allows_mixed_statuses(session: AsyncSession) -> Non
     [("points", -1), ("est_minutes", -1)],
 )
 async def test_task_defs_check_constraints(session: AsyncSession, col: str, value: int) -> None:
+    # S608: raw SQL is the point of this test — it exercises the CHECK
+    # constraint by bypassing the service layer. `value` is a test-only
+    # parametrize int, not user input.
     stmt = text(
-        "INSERT INTO task_defs (id, display_id, title, summary, description, tag, color,"
+        "INSERT INTO task_defs (id, display_id, title, summary, description, tag, color,"  # noqa: S608
         f"                       points, est_minutes, is_challenge, created_at)"
         " VALUES (gen_random_uuid(), 'TCK', 'x', 'x', 'x', '探索', '#000000',"
         f"        {value if col == 'points' else 0}, {value if col == 'est_minutes' else 0},"

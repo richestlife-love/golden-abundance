@@ -86,6 +86,14 @@ line-length = 120
 select = [
   "E", "F", "W", "I", "UP", "B", "SIM", "RUF", "N", "C4", "PTH",
   "ASYNC", "DTZ", "PT", "LOG", "G", "RET", "PIE", "TID",
+  # Pylint warnings — catches subprocess.run(check=...) missing, unnecessary
+  # lambda wrappers, etc. Currently low-signal but cheap to keep on.
+  "PLW",
+  # Pinpoint rules that caught real issues during the Phase-6a cleanup:
+  # D301 (missing r-prefix on docstrings with backslashes),
+  # ANN202 (private async helpers returning un-annotated tuples),
+  # S608 (raw-SQL CHECK tests — scoped via inline noqa where intentional).
+  "D301", "ANN202", "S608",
 ]
 # B008: FastAPI's `= Depends(...)` / `= Query(...)` defaults are idiomatic,
 #       not the anti-pattern this rule targets. Project-wide because Depends

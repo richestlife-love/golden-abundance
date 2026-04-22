@@ -112,7 +112,7 @@ async def test_current_user_recovers_from_concurrent_upsert_race(
                     display_id="URACER",
                     email=email,
                     profile_complete=False,
-                )
+                ),
             )
             await other.commit()
         raise IntegrityError("duplicate pk", {}, Exception())

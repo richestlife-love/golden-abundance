@@ -275,7 +275,4 @@ def stub_jwks(
 
             return _Key()
 
-    monkeypatch.setattr(
-        "backend.auth.supabase._jwks_client",
-        lambda: _StubJWKClient(),
-    )
+    monkeypatch.setattr("backend.auth.supabase._jwks_client", _StubJWKClient)

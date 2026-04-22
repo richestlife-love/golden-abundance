@@ -159,12 +159,12 @@ async def row_to_contract_team(session: AsyncSession, team: TeamRow, *, caller_i
 
 
 def _escape_like(s: str) -> str:
-    """Escape SQL LIKE metacharacters so user input matches literally.
+    r"""Escape SQL LIKE metacharacters so user input matches literally.
 
     Without this, a user searching for ``%`` matches every row and ``_``
     matches any single character — both a correctness bug and (combined
     with the unindexed sequential scan) a cheap DoS lever. The escape
-    character is ``\\``; callers must pass ``escape="\\\\"`` to the
+    character is ``\``; callers must pass ``escape="\\"`` to the
     ILIKE expression for Postgres to respect it.
     """
     return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")

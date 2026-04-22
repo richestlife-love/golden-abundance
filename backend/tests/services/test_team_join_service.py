@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.db.models import TeamMembershipRow
+from backend.db.models import TeamMembershipRow, TeamRow, UserRow
 from backend.services.team import create_led_team
 from backend.services.team_join import (
     JoinConflictError,
@@ -16,7 +16,7 @@ from backend.services.team_join import (
 from backend.services.user import upsert_user_by_supabase_identity
 
 
-async def _make_leader_and_outsider(session: AsyncSession):
+async def _make_leader_and_outsider(session: AsyncSession) -> tuple[UserRow, UserRow, TeamRow]:
     leader = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="leader@example.com")
     outsider = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="out@example.com")
     await session.flush()

@@ -1,12 +1,12 @@
 """Deterministic `display_id` generation for users and teams.
 
 User display_id: ``U`` + up to 7 [A-Z0-9] derived from the email local
-part. Collisions suffix a two-digit counter (01–99); the 100th collision
+part. Collisions suffix a two-digit counter (01-99); the 100th collision
 raises ``RuntimeError``. Matches the regex ``^U[A-Z0-9]{3,7}$`` from the
 contract.
 
 Team display_id: ``T-`` + up to 8 [A-Z0-9] from the user's display_id
-minus the leading ``U``, with the same 01–99 collision suffix and
+minus the leading ``U``, with the same 01-99 collision suffix and
 ``RuntimeError`` on exhaustion. Matches ``^T-[A-Z0-9]{3,10}$``.
 
 Phase-5 caveat: both functions run a SELECT-then-INSERT flow that is

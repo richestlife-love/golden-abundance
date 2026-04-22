@@ -118,7 +118,7 @@ DEMO_USERS: list[_DemoUser] = [
     },
 ]
 
-# γ-with-two-leaders fan-out: two pending requests each at jet and ami teams.
+# gamma-with-two-leaders fan-out: two pending requests each at jet and ami teams.
 # Exercises leader-approval UX (team-detail pending list) for Phase 4 plumbing.
 DEMO_FANOUT: list[tuple[str, str]] = [
     ("alex@demo.ga", "jet@demo.ga"),
@@ -279,7 +279,7 @@ async def _upsert_demo_users(session: AsyncSession) -> dict[str, UserRow]:
 
 
 async def _upsert_demo_join_requests(session: AsyncSession, users: dict[str, UserRow]) -> None:
-    """Seed the γ-with-two-leaders pending join requests.
+    """Seed the gamma-with-two-leaders pending join requests.
 
     Idempotent: any requester with a pre-existing pending request
     anywhere is skipped (Phase 5c invariant: at-most-one-pending-per-user).

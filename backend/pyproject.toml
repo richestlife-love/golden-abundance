@@ -92,12 +92,11 @@ select = [
 #       can appear in any module, not just routers.
 ignore = ["B008"]
 
-# Scope ambiguous-unicode ignores to the specific files that legitimately
-# need non-ASCII characters (zh-Hant seed content, en-dash in docstrings)
-# so the rest of the codebase still catches typo/lookalike-attack cases.
+# zh-Hant seed content legitimately needs full-width punctuation
+# (`，`, `–`, `×`) in user-facing strings (RUF001). Docstrings and
+# comments in seed.py stick to ASCII, so RUF002/RUF003 aren't ignored.
 [tool.ruff.lint.per-file-ignores]
-"src/backend/seed.py" = ["RUF001", "RUF002", "RUF003"]
-"src/backend/services/display_id.py" = ["RUF002"]
+"src/backend/seed.py" = ["RUF001"]
 
 [build-system]
 requires = ["uv_build>=0.11.7,<0.12.0"]

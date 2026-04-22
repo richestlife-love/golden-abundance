@@ -100,7 +100,9 @@ async def test_task_defs_check_constraints(session: AsyncSession, col: str, valu
         f"        {value if col == 'points' else 0}, {value if col == 'est_minutes' else 0},"
         "        false, now())",
     )
-    with pytest.raises(IntegrityError):  # noqa: PT012 — see test_teams_check_constraints
+    # PT012: the CHECK fires on flush (execute only queues), so the block
+    # needs both statements — splitting defeats the test.
+    with pytest.raises(IntegrityError):  # noqa: PT012
         await session.execute(stmt)
         await session.flush()
     await session.rollback()
@@ -137,7 +139,9 @@ async def test_task_progress_progress_unit_interval(session: AsyncSession) -> No
         "INSERT INTO task_progress (id, user_id, task_def_id, status, progress, updated_at)"
         " VALUES (gen_random_uuid(), :uid, :tid, 'in_progress', 1.5, now())",
     )
-    with pytest.raises(IntegrityError):  # noqa: PT012 — see test_teams_check_constraints
+    # PT012: the CHECK fires on flush (execute only queues), so the block
+    # needs both statements — splitting defeats the test.
+    with pytest.raises(IntegrityError):  # noqa: PT012
         await session.execute(stmt, {"uid": user.id, "tid": td_id})
         await session.flush()
     await session.rollback()

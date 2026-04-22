@@ -5,33 +5,29 @@ description = "FastAPI backend server for Golden Abundance"
 authors = [{ name = "Jet Kan", email = "jetkan.yk@gmail.com" }]
 requires-python = ">=3.14"
 dependencies = [
-  "alembic>=1.18.4",
-  # Avoid `fastapi[standard]` — it pulls fastapi-cli, jinja2, python-multipart,
-  # and pyyaml that aren't needed at runtime (the dev group below carries
-  # fastapi-cli for `just dev`). email-validator is kept because
-  # `pydantic.EmailStr` needs it at import time (User contract).
-  "email-validator>=2.0.0",
-  "fastapi>=0.136.0",
-  "greenlet>=3.4.0",
-  "psycopg[binary]>=3.3.3",
-  "pydantic-settings>=2.13.1",
-  "pyjwt[crypto]>=2.12.1",
-  "sentry-sdk[fastapi]>=2.17.0",
-  "slowapi>=0.1.9",
-  "sqlmodel>=0.0.38",
-  "uvicorn[standard]>=0.44.0",
+    "alembic>=1.18.4",
+    "email-validator>=2.3.0",
+    "fastapi>=0.136.0",
+    "greenlet>=3.4.0",
+    "psycopg[binary]>=3.3.3",
+    "pydantic-settings>=2.14.0",
+    "pyjwt[crypto]>=2.12.1",
+    "sentry-sdk[fastapi]>=2.58.0",
+    "slowapi>=0.1.9",
+    "sqlmodel>=0.0.38",
+    "uvicorn[standard]>=0.45.0",
 ]
 
 [dependency-groups]
 dev = [
-  "fastapi-cli>=0.0.5",
-  "httpx>=0.28.1",
-  "pytest>=9.0.3",
-  "pytest-asyncio>=1.3.0",
-  "pytest-cov>=7.1.0",
-  "ruff>=0.15.11",
-  "testcontainers>=4.14.2",
-  "ty>=0.0.31",
+    "fastapi-cli>=0.0.24",
+    "httpx>=0.28.1",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.11",
+    "testcontainers>=4.14.2",
+    "ty>=0.0.32",
 ]
 
 [tool.fastapi]
@@ -39,8 +35,6 @@ entrypoint = "backend.server:app"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# ``--cov=backend`` is explicit: the bare ``--cov`` form relies on
-# ``tool.coverage.run.source`` and reads magically.
 addopts = ["-v", "--cov=backend"]
 asyncio_mode = "auto"
 
@@ -84,16 +78,29 @@ line-length = 120
 
 [tool.ruff.lint]
 select = [
-  "E", "F", "W", "I", "UP", "B", "SIM", "RUF", "N", "C4", "PTH",
-  "ASYNC", "DTZ", "PT", "LOG", "G", "RET", "PIE", "TID",
-  # Pylint warnings — catches subprocess.run(check=...) missing, unnecessary
-  # lambda wrappers, etc. Currently low-signal but cheap to keep on.
+  "E",
+  "F",
+  "W",
+  "I",
+  "UP",
+  "B",
+  "SIM",
+  "RUF",
+  "N",
+  "C4",
+  "PTH",
+  "ASYNC",
+  "DTZ",
+  "PT",
+  "LOG",
+  "G",
+  "RET",
+  "PIE",
+  "TID",
   "PLW",
-  # Pinpoint rules that caught real issues during the Phase-6a cleanup:
-  # D301 (missing r-prefix on docstrings with backslashes),
-  # ANN202 (private async helpers returning un-annotated tuples),
-  # S608 (raw-SQL CHECK tests — scoped via inline noqa where intentional).
-  "D301", "ANN202", "S608",
+  "D301",
+  "ANN202",
+  "S608",
 ]
 # B008: FastAPI's `= Depends(...)` / `= Query(...)` defaults are idiomatic,
 #       not the anti-pattern this rule targets. Project-wide because Depends

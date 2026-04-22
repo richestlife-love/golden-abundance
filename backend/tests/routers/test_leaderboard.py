@@ -159,15 +159,16 @@ async def test_leaderboard_users_period_month_returns_200(client: AsyncClient) -
 
 async def test_leaderboard_users_cursor_past_end_returns_empty_page(client: AsyncClient) -> None:
     """A cursor whose (pts, id) tuple is strictly past every entry must
-    yield an empty page, not a 500. Hits the for-else branch in
-    ``_slice_after_cursor`` where start_idx = len(sorted_entries).
+    yield an empty page, not a 500.
     """
     from backend.services.pagination import encode_cursor
 
     jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
     # No user has pts < -1 (pts >= 0 always), and no user has pts == -1,
-    # so the for-loop completes without break.
-    past_end = encode_cursor({"pts": -1, "id": "ffffffff-ffff-ffff-ffff-ffffffffffff"})
+    # so the keyset WHERE filter yields zero rows.
+    past_end = encode_cursor(
+        {"pts": -1, "id": "ffffffff-ffff-ffff-ffff-ffffffffffff", "rank": 1000},
+    )
     r = await client.get(f"/api/v1/leaderboard/users?cursor={past_end}", headers=jet.headers)
     assert r.status_code == 200
     data = r.json()
@@ -218,3 +219,57 @@ async def test_leaderboard_teams_includes_approved_member_points(client: AsyncCl
     data = (await client.get("/api/v1/leaderboard/teams?period=all_time", headers=leader.headers)).json()
     leader_team = next(i for i in data["items"] if i["team"]["id"] == str(leader.led_team_id))
     assert leader_team["points"] == 50
+
+
+async def test_leaderboard_users_ranking_is_stable_across_pages(
+    client: AsyncClient,
+    seeded_task_defs,
+) -> None:
+    """Paginating through the leaderboard must produce contiguous,
+    unique, strictly-increasing ranks — and keyset pagination must
+    return the same ordering as a single-page fetch.
+
+    Regression for the H2 SQL rewrite: previous implementation sorted
+    in Python after loading every user; the SQL version must preserve
+    this ordering when paginated via cursor.
+    """
+    # Three users, one submits a scoring task so there's a non-trivial
+    # order. Small page size to exercise cursor pagination.
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    await client.post(
+        f"/api/v1/tasks/{seeded_task_defs['T1'].id}/submit",
+        json=_INTEREST,
+        headers=jet.headers,
+    )
+    await sign_in_and_complete(client, "wei@example.com", "偉")
+    await sign_in_and_complete(client, "mei@example.com", "美")
+
+    # One-shot fetch (baseline).
+    full = (
+        await client.get(
+            "/api/v1/leaderboard/users?period=all_time&limit=50",
+            headers=jet.headers,
+        )
+    ).json()
+    full_ids = [entry["user"]["id"] for entry in full["items"]]
+    full_ranks = [entry["rank"] for entry in full["items"]]
+    assert full_ranks == list(range(1, len(full_ranks) + 1))
+
+    # Paginated fetch (limit=1 per page).
+    paginated_ids: list[str] = []
+    paginated_ranks: list[int] = []
+    cursor: str | None = None
+    while True:
+        url = "/api/v1/leaderboard/users?period=all_time&limit=1"
+        if cursor is not None:
+            url += f"&cursor={cursor}"
+        page = (await client.get(url, headers=jet.headers)).json()
+        for entry in page["items"]:
+            paginated_ids.append(entry["user"]["id"])
+            paginated_ranks.append(entry["rank"])
+        cursor = page["next_cursor"]
+        if cursor is None:
+            break
+
+    assert paginated_ids == full_ids, "paginated order must match single-page order"
+    assert paginated_ranks == full_ranks, "ranks must be continuous across pages"

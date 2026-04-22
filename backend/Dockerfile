@@ -24,9 +24,12 @@ RUN uv sync --frozen --no-dev
 # -------- runtime stage --------
 FROM python:3.14-slim AS runtime
 
-# libpq for psycopg (binary wheel bundles libpq but not the shared system dep on slim).
+# libpq for psycopg. The binary wheel bundles its own libpq at wheel-build
+# time, so the system lib is only the safety net for any unexpected
+# dlopen path. Pin to the major that matches our server (Postgres 17) so a
+# future Debian upgrade can't silently drop a minor-version ABI.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpq5 \
+    && apt-get install -y --no-install-recommends 'libpq5=17.*' \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -43,6 +46,12 @@ ENV PATH="/app/.venv/bin:${PATH}" \
     PORT=8000
 
 EXPOSE 8000
+
+# Local Docker healthcheck for `docker-compose` / `docker run`. Railway
+# runs its own probes against /readyz so this is mostly defensive.
+# Uses the bundled Python interpreter to avoid adding curl to the image.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)" || exit 1
 
 # Alembic runs migrations idempotently on every container start. If the migration
 # fails, the container exits non-zero → Railway keeps the previous deployment live.

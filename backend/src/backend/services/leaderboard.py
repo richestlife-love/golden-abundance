@@ -196,9 +196,10 @@ async def leaderboard_teams(
     week_start = datetime.now(UTC) - timedelta(days=7)
     decoded = _decode_leaderboard_cursor(cursor)
 
-    # A team's membership = {leader} ∪ memberships. The UNION ALL
-    # below mirrors the logical "team member" set so one LEFT JOIN
-    # against task_progress covers both.
+    # A team's total membership is the leader plus every row in
+    # team_memberships. The UNION ALL below folds both into one
+    # "team_member" set so a single LEFT JOIN onto task_progress
+    # covers both.
     member_leader = select(
         TeamRow.id.label("team_id"),
         TeamRow.leader_id.label("user_id"),

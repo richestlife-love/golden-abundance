@@ -54,7 +54,7 @@ Test from your laptop with the `get_engine` snippet in plan 7a §B Task B1 Step 
 https://railway.app/new → Deploy from GitHub repo → this repo. Settings:
 - Root directory: `backend`
 - Builder: Dockerfile (auto-detected)
-- Healthcheck path: `/health`, timeout **180s for first boot** (migrations run on start), then drop to 60s for subsequent deploys
+- Healthcheck path: `/readyz` (pings the DB pool), timeout **180s for first boot** (migrations run on start), then drop to 60s for subsequent deploys. `/health` stays as a pure liveness probe.
 
 Environment variables:
 
@@ -66,8 +66,14 @@ Environment variables:
 | `APP_ENV` | `prod` |
 | `CORS_ORIGINS` | `https://jinfuyou.app` |
 | `APP_RELEASE` | `${{RAILWAY_GIT_COMMIT_SHA}}` (literal — Railway substitutes at deploy time) |
+| `RATE_LIMIT_DISABLED` | **unset / `0`** — must be enabled in prod (CI sets it to `1` to avoid flapping idempotent-loop tests) |
 
-Deploy. Watch logs for `alembic upgrade head` → `Uvicorn running` → healthcheck green. Verify via `curl https://<service>.up.railway.app/health`.
+Deploy. Watch logs for `alembic upgrade head` → `Uvicorn running` → healthcheck green. Verify both probes:
+
+```bash
+curl https://<service>.up.railway.app/health   # {"status":"ok"}      — process up
+curl https://<service>.up.railway.app/readyz   # {"status":"ready"}   — DB reachable
+```
 
 Settings → Networking → Custom Domains → add `api.jinfuyou.app`; record the target CNAME.
 

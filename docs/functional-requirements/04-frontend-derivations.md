@@ -51,16 +51,17 @@ Used in `TaskCard.tsx:41` and `TaskDetailScreen.tsx:61`.
 
 ## TeamCard fallbacks — *synthetic* data when backend omits
 
-`TeamCard.tsx:130–155` produces fake on-screen numbers when `team.*` fields are null:
+`TeamCard.tsx:130–155` produces fake on-screen numbers when the per-team
+point fields aren't supplied:
 
 | Field | Fallback |
 |---|---|
 | `memberPoints(name)` | deterministic hash in 400–1600 range |
-| `teamPoints` | `team.points ?? (total * 180 + 240)` |
+| `teamPoints` | formula: `total * 180 + 240` |
 | `teamRank` | `team.rank ?? 3` |
-| `weekPoints` | `team.week_points ?? Math.round(teamPoints * 0.18)` |
+| `weekPoints` | `Math.round(teamPoints * 0.18)` |
 
-> ⚠️ These produce **fake** numbers on screen. Decide: backend populates, or UI shows empty state.
+> ⚠️ These produce **fake** numbers on screen. The `team.points / team.week_points / team.cap` fields were removed from the `Team` contract in the 2026-04-22 review (M6) — the authoritative source is now `GET /leaderboard/teams`, which returns `TeamLeaderboardEntry { points, week_points, rank }`. Frontend should read points from that endpoint and drop the synthetic fallbacks entirely.
 
 ## Other client-only product rules
 

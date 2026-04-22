@@ -62,10 +62,10 @@ Each FR doc describes what the code does today. These are the points where the c
 - **Team search UI** — `GET /teams`, `GET /teams/{id}`, `POST /teams/{id}/join-requests` exist on the backend, but no `/teams` list/detail routes on the frontend. The T3 challenge's `TeamForm` (hard-coded 4-team demo) is currently dead-ended — Phase 7 hardening disabled `/tasks/T3/start` (404) and turned the MyScreen "搜尋加入" CTA into a "coming soon" toast, so no in-app path reaches `POST /teams/{id}/join-requests` today. → v1 feature, or permanently "T3-only team matching"?
 - **Rejected-request cooldown** — join-request guards only check `status='pending'`, so a user can resubmit immediately after rejection. → Add cooldown / retry cap / per-team block?
 - **Team auto-name** — every led team is auto-named `"{leader_name}的團隊"` on profile completion. → Final default, or prompt leader to name it on first `/me` visit?
-- **Per-team cap override** — `teams.cap` column supports non-6 caps; no UI. → Will leaders ever edit cap? Who sets cap for T3-aligned teams?
+- **Per-team cap override** — the `teams.cap` column was dropped in the 2026-04-22 review (M6); the 6-member cap is now driven by the T3 challenge's `TaskDefRow.cap`. → If per-team cap override is ever needed, reintroduce the column with a migration and wire up a leader-facing UI.
 - **`teams.alias` vs `name`** — both are searchable (`services/team.py:173`) and `alias` is user-overridable while `name` is auto-generated. → Is the dual-field model intentional long-term, or should `alias` replace `name` once set?
 - **Team lifecycle** — never deleted, leader can't leave own team, no leadership transfer. → Acceptable forever, or is at least transfer-leadership in v2?
-- **TeamCard synthetic fallbacks** — when `team.points / rank / week_points` are null, `TeamCard.tsx:130–155` fabricates numbers (deterministic hash in 400–1600 range for member points; formula for team points). **Users see fake data.** → Backend populates these fields, or UI shows a genuine empty state?
+- **TeamCard synthetic fallbacks** — `team.points` and `team.week_points` were removed from the `Team` contract (M6); the authoritative source is `GET /leaderboard/teams`. `TeamCard.tsx:130–155` still fabricates numbers (deterministic hash in 400–1600 range for member points; formula for team points) as a display-time fallback. **Users see fake data.** → Frontend should hydrate from the leaderboard endpoint and drop the synthetic fallbacks.
 
 ### Leaderboard
 

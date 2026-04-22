@@ -36,7 +36,7 @@ All paths under `/api/v1/`. Auth column: `—` public, `B` bearer required. Ever
 
 These are computed server-side; clients must not attempt to mirror the logic unless flagged as a gap.
 
-- **`User.name`** — `zh_name ?? nickname ?? email-local-part`.
+- **`User.name`** — `zh_name ?? nickname ?? display_id` (the opaque `U…` id). The fallback used to be the email local-part; switched so a profile-incomplete user doesn't leak email identity via `UserRef.name`.
 - **`Task.status`** — `locked` when any id in `requires` is not in caller's completed set; `expired` when `due_at` in the past and not completed.
 - **`Task.progress`** — authoritative; UI displays `steps[].done` for UX only and never computes progress from it.
 - **`Team.role`** — caller's relationship (`"leader" | "member" | null`).

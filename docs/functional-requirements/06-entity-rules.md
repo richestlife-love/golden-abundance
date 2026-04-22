@@ -21,7 +21,7 @@ exists(profile_complete=true, led_team=T)   ← PATCH /me mutates fields; state 
 
 - **Identity namespace**: `UserRow.id` is the Supabase `auth.users.id` UUID. No local UUID → Supabase UUID mapping table; the two namespaces are unified.
 - **Upsert on first sight** (`services/user.py::upsert_user_by_supabase_identity`): the first authed request for a never-seen `sub` materialises the `UserRow` with `profile_complete=false`. Concurrent first-sign-in requests are caught by an `IntegrityError` retry in `current_user`.
-- **Name derivation** (server): `User.name = zh_name ?? nickname ?? email-local-part`.
+- **Name derivation** (server): `User.name = zh_name ?? nickname ?? display_id` (the opaque `U…` id). The fallback used to be the email local-part; switched in the 2026-04-22 review (L7) so a profile-incomplete user doesn't leak email identity via `UserRef.name`.
 - **Display ID**: `U[A-Z0-9]{3,7}`. Generated in `services/display_id.py`.
 - **`POST /me/profile` side-effect**: `create_led_team` runs in the same transaction — enforces the "one led team per profile-complete user" invariant.
 

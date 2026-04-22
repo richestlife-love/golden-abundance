@@ -64,9 +64,13 @@ async def test_upsert_reuses_existing_row_on_auth_id_match(
     assert row.display_id == "SEED1"
 
 
-def test_derive_user_name_falls_back_to_email_local_part() -> None:
-    row = UserRow(id=UUID(int=1), display_id="X", email="jet.kan@example.com")
-    assert derive_user_name(row) == "jet.kan"
+def test_derive_user_name_falls_back_to_display_id() -> None:
+    """When zh_name and nickname are both empty, fall back to the opaque
+    display_id rather than the email local-part — the latter leaked
+    user identity to teammates via UserRef.name (L7).
+    """
+    row = UserRow(id=UUID(int=1), display_id="UJETKAN", email="jet.kan@example.com")
+    assert derive_user_name(row) == "UJETKAN"
 
 
 def test_derive_user_name_prefers_zh_name() -> None:

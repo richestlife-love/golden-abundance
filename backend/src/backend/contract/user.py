@@ -1,7 +1,7 @@
 """User shapes: full profile response and profile create/update bodies.
 
 Field derivation rules (server-authoritative):
-  * `name`: zh_name if set, else nickname, else email-local-part.
+  * `name`: zh_name if set, else nickname, else display_id.
   * `profile_complete`: True once POST /me/profile has run.
 
 Length caps on ProfileCreate/ProfileUpdate match the DB column caps in

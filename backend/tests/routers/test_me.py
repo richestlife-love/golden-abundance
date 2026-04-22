@@ -16,7 +16,7 @@ async def test_get_me_returns_current_user(client: AsyncClient) -> None:
     data = response.json()
     assert data["email"] == "jet@example.com"
     assert data["profile_complete"] is False
-    assert data["name"] == "jet"  # email-local-part fallback
+    assert data["name"].startswith("U")  # display_id fallback; UJET* pattern
 
 
 async def test_get_me_401_without_token(client: AsyncClient) -> None:

@@ -164,7 +164,7 @@ async def leaderboard_users(
                     name=_derive_name_from_cols(
                         zh_name=row.zh_name,
                         nickname=row.nickname,
-                        email=row.email,
+                        display_id=row.display_id,
                     ),
                     avatar_url=row.avatar_url,
                 ),
@@ -277,7 +277,7 @@ async def leaderboard_teams(
                         name=_derive_name_from_cols(
                             zh_name=row.leader_zh_name,
                             nickname=row.leader_nickname,
-                            email=row.leader_email,
+                            display_id=row.leader_display_id,
                         ),
                         avatar_url=row.leader_avatar_url,
                     ),
@@ -299,7 +299,7 @@ async def leaderboard_teams(
     return Paginated[TeamLeaderboardEntry](items=items, next_cursor=next_cursor)
 
 
-def _derive_name_from_cols(*, zh_name: str | None, nickname: str | None, email: str) -> str:
+def _derive_name_from_cols(*, zh_name: str | None, nickname: str | None, display_id: str) -> str:
     """Inline equivalent of ``services.user.derive_user_name`` for the
     leaderboard's projected row shape (we don't hydrate a full UserRow
     in SQL). Kept in sync with that function; if the fallback chain
@@ -309,7 +309,7 @@ def _derive_name_from_cols(*, zh_name: str | None, nickname: str | None, email: 
         return zh_name
     if nickname:
         return nickname
-    return email.split("@", 1)[0]
+    return display_id
 
 
 __all__ = [

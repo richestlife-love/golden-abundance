@@ -88,12 +88,18 @@ async def upsert_user_by_supabase_identity(
 
 
 def derive_user_name(row: UserRow) -> str:
-    """Display name fallback chain: zh_name → nickname → email local-part."""
+    """Display name fallback chain: zh_name → nickname → ``U{display_id}``.
+
+    The final fallback used to be the email local-part, which leaked the
+    user's email identity (often their real name) to teammates via
+    ``UserRef.name``. Returning the opaque ``U…`` id instead protects
+    that without breaking any code that expects a non-empty string (L7).
+    """
     if row.zh_name:
         return row.zh_name
     if row.nickname:
         return row.nickname
-    return row.email.split("@", 1)[0]
+    return row.display_id
 
 
 def row_to_contract_user(row: UserRow) -> ContractUser:

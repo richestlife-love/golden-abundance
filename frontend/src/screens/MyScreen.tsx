@@ -2,6 +2,7 @@ import { fs } from "../utils";
 import { useState } from "react";
 import type { MouseEvent, KeyboardEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useCopyToClipboard } from "../hooks/useCopyToClipboard";
 import { useMe } from "../hooks/useMe";
 import { useMyTasks } from "../hooks/useMyTasks";
 import { useMyTeams } from "../hooks/useMyTeams";
@@ -48,18 +49,11 @@ export default function MyScreen() {
   // card). Total = members count + self.
   const joinedTotal = joinedTeam ? (joinedTeam.members?.length ?? 0) + 1 : 0;
   const [teamTab, setTeamTab] = useState(ledTeam && !joinedTeam ? "leader" : "member");
-  const [userIdCopied, setUserIdCopied] = useState(false);
-  const copyUserId = async (e: MouseEvent | KeyboardEvent) => {
+  const { copied: userIdCopied, copy } = useCopyToClipboard();
+  const copyUserId = (e: MouseEvent | KeyboardEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    if (!navigator.clipboard) return;
-    try {
-      await navigator.clipboard.writeText(user.display_id);
-      setUserIdCopied(true);
-      setTimeout(() => setUserIdCopied(false), 1800);
-    } catch {
-      // permission denied or another failure — skip confirmation
-    }
+    void copy(user.display_id);
   };
 
   // Teams search UI is unwired pending spec §5.3 (real teams search).

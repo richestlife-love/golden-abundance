@@ -22,6 +22,8 @@ export const taskDetailRoute = createRoute({
   getParentRoute: () => authedRoute,
   path: "/tasks/$taskId",
   loader: async ({ params, context }) => {
+    // Child loaders run in parallel with the parent's loader, so ensure
+    // myTasks here before reading it to resolve the task id.
     await context.queryClient.ensureQueryData(myTasksQueryOptions());
     const list = context.queryClient.getQueryData<Task[]>(qk.myTasks) ?? [];
     const task = list.find((t) => t.display_id === params.taskId);

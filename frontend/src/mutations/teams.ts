@@ -77,11 +77,8 @@ export function useApproveJoinRequest() {
       }
     },
     onSettled: (_data, _err, { teamId }) => {
-      qc.invalidateQueries({ queryKey: qk.myTeams });
-      qc.invalidateQueries({ queryKey: qk.team(teamId) });
-      qc.invalidateQueries({ queryKey: qk.myTasks });
-      qc.invalidateQueries({ queryKey: qk.myRewards });
       qc.invalidateQueries({ queryKey: qk.me });
+      qc.invalidateQueries({ queryKey: qk.team(teamId) });
       qc.invalidateQueries({ queryKey: qk.leaderboardAll });
     },
   });
@@ -120,11 +117,8 @@ export function useLeaveTeam() {
   return useMutation({
     mutationFn: (teamId: string) => api.leaveTeam(teamId),
     onSuccess: (_data, teamId) => {
-      qc.invalidateQueries({ queryKey: qk.team(teamId) });
-      qc.invalidateQueries({ queryKey: qk.myTeams });
-      qc.invalidateQueries({ queryKey: qk.myTasks });
-      qc.invalidateQueries({ queryKey: qk.myRewards });
       qc.invalidateQueries({ queryKey: qk.me });
+      qc.invalidateQueries({ queryKey: qk.team(teamId) });
       qc.invalidateQueries({ queryKey: qk.leaderboardAll });
     },
   });

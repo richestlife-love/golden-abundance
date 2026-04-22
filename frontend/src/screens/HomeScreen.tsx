@@ -1,8 +1,9 @@
+import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMe } from "../hooks/useMe";
 import { useMyTasks } from "../hooks/useMyTasks";
 import { useAuth } from "../auth/session";
-import { getEffectiveStatus, fs } from "../utils";
+import { getEffectiveStatuses, fs } from "../utils";
 import BottomNav from "../ui/BottomNav";
 import { BabyIcon, CrownIcon, MedalIcon, StarIcon } from "../ui/Icon";
 import { useCountUp } from "../ui/useCountUp";
@@ -20,8 +21,9 @@ export default function HomeScreen() {
     navigate({ to: "/tasks/$taskId", params: { taskId: displayId } });
 
   const bg = "var(--bg)";
+  const statuses = useMemo(() => getEffectiveStatuses(tasks), [tasks]);
   const activeTasks = tasks.filter((t) => {
-    const { status } = getEffectiveStatus(t, tasks);
+    const status = statuses.get(t.id)!.status;
     return status === "todo" || status === "in_progress" || status === "locked";
   });
 
@@ -531,7 +533,7 @@ export default function HomeScreen() {
               <TaskCard
                 key={t.id}
                 t={t}
-                allTasks={tasks}
+                effective={statuses.get(t.id)!}
                 cardBg={cardBg}
                 cardBorder={cardBorder}
                 muted={muted}

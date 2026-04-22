@@ -22,10 +22,8 @@ export function useSubmitTask() {
         });
       }
       qc.invalidateQueries({ queryKey: qk.task(id) });
-      qc.invalidateQueries({ queryKey: qk.myTasks });
-      qc.invalidateQueries({ queryKey: qk.myRewards });
       qc.invalidateQueries({ queryKey: qk.me });
-      qc.invalidateQueries({ queryKey: ["leaderboard"] });
+      qc.invalidateQueries({ queryKey: qk.leaderboardAll });
     },
   });
 }

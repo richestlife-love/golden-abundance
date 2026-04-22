@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMyTasks } from "../hooks/useMyTasks";
 import BottomNav from "../ui/BottomNav";
 import TaskCard from "./TaskCard";
-import { getEffectiveStatus, fs } from "../utils";
+import { getEffectiveStatuses, fs } from "../utils";
 import type { components } from "../api/schema";
 
 type Task = components["schemas"]["Task"];
@@ -22,6 +22,9 @@ export default function TasksScreen() {
 
   const [filter, setFilter] = useState("active");
 
+  const statuses = useMemo(() => getEffectiveStatuses(tasks), [tasks]);
+  const statusOf = (t: Task) => statuses.get(t.id)!.status;
+
   const counts = useMemo(() => {
     const c = {
       all: tasks.length,
@@ -31,17 +34,19 @@ export default function TasksScreen() {
       locked: 0,
     };
     tasks.forEach((t) => {
-      const { status } = getEffectiveStatus(t, tasks);
+      const status = statusOf(t);
       if (status === "todo" || status === "in_progress" || status === "locked") c.active++;
       if (status === "completed") c.completed++;
       else if (status === "expired") c.expired++;
       else if (status === "locked") c.locked++;
     });
     return c;
-  }, [tasks]);
+    // statusOf is derived from statuses — including statuses is sufficient
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks, statuses]);
 
   const filtered = tasks.filter((t) => {
-    const { status } = getEffectiveStatus(t, tasks);
+    const status = statusOf(t);
     if (filter === "all") return true;
     if (filter === "active")
       return status === "todo" || status === "in_progress" || status === "locked";
@@ -184,7 +189,7 @@ export default function TasksScreen() {
           ) : filter === "all" ? (
             (() => {
               const bucketOf = (t: Task) => {
-                const { status } = getEffectiveStatus(t, tasks);
+                const status = statusOf(t);
                 if (status === "completed") return "completed";
                 if (status === "expired") return "expired";
                 return "active"; // todo | in_progress | locked
@@ -245,7 +250,7 @@ export default function TasksScreen() {
                         <TaskCard
                           key={t.id}
                           t={t}
-                          allTasks={tasks}
+                          effective={statuses.get(t.id)!}
                           cardBg={cardBg}
                           cardBorder={cardBorder}
                           muted={muted}
@@ -264,7 +269,7 @@ export default function TasksScreen() {
               <TaskCard
                 key={t.id}
                 t={t}
-                allTasks={tasks}
+                effective={statuses.get(t.id)!}
                 cardBg={cardBg}
                 cardBorder={cardBorder}
                 muted={muted}

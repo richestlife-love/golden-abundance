@@ -1,7 +1,7 @@
 import { fs } from "../utils";
-import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMe } from "../hooks/useMe";
+import { useCopyToClipboard } from "../hooks/useCopyToClipboard";
 import { ChevronLeftIcon } from "../ui/Icon";
 
 export default function ProfileScreen() {
@@ -16,17 +16,8 @@ export default function ProfileScreen() {
   const cardBorder = "1px solid rgba(254,199,1,0.22)";
   const accent = "var(--gold-deep)";
 
-  const [idCopied, setIdCopied] = useState(false);
-  const copyUserId = async () => {
-    if (!navigator.clipboard) return;
-    try {
-      await navigator.clipboard.writeText(user.display_id);
-      setIdCopied(true);
-      setTimeout(() => setIdCopied(false), 1800);
-    } catch {
-      // permission denied or another failure — skip confirmation
-    }
-  };
+  const { copied: idCopied, copy } = useCopyToClipboard();
+  const copyUserId = () => copy(user.display_id);
 
   const rows = [
     { label: "中文姓名", value: user.zh_name, icon: "文" },

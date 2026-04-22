@@ -1,5 +1,5 @@
 import type { components } from "../api/schema";
-import { getEffectiveStatus, daysUntil, fs } from "../utils";
+import { daysUntil, fs, type EffectiveStatus } from "../utils";
 import {
   CheckIcon,
   CircleIcon,
@@ -16,7 +16,7 @@ type Task = components["schemas"]["Task"];
 
 type Props = {
   t: Task;
-  allTasks: Task[];
+  effective: EffectiveStatus;
   cardBg: string;
   cardBorder: string;
   muted: string;
@@ -27,7 +27,7 @@ type Props = {
 
 export default function TaskCard({
   t,
-  allTasks,
+  effective,
   cardBg,
   cardBorder,
   muted,
@@ -35,7 +35,7 @@ export default function TaskCard({
   index = 0,
   onOpen,
 }: Props) {
-  const { status, unmet } = getEffectiveStatus(t, allTasks);
+  const { status, unmet } = effective;
   const daysLeft = daysUntil(t.due_at);
   const dueDisplay = t.due_at ? t.due_at.slice(0, 10) : null;
   const urgent = status === "todo" && daysLeft != null && daysLeft > 0 && daysLeft <= 7;

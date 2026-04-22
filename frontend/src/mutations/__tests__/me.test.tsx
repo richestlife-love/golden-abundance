@@ -98,7 +98,8 @@ const cases: Case[] = [
         availability: ["weekend"],
       },
     },
-    expectedKeys: [qk.task(taskId), qk.myTasks, qk.myRewards, qk.me, qk.leaderboardAll],
+    // qk.me prefix covers qk.myTasks / qk.myRewards via ["me"] → both.
+    expectedKeys: [qk.task(taskId), qk.me, qk.leaderboardAll],
   },
   {
     name: "useCreateJoinRequest",
@@ -126,7 +127,8 @@ const cases: Case[] = [
       HttpResponse.json(f.teamJetLed),
     ),
     args: { teamId, reqId },
-    expectedKeys: [qk.myTeams, qk.team(teamId), qk.myTasks, qk.myRewards, qk.me, qk.leaderboardAll],
+    // qk.me prefix covers qk.myTeams / qk.myTasks / qk.myRewards.
+    expectedKeys: [qk.team(teamId), qk.me, qk.leaderboardAll],
   },
   {
     name: "useRejectJoinRequest",
@@ -146,7 +148,8 @@ const cases: Case[] = [
       () => new HttpResponse(null, { status: 204 }),
     ),
     args: teamId,
-    expectedKeys: [qk.team(teamId), qk.myTeams, qk.myTasks, qk.myRewards, qk.me, qk.leaderboardAll],
+    // qk.me prefix covers qk.myTeams / qk.myTasks / qk.myRewards.
+    expectedKeys: [qk.team(teamId), qk.me, qk.leaderboardAll],
   },
   {
     name: "usePatchTeam",

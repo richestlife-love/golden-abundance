@@ -1,5 +1,6 @@
-import { avatarBg, fs } from "../utils";
+import { avatarBg, fs, hashString } from "../utils";
 import { useEffect, useState } from "react";
+import { useCopyToClipboard } from "../hooks/useCopyToClipboard";
 import RenameTeamSheet from "./RenameTeamSheet";
 import ShareSheet from "./ShareSheet";
 import type { components } from "../api/schema";
@@ -85,10 +86,10 @@ export default function TeamCard({
         shareFallback: "rgba(254,210,52,0.12)",
       };
   const [shareOpen, setShareOpen] = useState(false);
-  const [shareCopied, setShareCopied] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
-  const [idCopied, setIdCopied] = useState(false);
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+  const { copied: shareCopied, copy: copyShareClipboard } = useCopyToClipboard();
+  const { copied: idCopied, copy: copyIdClipboard } = useCopyToClipboard();
   useEffect(() => {
     if (!leaveConfirmOpen) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -100,38 +101,16 @@ export default function TeamCard({
   // Use display_id for shareable team codes (team.id is a UUID that's neither
   // typeable nor memorable).
   const shareCode = team.display_id;
-  const copyId = async () => {
-    if (!navigator.clipboard) return;
-    try {
-      await navigator.clipboard.writeText(shareCode);
-      setIdCopied(true);
-      setTimeout(() => setIdCopied(false), 1800);
-    } catch {
-      // permission denied or another failure — skip confirmation
-    }
-  };
   const shareUrl = "golden-abundance.vercel.app";
   const shareMessage = `嗨！我在「金富有」建立了志工團隊，一起來加入吧 ✨\n\n團隊編號：${shareCode}\n開啟 App：${shareUrl}\n\n進入 App 後，點「我的 › 搜尋加入」輸入編號 ${shareCode} 即可申請。`;
-  const copyShare = async () => {
-    if (!navigator.clipboard) return;
-    try {
-      await navigator.clipboard.writeText(shareMessage);
-      setShareCopied(true);
-      setTimeout(() => setShareCopied(false), 1800);
-    } catch {
-      // permission denied or another failure — skip confirmation
-    }
-  };
+  const copyId = () => copyIdClipboard(shareCode);
+  const copyShare = () => copyShareClipboard(shareMessage);
 
   // Full team view (leader OR approved member). Phase 3's "pending join
   // request" state is gone: `myTeams.joined` only returns approved teams;
   // outstanding requests live on the leader's `team.requests` list.
   const complete = total >= cap;
-  const memberPoints = (name: string) => {
-    let h = 0;
-    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
-    return 400 + (Math.abs(h) % 1200); // 400–1600
-  };
+  const memberPoints = (name: string) => 400 + (Math.abs(hashString(name)) % 1200); // 400–1600
   const allMembers = [
     {
       id: team.leader.id,

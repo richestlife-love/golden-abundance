@@ -82,38 +82,11 @@ async def test_pending_index_allows_mixed_statuses(session: AsyncSession) -> Non
     assert count == 2
 
 
-@pytest.mark.parametrize(
-    ("stmt", "params"),
-    [
-        (
-            "INSERT INTO teams (id, display_id, name, topic, leader_id, cap, points, week_points, created_at)"
-            " VALUES (gen_random_uuid(), 'T-CAP', 'x', 't', :leader, 0, 0, 0, now())",
-            {},
-        ),
-        (
-            "INSERT INTO teams (id, display_id, name, topic, leader_id, cap, points, week_points, created_at)"
-            " VALUES (gen_random_uuid(), 'T-PTS', 'x', 't', :leader, 6, -1, 0, now())",
-            {},
-        ),
-        (
-            "INSERT INTO teams (id, display_id, name, topic, leader_id, cap, points, week_points, created_at)"
-            " VALUES (gen_random_uuid(), 'T-WK', 'x', 't', :leader, 6, 0, -1, now())",
-            {},
-        ),
-    ],
-    ids=["cap-zero", "points-negative", "week-points-negative"],
-)
-async def test_teams_check_constraints(session: AsyncSession, stmt: str, params: dict) -> None:
-    leader = UserRow(id=uuid4(), display_id="ULCK", email="lck@example.com", profile_complete=True)
-    session.add(leader)
-    await session.flush()
-    # Async-session CHECK violations may surface at either execute or flush
-    # depending on statement boundary — both awaits must live inside the
-    # block to catch whichever raises.
-    with pytest.raises(IntegrityError):  # noqa: PT012
-        await session.execute(text(stmt), {"leader": leader.id, **params})
-        await session.flush()
-    await session.rollback()
+# Note: the ``teams.cap/points/week_points`` CHECK constraints were
+# dropped in migration 0008 along with the columns themselves — see
+# the M6 decision in the 2026-04-22 review. No replacement tests here
+# because aggregate points live in the leaderboard view and the team
+# size cap is a property of the T3 challenge task def.
 
 
 @pytest.mark.parametrize(

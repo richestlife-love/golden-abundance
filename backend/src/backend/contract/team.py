@@ -31,6 +31,10 @@ class Team(StrictModel):
     `role` reflects the caller's relationship to the team (leader /
     member / None for outsiders). `requests` is populated only when the
     caller is the leader; members and outsiders see `None`.
+
+    Aggregate points (all-time / week) live in the leaderboard view —
+    not on the team row. The team size cap (currently 6) is a property
+    of the T3 challenge task def (``TaskDefRow.cap``), not stored here.
     """
 
     id: UUID
@@ -40,9 +44,6 @@ class Team(StrictModel):
     topic: str
     leader: UserRef
     members: list[UserRef] = Field(default_factory=list)
-    cap: int = 6
-    points: int = 0
-    week_points: int = 0
     rank: int | None = None
     role: Literal["leader", "member"] | None = None
     requests: list[JoinRequest] | None = None

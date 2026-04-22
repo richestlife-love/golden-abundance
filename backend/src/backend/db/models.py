@@ -53,11 +53,6 @@ class UserRow(SQLModel, table=True):
 
 class TeamRow(SQLModel, table=True):
     __tablename__ = "teams"
-    __table_args__ = (
-        CheckConstraint("cap >= 1", name="ck_teams_cap_positive"),
-        CheckConstraint("points >= 0", name="ck_teams_points_nonneg"),
-        CheckConstraint("week_points >= 0", name="ck_teams_week_points_nonneg"),
-    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     display_id: str = Field(index=True, unique=True, max_length=16)
@@ -67,9 +62,6 @@ class TeamRow(SQLModel, table=True):
     # One led team per user: enforced by unique=True so `GET /me/teams`
     # can scalar_one_or_none() the lookup.
     leader_id: UUID = Field(foreign_key="users.id", ondelete="CASCADE", index=True, unique=True)
-    cap: int = Field(default=6, ge=1)
-    points: int = Field(default=0, ge=0)
-    week_points: int = Field(default=0, ge=0)
     created_at: datetime = Field(
         sa_column=Column(
             DateTime(timezone=True),

@@ -222,7 +222,13 @@ async def leaderboard_teams(
     items: list[TeamLeaderboardEntry] = []
     for offset, (pts, tid) in enumerate(page):
         t = team_by_id[tid]
-        leader = leaders[t.leader_id]
+        leader = leaders.get(t.leader_id)
+        if leader is None:
+            # Defensive: cascade is `leader_id ON DELETE CASCADE` today
+            # (migration 0007), so a team without a leader shouldn't
+            # exist. If cascade is ever softened to SET NULL, skip the
+            # row instead of KeyError-ing the request.
+            continue
         items.append(
             TeamLeaderboardEntry(
                 team=TeamRef(

@@ -11,12 +11,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import (
     JoinRequestRow,
-    TaskDefRow,
     TeamMembershipRow,
     TeamRow,
     UserRow,
 )
-from backend.services.reward import maybe_grant_challenge_rewards
+from backend.services.reward import (
+    grant_rewards_for_user,
+    load_bonused_challenge_defs,
+)
 
 
 class JoinConflictError(Exception):
@@ -69,29 +71,23 @@ async def approve_join_request(session: AsyncSession, *, team: TeamRow, req: Joi
     session.add(TeamMembershipRow(team_id=team.id, user_id=req.user_id))
     await session.flush()
 
-    # Skip the reward cascade when no bonused challenges exist —
-    # default seed has no bonuses, saving an N+1 per approval.
-    challenge_defs = (
-        (
-            await session.execute(
-                select(TaskDefRow).where(TaskDefRow.is_challenge.is_(True)).where(TaskDefRow.bonus.is_not(None)),
-            )
-        )
-        .scalars()
-        .all()
-    )
+    # Skip the reward cascade when no bonused challenges exist — the default
+    # seed has no bonuses, so this short-circuits every approval in dev/test.
+    challenge_defs = await load_bonused_challenge_defs(session)
     if not challenge_defs:
         return
 
-    # Post-flush: query includes the just-added membership.
+    # Batch-load the full post-approval membership list + all their UserRows
+    # in two queries (instead of per-member N+1). Then pass the same
+    # challenge_defs list to each user — ``grant_rewards_for_user`` does
+    # not re-query them (M3).
     memberships = (
         (await session.execute(select(TeamMembershipRow).where(TeamMembershipRow.team_id == team.id))).scalars().all()
     )
-    member_ids = [team.leader_id] + [row.user_id for row in memberships]
-    for uid in member_ids:
-        user_row = await session.get(UserRow, uid)
-        if user_row is not None:
-            await maybe_grant_challenge_rewards(session, user=user_row)
+    member_ids = [team.leader_id, *(m.user_id for m in memberships)]
+    user_rows = (await session.execute(select(UserRow).where(UserRow.id.in_(member_ids)))).scalars().all()
+    for user_row in user_rows:
+        await grant_rewards_for_user(session, user=user_row, challenge_defs=challenge_defs)
 
 
 async def reject_join_request(session: AsyncSession, *, req: JoinRequestRow) -> None:

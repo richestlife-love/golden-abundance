@@ -1,5 +1,7 @@
 """Reward service: list + creation on task completion."""
 
+from collections.abc import Sequence
+
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,17 +39,14 @@ def row_to_contract_reward(row: RewardRow) -> ContractReward:
     )
 
 
-async def maybe_grant_challenge_rewards(session: AsyncSession, *, user: UserRow) -> None:
-    """Create RewardRows for any bonused challenge TaskDef where the user
-    now meets cap. Idempotent. No-op when the user has no team
-    (total == 0) or no bonused challenges exist.
+async def load_bonused_challenge_defs(session: AsyncSession) -> Sequence[TaskDefRow]:
+    """Fetch every bonused challenge TaskDef in one query.
 
-    Concurrency: uses Postgres ``ON CONFLICT DO NOTHING`` against the
-    ``uq_reward_user_task`` constraint so two simultaneous
-    approve-join-request calls that both cross the cap produce exactly
-    one reward without rolling back either caller's transaction.
+    Exposed so callers that grant rewards for many users in a loop
+    (e.g., ``approve_join_request``) can reuse the same def list
+    across iterations instead of re-querying per user (M3).
     """
-    challenge_defs = (
+    return (
         (
             await session.execute(
                 select(TaskDefRow).where(TaskDefRow.is_challenge.is_(True)).where(TaskDefRow.bonus.is_not(None)),
@@ -56,6 +55,22 @@ async def maybe_grant_challenge_rewards(session: AsyncSession, *, user: UserRow)
         .scalars()
         .all()
     )
+
+
+async def grant_rewards_for_user(
+    session: AsyncSession,
+    *,
+    user: UserRow,
+    challenge_defs: Sequence[TaskDefRow],
+) -> None:
+    """Low-level: inspect ``user``'s team totals against pre-loaded
+    ``challenge_defs`` and upsert a ``RewardRow`` for each qualifying
+    challenge.
+
+    ``ON CONFLICT DO NOTHING`` against ``uq_reward_user_task`` keeps
+    this idempotent under concurrent callers (see the race discussed
+    at ``db/models.py``'s constraints).
+    """
     if not challenge_defs:
         return
 
@@ -64,10 +79,9 @@ async def maybe_grant_challenge_rewards(session: AsyncSession, *, user: UserRow)
 
     for td in challenge_defs:
         cap, bonus = td.cap, td.bonus
-        # ``bonus`` is non-None by the query filter; ``cap`` is non-None for
-        # any bonused challenge by convention (see row_to_contract_task).
-        # Both are re-checked here so this function is safe if those
-        # invariants ever slip — asserts would be stripped under ``-O``.
+        # bonus is non-None by the load filter; cap is non-None for any
+        # bonused challenge by convention. Re-checked so the function is
+        # safe if those invariants ever slip.
         if cap is None or bonus is None or total < cap:
             continue
         stmt = (
@@ -83,6 +97,20 @@ async def maybe_grant_challenge_rewards(session: AsyncSession, *, user: UserRow)
         )
         await session.execute(stmt)
     await session.flush()
+
+
+async def maybe_grant_challenge_rewards(session: AsyncSession, *, user: UserRow) -> None:
+    """Create RewardRows for any bonused challenge TaskDef where the user
+    now meets cap. Idempotent. No-op when the user has no team
+    (total == 0) or no bonused challenges exist.
+
+    Thin wrapper: loads the bonused challenge set once, then delegates
+    to ``grant_rewards_for_user``. Call this when granting for a single
+    user; call the pair of helpers directly when iterating over many
+    users in the same transaction (M3 — avoids re-querying defs).
+    """
+    challenge_defs = await load_bonused_challenge_defs(session)
+    await grant_rewards_for_user(session, user=user, challenge_defs=challenge_defs)
 
 
 async def list_rewards_for(session: AsyncSession, user: UserRow) -> list[ContractReward]:

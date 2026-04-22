@@ -109,34 +109,28 @@ async def row_to_contract_team(session: AsyncSession, team: TeamRow, *, caller_i
 
     requests: list[ContractJoinRequest] | None
     if role == "leader":
-        join_rows = (
-            (
-                await session.execute(
-                    select(JoinRequestRow)
-                    .where(JoinRequestRow.team_id == team.id)
-                    .where(JoinRequestRow.status == "pending")
-                    .order_by(JoinRequestRow.requested_at.asc()),
-                )
+        # Single join: load every pending request together with its
+        # requester, eliminating the per-row ``session.get(UserRow, ...)``
+        # N+1 the previous loop did (M4).
+        pending_pairs = (
+            await session.execute(
+                select(JoinRequestRow, UserRow)
+                .join(UserRow, JoinRequestRow.user_id == UserRow.id)
+                .where(JoinRequestRow.team_id == team.id)
+                .where(JoinRequestRow.status == "pending")
+                .order_by(JoinRequestRow.requested_at.asc()),
             )
-            .scalars()
-            .all()
-        )
-        requests = []
-        for jr in join_rows:
-            requester = await session.get(UserRow, jr.user_id)
-            if requester is None:
-                raise RuntimeError(
-                    f"FK violation: JoinRequestRow(id={jr.id}).user_id={jr.user_id} has no matching UserRow",
-                )
-            requests.append(
-                ContractJoinRequest(
-                    id=jr.id,
-                    team_id=jr.team_id,
-                    user=user_to_ref(requester),
-                    status=jr.status,
-                    requested_at=jr.requested_at,
-                ),
+        ).all()
+        requests = [
+            ContractJoinRequest(
+                id=jr.id,
+                team_id=jr.team_id,
+                user=user_to_ref(requester),
+                status=jr.status,
+                requested_at=jr.requested_at,
             )
+            for jr, requester in pending_pairs
+        ]
     else:
         requests = None
 

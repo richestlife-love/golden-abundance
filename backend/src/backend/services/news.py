@@ -17,7 +17,7 @@ from backend.db.models import NewsItemRow
 from backend.services.pagination import SortCol, paginate_keyset
 
 
-def _row_to_contract(row: NewsItemRow) -> ContractNewsItem:
+def row_to_contract_news(row: NewsItemRow) -> ContractNewsItem:
     return ContractNewsItem(
         id=row.id,
         title=row.title,
@@ -48,6 +48,6 @@ async def list_news(session: AsyncSession, *, cursor: str | None, limit: int) ->
         extract=lambda r: (r[0].pinned, r[0].published_at, r[0].id),
     )
     return Paginated[ContractNewsItem](
-        items=[_row_to_contract(r[0]) for r in page],
+        items=[row_to_contract_news(r[0]) for r in page],
         next_cursor=next_cursor,
     )

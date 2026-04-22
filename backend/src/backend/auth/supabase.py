@@ -44,8 +44,7 @@ def verify_supabase_jwt(token: str) -> SupabaseClaims:
             audience=settings.supabase_jwt_aud,
             issuer=settings.supabase_issuer,
         )
-    except pyjwt.PyJWTError as exc:
-        raise ValueError(str(exc)) from exc
-    except Exception as exc:  # PyJWKClient raises bare RuntimeError on malformed headers
+    except (pyjwt.PyJWTError, RuntimeError) as exc:
+        # RuntimeError covers PyJWKClient raising bare on malformed headers.
         raise ValueError(str(exc)) from exc
     return SupabaseClaims.model_validate(raw)

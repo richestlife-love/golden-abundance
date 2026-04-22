@@ -10,8 +10,6 @@ makes them short-circuit. One dedicated test module re-enables the
 limiter to exercise the 429 path.
 """
 
-from __future__ import annotations
-
 from fastapi import Request
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded

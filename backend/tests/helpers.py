@@ -29,6 +29,25 @@ _BASE_PROFILE = {
     "location": "台北",
 }
 
+# Submit-body fixtures for tasks with form_type="interest" / "ticket".
+# Shared so test files don't drift out of sync when the contract shape changes.
+INTEREST_SUBMIT_BODY = {
+    "form_type": "interest",
+    "name": "Jet",
+    "phone": "912345678",
+    "interests": ["探索"],
+    "skills": [],
+    "availability": ["週末"],
+}
+
+TICKET_SUBMIT_BODY = {
+    "form_type": "ticket",
+    "name": "Jet",
+    "ticket_725": "ABC-725",
+    "ticket_726": "ABC-726",
+    "note": None,
+}
+
 
 class SignedInUser(NamedTuple):
     """Result of `sign_in_and_complete` — the three IDs downstream tests need."""

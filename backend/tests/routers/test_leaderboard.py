@@ -3,23 +3,14 @@ from datetime import UTC
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tests.helpers import sign_in_and_complete
-
-_INTEREST = {
-    "form_type": "interest",
-    "name": "Jet",
-    "phone": "912345678",
-    "interests": ["x"],
-    "skills": [],
-    "availability": ["週末"],
-}
+from tests.helpers import INTEREST_SUBMIT_BODY, sign_in_and_complete
 
 
 async def test_leaderboard_users_sorts_by_points_desc(client: AsyncClient, seeded_task_defs) -> None:
     h_jet, *_ = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
     await client.post(
         f"/api/v1/tasks/{seeded_task_defs['T1'].id}/submit",
-        json=_INTEREST,
+        json=INTEREST_SUBMIT_BODY,
         headers=h_jet,
     )
     await sign_in_and_complete(client, "wei@example.com", "偉")
@@ -140,7 +131,7 @@ async def test_leaderboard_users_ties_break_by_user_id(
     for u in (a, b):
         await client.post(
             f"/api/v1/tasks/{seeded_task_defs['T1'].id}/submit",
-            json=_INTEREST,
+            json=INTEREST_SUBMIT_BODY,
             headers=u.headers,
         )
     data = (await client.get("/api/v1/leaderboard/users?period=all_time", headers=a.headers)).json()
@@ -213,7 +204,7 @@ async def test_leaderboard_teams_includes_approved_member_points(client: AsyncCl
     # Only the member submits — team total must reflect the member's 50 pts.
     await client.post(
         f"/api/v1/tasks/{seeded_task_defs['T1'].id}/submit",
-        json=_INTEREST,
+        json=INTEREST_SUBMIT_BODY,
         headers=member.headers,
     )
     data = (await client.get("/api/v1/leaderboard/teams?period=all_time", headers=leader.headers)).json()
@@ -238,7 +229,7 @@ async def test_leaderboard_users_ranking_is_stable_across_pages(
     jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
     await client.post(
         f"/api/v1/tasks/{seeded_task_defs['T1'].id}/submit",
-        json=_INTEREST,
+        json=INTEREST_SUBMIT_BODY,
         headers=jet.headers,
     )
     await sign_in_and_complete(client, "wei@example.com", "偉")

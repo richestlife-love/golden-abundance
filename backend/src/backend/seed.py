@@ -128,46 +128,79 @@ DEMO_FANOUT: list[tuple[str, str]] = [
 ]
 
 
+# Shared prototype task definitions. Consumed by the seed script here
+# and by ``tests/conftest.py::seeded_task_defs`` so the two sources of
+# truth don't drift. Keyed by display_id; values spread directly into
+# the ``TaskDefRow`` constructor.
+PROTOTYPE_TASK_DEFS: dict[str, dict[str, object]] = {
+    "T1": {
+        "title": "填寫金富有志工表單",
+        "summary": "完成你的志工個人資料，開啟金富有志工旅程。",
+        "description": "歡迎加入金富有志工！請填寫基本個人資料。",
+        "tag": "探索",
+        "color": "#fec701",
+        "points": 50,
+        "bonus": None,
+        "est_minutes": 5,
+        "is_challenge": False,
+        "form_type": "interest",
+    },
+    "T2": {
+        "title": "夏季盛會報名",
+        "summary": "報名 5/10 夏季盛會。",
+        "description": "請選擇 725/726 場次票券。",
+        "tag": "社区",
+        "color": "#38b6ff",
+        "points": 80,
+        "bonus": "限定紀念徽章",
+        "est_minutes": 10,
+        "is_challenge": False,
+        "form_type": "ticket",
+    },
+    "T3": {
+        "title": "組成 6 人團隊",
+        "summary": "揪齊 6 位夥伴組團衝榜。",
+        "description": "當你的領團或加入團總人數達 6 人，任務自動完成。",
+        "tag": "陪伴",
+        "color": "#ff5c8a",
+        "points": 120,
+        "bonus": None,
+        "est_minutes": 0,
+        "is_challenge": True,
+        "cap": 6,
+        "form_type": None,
+    },
+    "T4": {
+        "title": "志工培訓 (已結束)",
+        "summary": "2026 春季培訓。",
+        "description": "已結束,僅供參考。",
+        "tag": "探索",
+        "color": "#a3a3a3",
+        "points": 0,
+        "bonus": None,
+        "est_minutes": 60,
+        "is_challenge": False,
+        "form_type": None,
+        "due_at": datetime(2026, 3, 1, tzinfo=UTC),
+    },
+}
+
+T1_STEP_LABELS = ("確認電子郵件與手機", "填寫個人興趣與專長", "選擇可投入的時段", "簽署志工服務同意書")
+
+
 async def _upsert_task_defs(session: AsyncSession) -> dict[str, TaskDefRow]:
     existing = {t.display_id: t for t in (await session.execute(select(TaskDefRow))).scalars().all()}
 
     if "T1" not in existing:
-        t1 = TaskDefRow(
-            display_id="T1",
-            title="填寫金富有志工表單",
-            summary="完成你的志工個人資料，開啟金富有志工旅程。",
-            description="歡迎加入金富有志工！請填寫基本個人資料。",
-            tag="探索",
-            color="#fec701",
-            points=50,
-            bonus=None,
-            est_minutes=5,
-            is_challenge=False,
-            form_type="interest",
-        )
+        t1 = TaskDefRow(display_id="T1", **PROTOTYPE_TASK_DEFS["T1"])
         session.add(t1)
         await session.flush()
-        for order, label in enumerate(
-            ["確認電子郵件與手機", "填寫個人興趣與專長", "選擇可投入的時段", "簽署志工服務同意書"],
-            start=1,
-        ):
+        for order, label in enumerate(T1_STEP_LABELS, start=1):
             session.add(TaskStepDefRow(task_def_id=t1.id, label=label, order=order))
         existing["T1"] = t1
 
     if "T2" not in existing:
-        t2 = TaskDefRow(
-            display_id="T2",
-            title="夏季盛會報名",
-            summary="報名 5/10 夏季盛會。",
-            description="請選擇 725/726 場次票券。",
-            tag="社区",
-            color="#38b6ff",
-            points=80,
-            bonus="限定紀念徽章",
-            est_minutes=10,
-            is_challenge=False,
-            form_type="ticket",
-        )
+        t2 = TaskDefRow(display_id="T2", **PROTOTYPE_TASK_DEFS["T2"])
         session.add(t2)
         await session.flush()
         existing["T2"] = t2
@@ -175,38 +208,12 @@ async def _upsert_task_defs(session: AsyncSession) -> dict[str, TaskDefRow]:
         session.add(TaskDefRequiresRow(task_def_id=t2.id, requires_id=existing["T1"].id))
 
     if "T3" not in existing:
-        t3 = TaskDefRow(
-            display_id="T3",
-            title="組成 6 人團隊",
-            summary="揪齊 6 位夥伴組團衝榜。",
-            description="當你的領團或加入團總人數達 6 人，任務自動完成。",
-            tag="陪伴",
-            color="#ff5c8a",
-            points=120,
-            bonus=None,
-            est_minutes=0,
-            is_challenge=True,
-            cap=6,
-            form_type=None,
-        )
+        t3 = TaskDefRow(display_id="T3", **PROTOTYPE_TASK_DEFS["T3"])
         session.add(t3)
         existing["T3"] = t3
 
     if "T4" not in existing:
-        t4 = TaskDefRow(
-            display_id="T4",
-            title="志工培訓 (已結束)",
-            summary="2026 春季培訓。",
-            description="已結束，僅供參考。",
-            tag="探索",
-            color="#a3a3a3",
-            points=0,
-            bonus=None,
-            est_minutes=60,
-            is_challenge=False,
-            form_type=None,
-            due_at=datetime(2026, 3, 1, tzinfo=UTC),
-        )
+        t4 = TaskDefRow(display_id="T4", **PROTOTYPE_TASK_DEFS["T4"])
         session.add(t4)
         existing["T4"] = t4
 

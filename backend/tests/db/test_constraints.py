@@ -150,6 +150,98 @@ async def test_task_progress_progress_unit_interval(session: AsyncSession) -> No
     await session.rollback()
 
 
+async def test_teams_leader_id_globally_unique(session: AsyncSession) -> None:
+    """One led team per user — ``teams.leader_id UNIQUE`` backstops the
+    ``POST /me/profile`` side-effect. A second TeamRow with the same
+    leader must fail at the DB even if the service layer forgot to check.
+    """
+    leader = UserRow(id=uuid4(), display_id="ULDU", email="ldu@example.com", profile_complete=True)
+    session.add(leader)
+    await session.flush()
+
+    session.add(TeamRow(display_id="T-DU1", name="A", leader_id=leader.id))
+    await session.flush()
+
+    session.add(TeamRow(display_id="T-DU2", name="B", leader_id=leader.id))
+    with pytest.raises(IntegrityError):
+        await session.flush()
+    await session.rollback()
+
+
+async def test_team_memberships_user_id_globally_unique(session: AsyncSession) -> None:
+    """``uq_membership_user`` on ``team_memberships.user_id`` enforces
+    the one-membership-per-user invariant across all teams — a user
+    can't be a member of two teams even via direct DB insert.
+    """
+    team_a, team_b, requester = await _seed_two_teams_and_user(session)
+    session.add(TeamMembershipRow(team_id=team_a.id, user_id=requester.id))
+    await session.flush()
+
+    session.add(TeamMembershipRow(team_id=team_b.id, user_id=requester.id))
+    with pytest.raises(IntegrityError):
+        await session.flush()
+    await session.rollback()
+
+
+async def test_reward_unique_per_user_task(session: AsyncSession) -> None:
+    """``uq_reward_user_task`` backstops the service-layer
+    idempotence: two reward rows for the same (user, task_def) must
+    raise at the DB.
+    """
+    user = UserRow(id=uuid4(), display_id="URWU", email="rwu@example.com", profile_complete=True)
+    session.add(user)
+    td = TaskDefRow(
+        display_id="TRWU",
+        title="x",
+        summary="x",
+        description="x",
+        tag="探索",
+        color="#000000",
+        points=0,
+        est_minutes=0,
+        is_challenge=False,
+    )
+    session.add(td)
+    await session.flush()
+
+    session.add(RewardRow(user_id=user.id, task_def_id=td.id, task_title="x", bonus="b", status="earned"))
+    await session.flush()
+
+    session.add(RewardRow(user_id=user.id, task_def_id=td.id, task_title="x", bonus="b", status="earned"))
+    with pytest.raises(IntegrityError):
+        await session.flush()
+    await session.rollback()
+
+
+async def test_task_step_def_unique_order_per_task_def(session: AsyncSession) -> None:
+    """``uq_step_order`` on ``(task_def_id, order)`` prevents two steps
+    sharing the same slot within one task def.
+    """
+    from backend.db.models import TaskStepDefRow
+
+    td = TaskDefRow(
+        display_id="TSTU",
+        title="x",
+        summary="x",
+        description="x",
+        tag="探索",
+        color="#000000",
+        points=0,
+        est_minutes=0,
+        is_challenge=False,
+    )
+    session.add(td)
+    await session.flush()
+
+    session.add(TaskStepDefRow(task_def_id=td.id, label="first", order=1))
+    await session.flush()
+
+    session.add(TaskStepDefRow(task_def_id=td.id, label="first-dup", order=1))
+    with pytest.raises(IntegrityError):
+        await session.flush()
+    await session.rollback()
+
+
 async def test_delete_user_cascades_to_dependent_rows(session: AsyncSession) -> None:
     """Deleting a user row must cascade through every child table — the FKs
     were rewritten with ``ON DELETE CASCADE`` in migration 0007.

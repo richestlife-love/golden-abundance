@@ -129,3 +129,60 @@ async def test_list_caller_tasks_returns_all(session: AsyncSession, seeded_task_
     assert len(tasks) == 4
     ids = {t.display_id for t in tasks}
     assert ids == {"T1", "T2", "T3", "T4"}
+
+
+async def test_completed_past_due_task_stays_completed(session: AsyncSession, seeded_task_defs) -> None:
+    """Spec §1.3: ``expired`` only applies when the caller has NOT
+    completed the task. Once completed, status stays ``completed`` even
+    if ``due_at`` is in the past. Pins the ``progress_row.status ==
+    'completed'`` short-circuit in the expired branch.
+    """
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
+    await session.flush()
+    session.add(
+        TaskProgressRow(
+            user_id=user.id,
+            task_def_id=seeded_task_defs["T4"].id,
+            status="completed",
+            progress=1.0,
+        ),
+    )
+    await session.commit()
+
+    task = await row_to_contract_task(session, seeded_task_defs["T4"], caller=user)
+    assert task.status == "completed"
+
+
+async def test_challenge_completion_does_not_persist_progress_row(
+    session: AsyncSession,
+    seeded_task_defs,
+) -> None:
+    """Spec §1.3: T3 auto-completion is a read-side derivation. No
+    ``task_progress`` row is written when the team reaches cap — the
+    ``row_to_contract_task`` service computes status from team totals.
+    """
+    from sqlalchemy import select
+
+    from backend.db.models import TeamMembershipRow
+    from backend.services.team import create_led_team
+
+    user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
+    await session.flush()
+    team = await create_led_team(session, user)
+    for i in range(5):
+        m = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email=f"m{i}@example.com")
+        await session.flush()
+        session.add(TeamMembershipRow(team_id=team.id, user_id=m.id))
+    await session.commit()
+
+    task = await row_to_contract_task(session, seeded_task_defs["T3"], caller=user)
+    assert task.status == "completed"
+
+    progress = (
+        await session.execute(
+            select(TaskProgressRow)
+            .where(TaskProgressRow.user_id == user.id)
+            .where(TaskProgressRow.task_def_id == seeded_task_defs["T3"].id),
+        )
+    ).scalar_one_or_none()
+    assert progress is None, "T3 auto-completion must not persist a progress row"

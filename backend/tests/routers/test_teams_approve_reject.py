@@ -205,6 +205,50 @@ async def test_approve_unknown_req_404(client: AsyncClient) -> None:
     assert r.status_code == 404
 
 
+async def test_t3_cap_reached_grants_no_reward_when_bonus_is_none(
+    client: AsyncClient,
+    session: AsyncSession,
+    seeded_task_defs,
+) -> None:
+    """Spec §1.3 + seed §Task: T3 has ``bonus=None``; reaching cap
+    derives ``Task.status == "completed"`` but must NOT create a
+    ``RewardRow``. Pins the negative branch of
+    ``maybe_grant_challenge_rewards`` (``bonus is None → continue``).
+    """
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    for i in range(5):
+        out = await sign_in_and_complete(client, f"mm{i}@example.com", f"M{i}")
+        req = (
+            await client.post(
+                f"/api/v1/teams/{jet.led_team_id}/join-requests",
+                headers=out.headers,
+            )
+        ).json()
+        r = await client.post(
+            f"/api/v1/teams/{jet.led_team_id}/join-requests/{req['id']}/approve",
+            headers=jet.headers,
+        )
+        assert r.status_code == 200, f"approve #{i} failed: {r.text}"
+
+    # T3 derived as completed — 6 team members matches the seed cap.
+    tasks = (await client.get("/api/v1/me/tasks", headers=jet.headers)).json()
+    t3 = next(t for t in tasks if t["display_id"] == "T3")
+    assert t3["status"] == "completed"
+
+    # Every team member's reward list is empty for T3 because bonus is None.
+    t3_id = seeded_task_defs["T3"].id
+    t3_rewards = (
+        (
+            await session.execute(
+                select(RewardRow).where(RewardRow.task_def_id == t3_id),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert t3_rewards == [], "T3 has bonus=None — no reward rows expected"
+
+
 async def test_reject_unknown_req_404(client: AsyncClient) -> None:
     jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
     r = await client.post(

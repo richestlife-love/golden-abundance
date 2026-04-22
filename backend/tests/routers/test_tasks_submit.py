@@ -4,7 +4,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tests.helpers import INTEREST_SUBMIT_BODY, TICKET_SUBMIT_BODY, sign_in_and_complete
+from tests.helpers import INTEREST_SUBMIT_BODY, TICKET_SUBMIT_BODY, sign_in, sign_in_and_complete
 
 
 async def test_submit_interest_marks_completed(client: AsyncClient, seeded_task_defs) -> None:
@@ -136,3 +136,21 @@ async def test_submit_t2_twice_does_not_create_second_reward(
 async def test_phase_5d_endpoint_requires_auth(client: AsyncClient, method: str, path: str) -> None:
     r = await client.request(method, path)
     assert r.status_code == 401, f"{method} {path} should require auth"
+
+
+async def test_profile_incomplete_can_submit_task(client: AsyncClient, seeded_task_defs) -> None:
+    """Known gap (FR §05): backend ``current_user`` verifies the JWT and
+    upserts a ``UserRow`` on first sight, but does NOT inspect
+    ``profile_complete``. Any client holding a valid bearer token can
+    call business endpoints regardless of whether they've completed
+    their profile. Pinned so closing the gap (e.g., adding a
+    ``require_profile_complete`` dep) is a conscious, tested change.
+    """
+    h = await sign_in(client, "incomplete@example.com")
+    r = await client.post(
+        f"/api/v1/tasks/{seeded_task_defs['T1'].id}/submit",
+        json=INTEREST_SUBMIT_BODY,
+        headers=h,
+    )
+    assert r.status_code == 200
+    assert r.json()["task"]["status"] == "completed"

@@ -145,6 +145,64 @@ async def test_requester_can_reapply_after_rejection(
     assert r2.status_code == 201
 
 
+async def test_join_conflict_messages_are_distinct(client: AsyncClient) -> None:
+    """Spec §08: each conflict cause emits a distinct ``detail`` string
+    so UX copy can map 1:1. Pin all four so a rename breaks CI instead
+    of silently drifting the frontend's error translations.
+    """
+    leader_a = await sign_in_and_complete(client, "a@example.com", "A")
+
+    # (1) leader → own team.
+    r = await client.post(
+        f"/api/v1/teams/{leader_a.led_team_id}/join-requests",
+        headers=leader_a.headers,
+    )
+    assert r.status_code == 409
+    assert r.json()["detail"] == "Leaders cannot request to join their own team"
+
+    # (2) existing member → same team.
+    out = await sign_in_and_complete(client, "out@example.com", "O")
+    req = (
+        await client.post(
+            f"/api/v1/teams/{leader_a.led_team_id}/join-requests",
+            headers=out.headers,
+        )
+    ).json()
+    await client.post(
+        f"/api/v1/teams/{leader_a.led_team_id}/join-requests/{req['id']}/approve",
+        headers=leader_a.headers,
+    )
+    r = await client.post(
+        f"/api/v1/teams/{leader_a.led_team_id}/join-requests",
+        headers=out.headers,
+    )
+    assert r.status_code == 409
+    assert r.json()["detail"] == "Already a member of this team"
+
+    # (3) existing member → different team.
+    leader_c = await sign_in_and_complete(client, "c@example.com", "C")
+    r = await client.post(
+        f"/api/v1/teams/{leader_c.led_team_id}/join-requests",
+        headers=out.headers,
+    )
+    assert r.status_code == 409
+    assert r.json()["detail"] == "Already a member of a different team"
+
+    # (4) pending elsewhere.
+    leader_b = await sign_in_and_complete(client, "b@example.com", "B")
+    new_user = await sign_in_and_complete(client, "new@example.com", "N")
+    await client.post(
+        f"/api/v1/teams/{leader_a.led_team_id}/join-requests",
+        headers=new_user.headers,
+    )
+    r = await client.post(
+        f"/api/v1/teams/{leader_b.led_team_id}/join-requests",
+        headers=new_user.headers,
+    )
+    assert r.status_code == 409
+    assert r.json()["detail"] == "Already has a pending join request"
+
+
 async def test_requester_can_rejoin_after_leave(client: AsyncClient) -> None:
     """After leaving a team, a user may re-request to join it."""
     jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")

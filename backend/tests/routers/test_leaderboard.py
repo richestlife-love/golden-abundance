@@ -148,6 +148,39 @@ async def test_leaderboard_users_period_month_returns_200(client: AsyncClient) -
     assert r.status_code == 200
 
 
+async def test_leaderboard_week_points_trailing_7d_under_month_period(
+    session: AsyncSession,
+    client: AsyncClient,
+    seeded_task_defs,
+) -> None:
+    """Spec §Leaderboard: ``week_points`` is **always** trailing-7d,
+    regardless of the ``period`` window. Pins the ``month`` branch —
+    the existing ``all_time`` test covers the opposite end. A 10-day-old
+    completion must count toward month ``points`` but NOT toward
+    ``week_points``.
+    """
+    from datetime import datetime, timedelta
+
+    from backend.db.models import TaskProgressRow
+
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    session.add(
+        TaskProgressRow(
+            user_id=jet.user_id,
+            task_def_id=seeded_task_defs["T1"].id,
+            status="completed",
+            progress=1.0,
+            completed_at=datetime.now(UTC) - timedelta(days=10),
+        ),
+    )
+    await session.commit()
+
+    data = (await client.get("/api/v1/leaderboard/users?period=month", headers=jet.headers)).json()
+    row = next(i for i in data["items"] if i["user"]["id"] == str(jet.user_id))
+    assert row["points"] == 50, "month window (30d) includes the 10-day-old completion"
+    assert row["week_points"] == 0, "week_points stays trailing-7d under period=month"
+
+
 async def test_leaderboard_users_cursor_past_end_returns_empty_page(client: AsyncClient) -> None:
     """A cursor whose (pts, id) tuple is strictly past every entry must
     yield an empty page, not a 500.

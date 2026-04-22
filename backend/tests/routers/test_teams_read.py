@@ -61,6 +61,17 @@ async def test_team_detail_404(client: AsyncClient) -> None:
     assert response.status_code == 404
 
 
+async def test_team_detail_rank_is_null(client: AsyncClient) -> None:
+    """Spec §Leaderboard: ``Team.rank`` is populated only by the
+    leaderboard queries. The bare ``GET /teams/{id}`` response must
+    return ``rank=null`` so UIs know not to render a position here.
+    """
+    jet = await sign_in_and_complete(client, "jet@example.com", "簡傑特")
+    response = await client.get(f"/api/v1/teams/{jet.led_team_id}", headers=jet.headers)
+    assert response.status_code == 200
+    assert response.json()["rank"] is None
+
+
 async def test_team_detail_member_sees_null_requests(
     client: AsyncClient,
 ) -> None:

@@ -79,3 +79,38 @@ async def test_patch_me_allows_null_to_clear_optional_field(client: AsyncClient)
     r = await client.patch("/api/v1/me", json={"line_id": None}, headers=headers)
     assert r.status_code == 200
     assert r.json()["line_id"] is None
+
+
+async def test_patch_me_rejects_avatar_url_422(client: AsyncClient) -> None:
+    """``avatar_url`` is read-only: present on the ``User`` response but
+    deliberately absent from ``ProfileUpdate``. StrictModel must 422
+    the write attempt instead of silently ignoring it.
+    """
+    headers = await sign_in(client, "jet@example.com")
+    await client.post("/api/v1/me/profile", json=_PROFILE_BODY, headers=headers)
+    r = await client.patch(
+        "/api/v1/me",
+        json={"avatar_url": "https://example.com/a.png"},
+        headers=headers,
+    )
+    assert r.status_code == 422
+
+
+async def test_patch_me_rejects_unknown_field(client: AsyncClient) -> None:
+    """``ProfileUpdate`` inherits ``StrictModel(extra='forbid')`` —
+    unknown keys must 422, not silently no-op.
+    """
+    headers = await sign_in(client, "jet@example.com")
+    await client.post("/api/v1/me/profile", json=_PROFILE_BODY, headers=headers)
+    r = await client.patch("/api/v1/me", json={"foo": "bar"}, headers=headers)
+    assert r.status_code == 422
+
+
+async def test_patch_me_rejects_profile_complete_smuggle(client: AsyncClient) -> None:
+    """``profile_complete`` is set server-side by POST /me/profile only;
+    a client must not be able to reset it via PATCH.
+    """
+    headers = await sign_in(client, "jet@example.com")
+    await client.post("/api/v1/me/profile", json=_PROFILE_BODY, headers=headers)
+    r = await client.patch("/api/v1/me", json={"profile_complete": False}, headers=headers)
+    assert r.status_code == 422

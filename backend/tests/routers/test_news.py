@@ -84,6 +84,48 @@ async def test_news_empty_returns_empty_items(client: AsyncClient) -> None:
     assert data["next_cursor"] is None
 
 
+async def test_news_multiple_pinned_sort_by_published_at_desc(
+    client: AsyncClient,
+    session: AsyncSession,
+) -> None:
+    """Spec §Content: news sort is ``pinned DESC, published_at DESC``.
+    Two pinned items must order newer-first among themselves, and a
+    newer unpinned item must still fall below both.
+    """
+    session.add(
+        NewsItemRow(
+            title="pin-older",
+            body="...",
+            category="公告",
+            pinned=True,
+            published_at=datetime(2026, 4, 10, tzinfo=UTC),
+        ),
+    )
+    session.add(
+        NewsItemRow(
+            title="pin-newer",
+            body="...",
+            category="公告",
+            pinned=True,
+            published_at=datetime(2026, 4, 18, tzinfo=UTC),
+        ),
+    )
+    session.add(
+        NewsItemRow(
+            title="unpinned-newest",
+            body="...",
+            category="活動",
+            pinned=False,
+            published_at=datetime(2026, 4, 20, tzinfo=UTC),
+        ),
+    )
+    await session.commit()
+
+    h = await sign_in(client, "jet@example.com")
+    items = (await client.get("/api/v1/news", headers=h)).json()["items"]
+    assert [it["title"] for it in items] == ["pin-newer", "pin-older", "unpinned-newest"]
+
+
 async def test_news_cursor_terminal_page_next_cursor_is_none(client: AsyncClient, session: AsyncSession) -> None:
     """On the last page, next_cursor must be null."""
     from backend.db.models import NewsItemRow

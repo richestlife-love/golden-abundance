@@ -21,7 +21,7 @@ from backend.config import get_settings
 from backend.db.session import get_session
 from backend.rate_limit import _client_key, limiter
 from backend.server import create_app
-from tests.helpers import sign_in
+from tests.helpers import INTEREST_SUBMIT_BODY, sign_in
 
 
 @pytest.fixture(autouse=True)
@@ -109,6 +109,32 @@ async def test_profile_post_returns_429_past_limit(
     response = await rate_limited_client.post(
         "/api/v1/me/profile",
         json=profile_body,
+        headers=headers,
+    )
+    assert response.status_code == 429
+
+
+@pytest.mark.asyncio
+async def test_task_submit_returns_429_past_limit(
+    rate_limited_client: AsyncClient,
+    seeded_task_defs,
+) -> None:
+    """POST /tasks/{id}/submit is capped at 30/minute. First call
+    succeeds, the rest 409 (already completed) but still count toward
+    the limit; the 31st call must 429.
+    """
+    headers = await sign_in(rate_limited_client, "jet@example.com")
+    t1_id = seeded_task_defs["T1"].id
+    for i in range(30):
+        response = await rate_limited_client.post(
+            f"/api/v1/tasks/{t1_id}/submit",
+            json=INTEREST_SUBMIT_BODY,
+            headers=headers,
+        )
+        assert response.status_code in (200, 409), f"attempt {i}: {response.text}"
+    response = await rate_limited_client.post(
+        f"/api/v1/tasks/{t1_id}/submit",
+        json=INTEREST_SUBMIT_BODY,
         headers=headers,
     )
     assert response.status_code == 429

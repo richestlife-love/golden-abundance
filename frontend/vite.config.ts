@@ -35,6 +35,21 @@ export default defineConfig(({ mode }) => {
       // doesn't add a `//# sourceMappingURL=` comment to the bundle — real
       // visitors don't fetch source maps; only Sentry resolves stack traces.
       sourcemap: "hidden",
+      rolldownOptions: {
+        output: {
+          // Split heavy third-party libs into their own chunks so the main
+          // app chunk stays under rolldown's 500 kB warning threshold and
+          // vendor code can cache independently across app deploys.
+          codeSplitting: {
+            groups: [
+              { name: "react", test: /node_modules\/(?:react|react-dom|scheduler)\// },
+              { name: "sentry", test: /node_modules\/@sentry\// },
+              { name: "tanstack", test: /node_modules\/@tanstack\// },
+              { name: "supabase", test: /node_modules\/@supabase\// },
+            ],
+          },
+        },
+      },
     },
     server: {
       port,
@@ -51,7 +66,7 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       environment: "jsdom",
-      setupFiles: ["./src/test/setup.ts"],
+      setupFiles: ["./src/test/setup-pre.ts", "./src/test/setup.ts"],
       css: false,
     },
   };

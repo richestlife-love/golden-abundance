@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
@@ -196,10 +196,18 @@ describe("history back", () => {
   it("back() from /tasks/T1 re-renders /tasks (not just URL — DOM-level check)", async () => {
     const { router } = renderRoute("/tasks", { session: "signed-in" });
     await expectScreen(router, "/tasks", /個進行中/);
-    await router.navigate({ to: "/tasks/$taskId", params: { taskId: "T1" } });
+    // router.navigate / history.back synchronously flush Transitioner +
+    // CatchNotFound + BottomNav state outside React Testing Library's
+    // act boundary. Wrap them so the initial flush is covered (waitFor
+    // only wraps its own polling in act, not the triggering mutation).
+    await act(async () => {
+      await router.navigate({ to: "/tasks/$taskId", params: { taskId: "T1" } });
+    });
     // "任務說明" is unique to TaskDetailScreen — proves the detail view mounted.
     await expectScreen(router, "/tasks/T1", "任務說明");
-    router.history.back();
+    await act(async () => {
+      router.history.back();
+    });
     // After back, tasks list is visible and detail-only content is gone.
     await expectScreen(router, "/tasks", /個進行中/);
     expect(screen.queryByText("任務說明")).toBeNull();

@@ -58,7 +58,7 @@ any backend request → 401 (Supabase token rejected by JWKS verifier,
 
 ## 5. Team join (requester side)
 
-> ⚠️ **Backend ready, UI deferred.** `GET /teams`, `GET /teams/{id}`, and `POST /teams/{id}/join-requests` all exist on the backend, but no `/teams` or `/teams/:teamId` routes are registered in `frontend/src/router.ts`. The only in-app entry to creating a join request today is the T3 challenge's `TeamForm`, which uses hard-coded demo teams (`frontend/src/screens/TeamForm.tsx`). The flow below is the target; treat as deferred until the list/detail screens ship.
+> ⚠️ **Backend ready, UI deferred.** `GET /teams`, `GET /teams/{id}`, and `POST /teams/{id}/join-requests` all exist on the backend, but no `/teams` or `/teams/:teamId` routes are registered in `frontend/src/router.ts`. The T3 challenge's `TeamForm` (`frontend/src/screens/TeamForm.tsx`) holds the UI surface but is currently dead-ended: Phase 7 hardening removed `T3` from `SUPPORTED_TASK_DISPLAY_IDS` so `/tasks/T3/start` returns 404, and the MyScreen "搜尋加入" CTA shows a "coming soon" toast instead of navigating. The flow below is the target; treat as deferred until the list/detail screens (or a rewired `TeamForm` against `teamsInfiniteQueryOptions`) ship.
 
 ```
 /teams (search with q/topic/leader_display_id)

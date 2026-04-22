@@ -59,7 +59,7 @@ Each FR doc describes what the code does today. These are the points where the c
 
 ### Teams & join flow
 
-- **Team search UI** — `GET /teams`, `GET /teams/{id}`, `POST /teams/{id}/join-requests` exist on the backend, but no `/teams` list/detail routes on the frontend. Only in-app entry to creating a join request is the T3 challenge's hard-coded-demo `TeamForm`. → v1 feature, or permanently "T3-only team matching"?
+- **Team search UI** — `GET /teams`, `GET /teams/{id}`, `POST /teams/{id}/join-requests` exist on the backend, but no `/teams` list/detail routes on the frontend. The T3 challenge's `TeamForm` (hard-coded 4-team demo) is currently dead-ended — Phase 7 hardening disabled `/tasks/T3/start` (404) and turned the MyScreen "搜尋加入" CTA into a "coming soon" toast, so no in-app path reaches `POST /teams/{id}/join-requests` today. → v1 feature, or permanently "T3-only team matching"?
 - **Rejected-request cooldown** — join-request guards only check `status='pending'`, so a user can resubmit immediately after rejection. → Add cooldown / retry cap / per-team block?
 - **Team auto-name** — every led team is auto-named `"{leader_name}的團隊"` on profile completion. → Final default, or prompt leader to name it on first `/me` visit?
 - **Per-team cap override** — `teams.cap` column supports non-6 caps; no UI. → Will leaders ever edit cap? Who sets cap for T3-aligned teams?

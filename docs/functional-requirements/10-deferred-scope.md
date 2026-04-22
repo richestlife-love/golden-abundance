@@ -21,6 +21,7 @@ Intentional gaps in the current codebase. Listing them explicitly so reviewers k
 
 - **Team disband / delete** — leader cannot leave; no delete endpoint. Teams exist forever once created.
 - **Transfer leadership** — no endpoint.
+- **Team join via T3 challenge flow** — disabled pending a real teams-search UI. `/tasks/T3/start` throws `notFound()` and the MyScreen "搜尋加入" CTA shows a "coming soon" toast, so the app has no live caller for `POST /teams/{id}/join-requests` today. Backend endpoints (`GET /teams`, `GET /teams/{id}`, the join-request POST) all work; the frontend just can't reach them until `TeamForm` is wired to `teamsInfiniteQueryOptions` or dedicated `/teams` list/detail routes ship.
 
 ## Tasks
 

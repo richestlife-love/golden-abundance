@@ -267,7 +267,7 @@ Surfaced during Phase 4c (write-side migration + cleanup — every form/button r
 
 ### Demo flow ergonomics
 - **Seed reaches at most 3/6 on T3** — completing T3 requires extra manual approvals after the two seeded pending requests clear (spec §7.1). Add a `just seed-extra-team-members` recipe if this becomes a bottleneck for product demos.
-- **`TeamForm` still filters a hardcoded 4-team list** — [`frontend/src/screens/TeamForm.tsx`](../frontend/src/screens/TeamForm.tsx) emits `display_id` strings like `T-MING2024` into `useCreateJoinRequest.mutate(...)`; the backend has no matching rows so the real flow 404s. Real `teamsInfiniteQueryOptions` + a search endpoint land post-Phase-4.
+- **`TeamForm` still filters a hardcoded 4-team list** — [`frontend/src/screens/TeamForm.tsx`](../frontend/src/screens/TeamForm.tsx) emits `display_id` strings like `T-MING2024` into `useCreateJoinRequest.mutate(...)`; the backend has no matching rows so the real flow 404s. Real `teamsInfiniteQueryOptions` + a search endpoint land post-Phase-4. **Partially mitigated in Phase 7 hardening:** `/tasks/T3/start` now throws `notFound()` and the MyScreen "搜尋加入" CTA shows a "coming soon" toast instead of navigating — the synthetic-ID POST can no longer reach the backend. `TeamForm.tsx` itself is retained (currently unused) as the UI starting point for the real wiring.
 
 ### Router ref coupling
 - **`setRouterRef` singleton is global** — [`frontend/src/router.ts`](../frontend/src/router.ts). Harmless today (single router per app + vitest isolates module state per file), but a future multi-window / SSR setup would need a per-request router resolver. Document or re-scope then.
@@ -306,3 +306,31 @@ All fixes against commit `ea61f36` (Phase 6 merge). Branch: `worktree-phase-6-ha
 - **`schema.d.ts` regeneration in CI** — `frontend/src/api/schema.d.ts` is gitignored. `pnpm exec tsc --noEmit` and `pnpm build` require it. 7a's GitHub Actions must run `just gen-types` before any typecheck/build step.
 - **Sentry (backend + frontend)** — scoped for 7b. `auth.callback.tsx`'s error path has a `TODO(phase-7b)` comment flagging the Sentry integration point.
 - **Admin / RLS / account-deletion / custom Supabase domain / staging env / load testing / Playwright** — tracked in the Phase 6-7 design spec §11.
+
+## Tech debt / review findings (Phase 7 hardening)
+
+Surfaced during a post-Phase-7 frontend code review (2026-04-22). All fixes landed at HEAD; items below document what changed and what remains deferred.
+
+### Landed in Phase 7 hardening
+
+- **Vercel `/api/v1/*` rewrite** — [`frontend/vercel.json`](../frontend/vercel.json). Without it, every `apiFetch` call fell through the SPA catch-all and returned `index.html` as JSON. Now rewrites to `https://api.jinfuyou.app/api/v1/:path*` before the SPA fallback.
+- **CSP extended for Google Fonts + API origin** — [`frontend/vercel.json`](../frontend/vercel.json). `style-src` now allows `https://fonts.googleapis.com`, added `font-src 'self' https://fonts.gstatic.com`, and `connect-src` includes `https://api.jinfuyou.app` so absolute-URL requests / Sentry breadcrumbs don't get blocked. (Separate from the `'unsafe-inline'` deferral above.)
+- **Challenge-task start flow disabled** — [`frontend/src/routes/_authed.tasks.$taskId.start.tsx`](../frontend/src/routes/_authed.tasks.$taskId.start.tsx), [`frontend/src/screens/MyScreen.tsx`](../frontend/src/screens/MyScreen.tsx). See Phase 4c item above — `T3` removed from `SUPPORTED_TASK_DISPLAY_IDS`, MyScreen CTA toasts instead of navigating. The synthetic `T-*` IDs can no longer reach the backend's `/teams/{uuid}/join-requests`.
+- **Sentry PII scrubber + 401 drop** — [`frontend/src/main.tsx`](../frontend/src/main.tsx). Added `sendDefaultPii: false` and a `beforeSend` that drops `ApiError[401]` entirely (expected session-expiry noise) and strips query strings from `event.request.url` + breadcrumb URLs (returnTo, OAuth codes, cursors).
+- **`ErrorBoundary` fallback has retry + home** — [`frontend/src/main.tsx`](../frontend/src/main.tsx). 重試 clears the query cache and calls `resetError`; 回到首頁 links to `/`.
+- **`pnpm build` in CI** — [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). Catches Sentry-plugin regressions, TS-in-Vite edge cases, and CSP-breaking import drift pre-merge.
+- **`AbortSignal` threaded through `apiFetch` → api/* → queries/*** — every `api/*.ts` function accepts `opts.signal`; every `queries/*.ts` `queryFn` destructures `{ signal }` from the TanStack context; `apiFetch` passes it explicitly to `fetch`. Navigating away from a slow list/infinite query now cancels the in-flight request.
+- **`AuthCtx.isSignedIn` is `boolean | undefined`** — [`frontend/src/auth/session.tsx`](../frontend/src/auth/session.tsx). Initial `undefined` = unknown, replacing the spurious "signed-out" flicker for users with a persisted Supabase session. Consumers that truthy-check still work.
+- **Redundant invalidations removed from `mutations/me.ts`** — `qk.me` (`["me"]`) already prefix-matches `qk.myTasks` / `qk.myTeams` / `qk.myRewards`; the explicit calls were noise. Table-driven regression test in [`mutations/__tests__/me.test.tsx`](../frontend/src/mutations/__tests__/me.test.tsx) updated to match.
+- **`qk.teamsAll` / `qk.leaderboardAll` helpers** — [`frontend/src/queries/keys.ts`](../frontend/src/queries/keys.ts). Replaces raw `["teams"]` / `["leaderboard"]` strings in `mutations/teams.ts` and related tests with lint-safe prefix helpers.
+- **`queries/news.ts` + `api/news.ts` deleted** — no screen consumed them. `qk.news`, `newsList` fixture, and the `/api/v1/news` MSW handler all removed.
+- **`tsconfig noUnusedParameters: true`** — tightens the typecheck gate; clean against current code.
+- **`renderRoute` wraps in `<Suspense fallback={null}>`** — [`frontend/src/test/renderRoute.tsx`](../frontend/src/test/renderRoute.tsx). Accidental `useSuspenseQuery` on an unloaded key no longer crashes confusingly in tests.
+- **`GoogleAuthScreen` test strengthened** — [`frontend/src/screens/__tests__/GoogleAuthScreen.test.tsx`](../frontend/src/screens/__tests__/GoogleAuthScreen.test.tsx). Now asserts `fake.signInCalls` (provider + redirectTo shape), not just that the button disappeared.
+
+### Still deferred
+
+- **`TeamForm` → real teams search** — the T3 flow disablement is a mitigation, not a wiring. `frontend/src/screens/TeamForm.tsx` is still the hard-coded 4-team demo; a full rewire to `teamsInfiniteQueryOptions` + UUID-keyed `useCreateJoinRequest` is the follow-up that restores T3 to `SUPPORTED_TASK_DISPLAY_IDS`.
+- **Session-expired handler can fire during hover preload** — `defaultPreload: "intent"` + a 401 on a preloaded route will call `onSessionExpired` and redirect a user who hasn't clicked anywhere. Reviewed; not critical today because the `returnTo` derivation reads the current location (redirect target is sensible). Revisit if it becomes a real UX problem.
+- **`@typescript-eslint/no-floating-promises`** — reviewer recommendation; skipped pending an audit of existing deliberate `void signOut()` / similar patterns.
+- **Shared default-invalidate map** — Phase 4c deferral still stands; cleaning up the inlined-per-hook pattern into one `INVALIDATE_MAP` would collapse ~40 lines of `qc.invalidateQueries({...})` and dedupe the regression test.

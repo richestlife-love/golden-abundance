@@ -2,7 +2,7 @@
 
 The Phase 2 API contract: Pydantic 2 models describing the wire format
 between the frontend and the FastAPI backend. See the full design at
-[`../../../../docs/superpowers/specs/2026-04-19-api-contract-design.md`](../../../../docs/superpowers/specs/2026-04-19-api-contract-design.md)
+[`../../../../docs/superpowers/specs/2026-04-19-phase-2-api-contract-design.md`](../../../../docs/superpowers/specs/2026-04-19-phase-2-api-contract-design.md)
 and the endpoint catalog at [`endpoints.md`](endpoints.md).
 
 ## Consume

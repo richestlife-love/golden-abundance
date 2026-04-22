@@ -2,16 +2,16 @@
 
 Monorepo-style layout:
 
-- `frontend/` — React 18 + TypeScript + Vite
+- `frontend/` — React 19 + TypeScript + Vite
 - `backend/` — Python FastAPI service
 - `docs/` — production launch plan and design specs
 
 ## Prerequisites
 
 - [`just`](https://github.com/casey/just) 1.31+
-- [`uv`](https://github.com/astral-sh/uv) — backend Python runtime
-- Node 22+ with [`pnpm`](https://pnpm.io/) 10+ (dev uses Node 25 via `frontend/.nvmrc`; `engines` floor is 22)
-- Docker — local Postgres via `docker compose`
+- [`uv`](https://github.com/astral-sh/uv) — backend Python runtime (requires Python 3.14)
+- Node 24+ with [`pnpm`](https://pnpm.io/) 10+ (`frontend/.nvmrc` pins Node 24; `engines` floor is 24)
+- Docker — local Postgres 17 via `docker compose`
 
 ## Invocation
 
@@ -44,6 +44,8 @@ cd frontend && just ci
 | Recipe | Purpose | When to run |
 | --- | --- | --- |
 | `just backend db-up` / `db-down` | Start / stop local Postgres via `docker compose`. | `db-up` once per machine boot. |
+| `just backend db-reset` | Drop the Postgres volume, restart container, migrate, and seed. | Hard wipe — schema or seed shape changed. |
+| `just backend db-psql [args]` | Open a psql shell in the running Postgres container. | Ad-hoc inspection. |
 | `just backend migrate` | Apply Alembic migrations to head. | Fresh DB, or after pulling new revisions. |
 | `just backend makemigration MSG="..."` | Autogenerate an Alembic revision. | After changing SQLAlchemy models. |
 | `just backend seed` | Populate task definitions + news items. Idempotent but **skip-on-conflict** — won't update existing rows. | Fresh DB. |

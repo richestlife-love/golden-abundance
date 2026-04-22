@@ -1,6 +1,6 @@
 # Frontend
 
-React 18 + TypeScript + Vite. See the [root README](../README.md) for prerequisites, recipe tables, and typical workflows.
+React 19 + TypeScript + Vite. See the [root README](../README.md) for prerequisites, recipe tables, and typical workflows.
 
 ## API proxy
 
@@ -10,7 +10,7 @@ Vite proxies `/api/*` to the backend (default `http://localhost:8000`, overridab
 fetch("/api/v1/me");
 ```
 
-`just dev` (from repo root) boots backend + frontend together. `just frontend dev` boots Vite only — API calls will 404 at the proxy unless a backend is already running. `pnpm build` and `pnpm typecheck` require `src/api/schema.d.ts`; run `just gen-types` from the repo root first.
+`just frontend dev` boots Vite only — API calls will 404 at the proxy unless a backend is already running (`just backend dev`). `pnpm build` and `pnpm typecheck` require `src/api/schema.d.ts`; run `just gen-types` from the repo root first.
 
 ## Environment
 

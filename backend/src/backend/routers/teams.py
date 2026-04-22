@@ -102,7 +102,6 @@ async def update_team(
     # set is closed, so no unknown columns can be written through here.
     for field_name in body.model_fields_set:
         setattr(team, field_name, getattr(body, field_name))
-    session.add(team)
     await session.commit()
     return await row_to_contract_team(session, team, caller_id=me.id)
 

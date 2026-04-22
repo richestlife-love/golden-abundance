@@ -64,7 +64,6 @@ async def complete_profile(
     me.country = body.country
     me.location = body.location
     me.profile_complete = True
-    session.add(me)
     await session.flush()
 
     team = await create_led_team(session, me)
@@ -87,7 +86,6 @@ async def patch_me(
     # cannot be smuggled in from the wire.
     for field_name in body.model_fields_set:
         setattr(me, field_name, getattr(body, field_name))
-    session.add(me)
     await session.commit()
     return row_to_contract_user(me)
 

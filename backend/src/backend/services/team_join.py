@@ -64,7 +64,6 @@ async def create_join_request(session: AsyncSession, *, team: TeamRow, requester
 
 async def approve_join_request(session: AsyncSession, *, team: TeamRow, req: JoinRequestRow) -> None:
     req.status = "approved"
-    session.add(req)
     session.add(TeamMembershipRow(team_id=team.id, user_id=req.user_id))
     await session.flush()
 
@@ -82,7 +81,6 @@ async def approve_join_request(session: AsyncSession, *, team: TeamRow, req: Joi
 
 async def reject_join_request(session: AsyncSession, *, req: JoinRequestRow) -> None:
     req.status = "rejected"
-    session.add(req)
     await session.flush()
 
 

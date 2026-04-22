@@ -151,6 +151,73 @@ async def test_search_team_refs_filters_by_topic(session: AsyncSession) -> None:
     assert [t.id for t in page.items] == [jet_team.id]
 
 
+async def test_search_team_refs_treats_percent_literally(session: AsyncSession) -> None:
+    """A user searching for ``%`` must not wildcard-match every team (H3).
+
+    Two teams created with distinct non-overlapping aliases; querying for
+    ``%`` returns 0 rows because no alias or name actually contains a literal
+    percent sign.
+    """
+    jet = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
+    wei = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="wei@example.com")
+    await session.flush()
+    jet_team = await create_led_team(session, jet)
+    jet_team.alias = "金富有小隊"
+    wei_team = await create_led_team(session, wei)
+    wei_team.alias = "完全無關"
+    await session.commit()
+
+    page = await search_team_refs(
+        session,
+        q="%",
+        topic=None,
+        leader_display_id=None,
+        cursor=None,
+        limit=20,
+    )
+    assert page.items == []
+
+
+async def test_search_team_refs_treats_underscore_literally(session: AsyncSession) -> None:
+    """``_`` is a single-char wildcard in SQL LIKE — escaping must prevent that."""
+    jet = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
+    await session.flush()
+    jet_team = await create_led_team(session, jet)
+    jet_team.alias = "金富有"  # three characters, none are underscores
+    await session.commit()
+
+    page = await search_team_refs(
+        session,
+        q="___",  # would match any three characters before escaping
+        topic=None,
+        leader_display_id=None,
+        cursor=None,
+        limit=20,
+    )
+    assert page.items == []
+
+
+async def test_search_team_refs_finds_literal_percent_in_alias(
+    session: AsyncSession,
+) -> None:
+    """If a team's alias actually contains ``%``, searching for it succeeds."""
+    jet = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")
+    await session.flush()
+    jet_team = await create_led_team(session, jet)
+    jet_team.alias = "100% 認證"
+    await session.commit()
+
+    page = await search_team_refs(
+        session,
+        q="100%",
+        topic=None,
+        leader_display_id=None,
+        cursor=None,
+        limit=20,
+    )
+    assert [t.id for t in page.items] == [jet_team.id]
+
+
 async def test_user_to_ref_does_not_leak_pii(session: AsyncSession) -> None:
     """UserRef must not expose email/phone/line_id/etc. to other team members."""
     user = await upsert_user_by_supabase_identity(session, auth_user_id=uuid4(), email="jet@example.com")

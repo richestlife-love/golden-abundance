@@ -158,6 +158,18 @@ async def row_to_contract_team(session: AsyncSession, team: TeamRow, *, caller_i
     )
 
 
+def _escape_like(s: str) -> str:
+    """Escape SQL LIKE metacharacters so user input matches literally.
+
+    Without this, a user searching for ``%`` matches every row and ``_``
+    matches any single character — both a correctness bug and (combined
+    with the unindexed sequential scan) a cheap DoS lever. The escape
+    character is ``\\``; callers must pass ``escape="\\\\"`` to the
+    ILIKE expression for Postgres to respect it.
+    """
+    return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 async def search_team_refs(
     session: AsyncSession,
     *,
@@ -169,8 +181,10 @@ async def search_team_refs(
 ) -> Paginated[ContractTeamRef]:
     stmt = select(TeamRow, UserRow).join(UserRow, TeamRow.leader_id == UserRow.id)
     if q:
-        like = f"%{q}%"
-        stmt = stmt.where(TeamRow.name.ilike(like) | TeamRow.alias.ilike(like))
+        like = f"%{_escape_like(q)}%"
+        stmt = stmt.where(
+            TeamRow.name.ilike(like, escape="\\") | TeamRow.alias.ilike(like, escape="\\"),
+        )
     if topic:
         stmt = stmt.where(TeamRow.topic == topic)
     if leader_display_id:

@@ -1,4 +1,4 @@
-"""Rate limit enforcement (H1) — dedicated module with the limiter enabled.
+"""Rate limit enforcement — dedicated module with the limiter enabled.
 
 The rest of the suite disables rate limiting via ``RATE_LIMIT_DISABLED=1``
 so idempotent-loop tests don't flap. Here we opt back in and assert the
@@ -8,15 +8,18 @@ so idempotent-loop tests don't flap. Here we opt back in and assert the
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Iterator
+from types import SimpleNamespace
+from typing import cast
 
 import pytest
 import pytest_asyncio
+from fastapi import Request
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import get_settings
 from backend.db.session import get_session
-from backend.rate_limit import limiter
+from backend.rate_limit import _client_key, limiter
 from backend.server import create_app
 from tests.helpers import sign_in
 
@@ -109,3 +112,46 @@ async def test_profile_post_returns_429_past_limit(
         headers=headers,
     )
     assert response.status_code == 429
+
+
+@pytest.mark.asyncio
+async def test_429_response_includes_retry_after_header(
+    rate_limited_client: AsyncClient,
+) -> None:
+    """The 429 must tell the client how long to back off."""
+    headers = await sign_in(rate_limited_client, "jet@example.com")
+    for _ in range(30):
+        r = await rate_limited_client.get("/api/v1/teams", headers=headers)
+        assert r.status_code == 200, r.text
+    r = await rate_limited_client.get("/api/v1/teams", headers=headers)
+    assert r.status_code == 429
+    retry_after = r.headers.get("Retry-After")
+    assert retry_after is not None, "Retry-After header must be set on 429"
+    # 30/minute window → Retry-After should be around the window length (60s).
+    assert int(retry_after) > 0
+
+
+def _fake_request(*, client_host: str = "1.2.3.4", xff: str | None = None) -> Request:
+    headers = {"x-forwarded-for": xff} if xff is not None else {}
+    return cast(
+        "Request",
+        SimpleNamespace(client=SimpleNamespace(host=client_host), headers=headers),
+    )
+
+
+def test_client_key_prefers_xff_first_hop() -> None:
+    """Behind an LB, ``X-Forwarded-For: <client>, <lb>`` — leftmost wins."""
+    assert _client_key(_fake_request(xff="203.0.113.1, 10.0.0.1")) == "203.0.113.1"
+
+
+def test_client_key_handles_single_xff_hop() -> None:
+    assert _client_key(_fake_request(xff="203.0.113.9")) == "203.0.113.9"
+
+
+def test_client_key_falls_back_to_remote_address() -> None:
+    """No ``X-Forwarded-For`` (local dev, tests) → use the socket host."""
+    assert _client_key(_fake_request(client_host="127.0.0.1", xff=None)) == "127.0.0.1"
+
+
+def test_client_key_strips_whitespace_around_xff() -> None:
+    assert _client_key(_fake_request(xff="  203.0.113.2  , 10.0.0.1")) == "203.0.113.2"

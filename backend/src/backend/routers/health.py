@@ -31,8 +31,3 @@ async def readyz() -> dict[str, str]:
             detail="database unavailable",
         ) from exc
     return {"status": "ready"}
-
-
-@router.get("/debug/sentry-smoke", tags=["internal"])
-def sentry_smoke() -> None:
-    raise RuntimeError("sentry smoke test — Phase 7b")

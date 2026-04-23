@@ -4,9 +4,8 @@ FROM debian:trixie-slim AS build
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.7 /uv /uvx /usr/local/bin/
 
-ARG UV_COMPILE_BYTECODE=1
-
-ENV UV_PYTHON_INSTALL_DIR=/opt/uv/python \
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_PYTHON_INSTALL_DIR=/opt/uv/python \
     UV_PYTHON_PREFERENCE=only-managed \
     PYTHONDONTWRITEBYTECODE=1
 
@@ -60,10 +59,6 @@ ENV PATH="/app/.venv/bin:${PATH}" \
     PORT=8000
 
 EXPOSE 8000
-
-# Railway uses its own /readyz probes; this exists for docker-compose / docker run.
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)" || exit 1
 
 # Migrations run in Railway's Pre-Deploy Command (`alembic upgrade head`),
 # not here — a failed migration aborts the deploy before the app container

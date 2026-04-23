@@ -65,7 +65,7 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)" || exit 1
 
-# If alembic fails the container exits non-zero and Railway keeps the
-# previous deployment live. `exec` ensures SIGTERM reaches uvicorn for
-# graceful shutdown rather than being swallowed by sh.
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn backend.server:app --host 0.0.0.0 --port ${PORT}"]
+# Migrations run in Railway's Pre-Deploy Command (`alembic upgrade head`),
+# not here — a failed migration aborts the deploy before the app container
+# starts, and parallel instances can't race each other on DDL.
+CMD ["sh", "-c", "exec uvicorn backend.server:app --host 0.0.0.0 --port ${PORT}"]

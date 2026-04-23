@@ -62,7 +62,8 @@ Test both from your laptop with the `get_engine` snippet in plan 7a §B Task B1 
 https://railway.app/new → Deploy from GitHub repo → this repo. Settings:
 - Root directory: `backend`
 - Builder: Dockerfile (auto-detected)
-- Healthcheck path: `/readyz` (pings the DB pool), timeout **180s for first boot** (migrations run on start), then drop to 60s for subsequent deploys. `/health` stays as a pure liveness probe.
+- **Pre-Deploy Command**: `alembic upgrade head` — runs in an ephemeral container before the new app container starts; a failed migration aborts the deploy and traffic stays on the previous version. Reads `MIGRATION_DATABASE_URL` (superuser) from the service env.
+- Healthcheck path: `/readyz` (pings the DB pool), timeout 30s. `/health` stays as a pure liveness probe. Bump to 60s if first-connect to Supabase is consistently slow.
 
 Environment variables:
 
@@ -77,7 +78,7 @@ Environment variables:
 | `APP_RELEASE` | `${{RAILWAY_GIT_COMMIT_SHA}}` (literal — Railway substitutes at deploy time) |
 | `RATE_LIMIT_DISABLED` | **unset / `0`** — must be enabled in prod (CI sets it to `1` to avoid flapping idempotent-loop tests) |
 
-Deploy. Watch logs for `alembic upgrade head` → `Uvicorn running` → healthcheck green. Verify both probes:
+Deploy. Watch the Pre-Deploy log for `alembic upgrade head` (INFO lines for each revision applied) → then the Deploy log for `Uvicorn running` → healthcheck green. Verify both probes:
 
 ```bash
 curl https://<service>.up.railway.app/health   # {"status":"ok"}      — process up

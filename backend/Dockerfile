@@ -23,13 +23,13 @@ WORKDIR /app
 # Manifests first so a source-only change doesn't bust the deps layer.
 COPY pyproject.toml uv.lock .python-version ./
 
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,id=uv,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
 # --no-editable installs `backend` as a real wheel so the venv is
 # self-contained and safe to copy into the runtime stage.
 COPY src/ src/
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,id=uv,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable
 
 COPY alembic/ alembic/

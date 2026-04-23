@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship the Phase-5 backend + Phase-6 frontend to the public internet at `jinfuyou.app` + `api.jinfuyou.app`. Backend runs on Railway as a Dockerized FastAPI. Frontend runs on Vercel as a static SPA. Database is managed Supabase Postgres. A signed-in real user can reach the public URL, authenticate via Google, and exercise every endpoint end-to-end.
+**Goal:** Ship the Phase-5 backend + Phase-6 frontend to the public internet at `goldenabundance.app` + `api.goldenabundance.app`. Backend runs on Railway as a Dockerized FastAPI. Frontend runs on Vercel as a static SPA. Database is managed Supabase Postgres. A signed-in real user can reach the public URL, authenticate via Google, and exercise every endpoint end-to-end.
 
-**Prereqs:** Plans 6a and 6b merged on `main`. The Supabase project created in plan 6a §0 is ready. A domain registrar account with `jinfuyou.app` purchased (or at minimum unpurchased but available).
+**Prereqs:** Plans 6a and 6b merged on `main`. The Supabase project created in plan 6a §0 is ready. A domain registrar account with `goldenabundance.app` purchased (or at minimum unpurchased but available).
 
 **Pre-flight verification** (one minute — confirms 6a + 6b actually landed on `main` before you start clicking in dashboards):
 
@@ -19,19 +19,19 @@ ls frontend/vercel.json                        # from 6b: CSP + SPA rewrite
 ! ls backend/src/backend/auth/jwt.py 2>/dev/null && echo '6a cleanup ok'
 ```
 
-**Architecture:** No application code changes — this plan is pure infrastructure and config. Outbound Alembic migrations run on backend container startup. DNS records point `jinfuyou.app` → Vercel, `api.jinfuyou.app` → Railway. CORS is locked to the production origin. Secrets live in Railway's + Vercel's UIs; the existing `.env.example` files document the shape.
+**Architecture:** No application code changes — this plan is pure infrastructure and config. Outbound Alembic migrations run on backend container startup. DNS records point `goldenabundance.app` → Vercel, `api.goldenabundance.app` → Railway. CORS is locked to the production origin. Secrets live in Railway's + Vercel's UIs; the existing `.env.example` files document the shape.
 
 **Tech Stack:** Vercel, Railway, Supabase (Postgres + Auth), Google Cloud Console (OAuth 2.0 credentials), Docker, Python 3.14-slim base image, uv.
 
 **Spec:** `docs/superpowers/specs/2026-04-21-phase-6-7-auth-deploy-design.md` §6 (Sub-plan 7a).
 
 **Exit criteria:**
-- `https://jinfuyou.app` resolves and serves the Vercel-built frontend.
-- `https://api.jinfuyou.app/health` returns 200.
-- Google sign-in end-to-end on prod: Google consent → Supabase callback → `jinfuyou.app/auth/callback` → `/welcome` (or `/home` if profile complete).
+- `https://goldenabundance.app` resolves and serves the Vercel-built frontend.
+- `https://api.goldenabundance.app/health` returns 200.
+- Google sign-in end-to-end on prod: Google consent → Supabase callback → `goldenabundance.app/auth/callback` → `/welcome` (or `/home` if profile complete).
 - `alembic upgrade head` has run against the prod Supabase Postgres and created all 11 tables.
-- `securityheaders.com` grade for `jinfuyou.app`: A or better.
-- `curl -H "Origin: https://evil.example" https://api.jinfuyou.app/api/v1/me` returns no `Access-Control-Allow-Origin` header.
+- `securityheaders.com` grade for `goldenabundance.app`: A or better.
+- `curl -H "Origin: https://evil.example" https://api.goldenabundance.app/api/v1/me` returns no `Access-Control-Allow-Origin` header.
 
 ---
 
@@ -41,16 +41,16 @@ Plan 6a §0 covers **Supabase project** setup (project creation, JWT signing key
 
 - [ ] **Step 1: Create or reuse a GCP project**
 
-https://console.cloud.google.com/ → create project (e.g., `jinfuyou-prod`).
+https://console.cloud.google.com/ → create project (e.g., `goldenabundance-prod`).
 
 - [ ] **Step 2: Create OAuth 2.0 credentials**
 
 APIs & Services → Credentials → **Create Credentials → OAuth 2.0 Client ID**.
 
 - Application type: **Web application**
-- Name: `jinfuyou.app web`
+- Name: `goldenabundance.app web`
 - Authorized JavaScript origins:
-  - `https://jinfuyou.app`
+  - `https://goldenabundance.app`
   - `http://localhost:5173`
 - Authorized redirect URIs:
   - `https://<supabase-ref>.supabase.co/auth/v1/callback`
@@ -68,8 +68,8 @@ APIs & Services → OAuth consent screen:
 - App name: `金富有志工`
 - User support email: your email
 - App logo: optional for MVP
-- Application home page: `https://jinfuyou.app`
-- Authorized domains: `jinfuyou.app`
+- Application home page: `https://goldenabundance.app`
+- Authorized domains: `goldenabundance.app`
 - Developer contact: your email
 - Scopes: only the defaults (`openid`, `email`, `profile`). No sensitive or restricted scopes.
 - Publishing status: **In production** (so sign-ins don't throw a "not verified" warning beyond the initial 100-user cap; request verification later if you expect >100 distinct Google accounts to sign in).
@@ -304,7 +304,7 @@ If connection fails with "role does not exist" or "password authentication faile
 
 ## Section C — Railway project (backend)
 
-**Exit criteria:** `https://api.jinfuyou.app/health` returns 200 from a Railway-served container; logs show `alembic upgrade head` completed.
+**Exit criteria:** `https://api.goldenabundance.app/health` returns 200 from a Railway-served container; logs show `alembic upgrade head` completed.
 
 ### Task C1: Create the Railway project
 
@@ -338,7 +338,7 @@ Project → Variables → add each row:
 | `SUPABASE_URL` | `https://<ref>.supabase.co` |
 | `SUPABASE_JWT_AUD` | `authenticated` |
 | `APP_ENV` | `prod` |
-| `CORS_ORIGINS` | `https://jinfuyou.app` |
+| `CORS_ORIGINS` | `https://goldenabundance.app` |
 | `APP_RELEASE` | `${{RAILWAY_GIT_COMMIT_SHA}}` (literal — Railway substitutes it at deploy time) |
 
 *Do not* set `SENTRY_DSN` yet; that belongs in plan 7b.
@@ -367,9 +367,9 @@ curl -s https://<your-service>.up.railway.app/health | jq
 
 Expected: `{"status":"ok"}`.
 
-- [ ] **Step 6: Assign custom domain `api.jinfuyou.app`**
+- [ ] **Step 6: Assign custom domain `api.goldenabundance.app`**
 
-Settings → Networking → Custom Domains → Add `api.jinfuyou.app`. Railway will show a target CNAME value (e.g., `<project>.up.railway.app`). Record it — you'll point DNS at it in Section E.
+Settings → Networking → Custom Domains → Add `api.goldenabundance.app`. Railway will show a target CNAME value (e.g., `<project>.up.railway.app`). Record it — you'll point DNS at it in Section E.
 
 (SSL cert auto-provisions via Let's Encrypt within ~2 minutes after DNS propagates.)
 
@@ -418,7 +418,7 @@ Expected: 4 task_def rows (T1, T2, T3, T4) and 3 news_item rows.
 
 ## Section D — Vercel project (frontend)
 
-**Exit criteria:** `https://jinfuyou.app` serves the Vite-built SPA; CSP headers from `vercel.json` are present on every response.
+**Exit criteria:** `https://goldenabundance.app` serves the Vite-built SPA; CSP headers from `vercel.json` are present on every response.
 
 ### Task D1: Create the Vercel project
 
@@ -476,23 +476,23 @@ curl -sI https://<your-project>.vercel.app | grep -i -E 'content-security-policy
 
 Expected: all five headers from `frontend/vercel.json` present.
 
-- [ ] **Step 7: Assign custom domain `jinfuyou.app`**
+- [ ] **Step 7: Assign custom domain `goldenabundance.app`**
 
-Settings → Domains → Add `jinfuyou.app` (apex). Vercel shows the `A` / `CNAME` values needed for DNS. Record them — Section E wires DNS.
+Settings → Domains → Add `goldenabundance.app` (apex). Vercel shows the `A` / `CNAME` values needed for DNS. Record them — Section E wires DNS.
 
-(Also add `www.jinfuyou.app` with a 301 → apex redirect if you want the `www` prefix to work too; optional.)
+(Also add `www.goldenabundance.app` with a 301 → apex redirect if you want the `www` prefix to work too; optional.)
 
 ---
 
 ## Section E — DNS
 
-**Exit criteria:** `dig jinfuyou.app` and `dig api.jinfuyou.app` both resolve to Vercel and Railway respectively; browsers reach both over HTTPS.
+**Exit criteria:** `dig goldenabundance.app` and `dig api.goldenabundance.app` both resolve to Vercel and Railway respectively; browsers reach both over HTTPS.
 
 ### Task E1: Configure DNS records at the registrar
 
 **Files:** (Registrar dashboard — no files touched here)
 
-- [ ] **Step 1: Log in to the registrar** where you bought `jinfuyou.app` (Namecheap / Cloudflare / Porkbun / etc.).
+- [ ] **Step 1: Log in to the registrar** where you bought `goldenabundance.app` (Namecheap / Cloudflare / Porkbun / etc.).
 
 - [ ] **Step 2: Set the apex record for Vercel**
 
@@ -513,20 +513,20 @@ Add a `CNAME` record:
 
 - [ ] **Step 4: (Optional) Set `www` redirect**
 
-If you want `www.jinfuyou.app` to resolve:
+If you want `www.goldenabundance.app` to resolve:
 - Add `CNAME www → cname.vercel-dns.com` (or the same flattening target as apex)
-- In Vercel, add `www.jinfuyou.app` and configure it as a 301 redirect to apex.
+- In Vercel, add `www.goldenabundance.app` and configure it as a 301 redirect to apex.
 
 - [ ] **Step 5: Wait for propagation + verify**
 
 ```bash
 # Should resolve to Vercel IPs
-dig jinfuyou.app +short
+dig goldenabundance.app +short
 # Should resolve to Railway's CNAME target
-dig api.jinfuyou.app +short
+dig api.goldenabundance.app +short
 # Confirm SSL cert
-curl -sI https://jinfuyou.app | head -5
-curl -sI https://api.jinfuyou.app/health | head -5
+curl -sI https://goldenabundance.app | head -5
+curl -sI https://api.goldenabundance.app/health | head -5
 ```
 
 Expected: both URLs serve 200 OK over HTTPS.
@@ -540,7 +540,7 @@ Troubleshooting:
 
 ## Section F — Supabase Auth redirect URLs for prod
 
-**Exit criteria:** Signing in on `jinfuyou.app` redirects to `jinfuyou.app/auth/callback` (not localhost or preview URL).
+**Exit criteria:** Signing in on `goldenabundance.app` redirects to `goldenabundance.app/auth/callback` (not localhost or preview URL).
 
 ### Task F1: Update Supabase URL allowlist
 
@@ -548,9 +548,9 @@ Troubleshooting:
 
 - [ ] **Step 1: Supabase → Authentication → URL Configuration**
 
-- **Site URL:** `https://jinfuyou.app` (this is the default redirect Supabase uses when OAuth doesn't specify one)
+- **Site URL:** `https://goldenabundance.app` (this is the default redirect Supabase uses when OAuth doesn't specify one)
 - **Additional redirect URLs** (one per line):
-  - `https://jinfuyou.app/auth/callback`
+  - `https://goldenabundance.app/auth/callback`
   - `http://localhost:5173/auth/callback` (local dev)
   - `https://*.vercel.app/auth/callback` (Vercel PR previews)
 
@@ -560,10 +560,10 @@ Note: `https://*.vercel.app/auth/callback` is intentionally broad for MVP so any
 
 - [ ] **Step 2: Verify from a new incognito window**
 
-1. https://jinfuyou.app
+1. https://goldenabundance.app
 2. Click "Sign in with Google"
 3. Pick a Google account
-4. Browser returns to `https://jinfuyou.app/auth/callback` → `/welcome` (if first sign-in) or `/home`
+4. Browser returns to `https://goldenabundance.app/auth/callback` → `/welcome` (if first sign-in) or `/home`
 5. Sign out → back at `/sign-in`
 6. `GET /api/v1/me` with no auth → 401
 
@@ -577,7 +577,7 @@ Note: `https://*.vercel.app/auth/callback` is intentionally broad for MVP so any
 
 - [ ] **Step 1: Sign-in end-to-end**
 
-In an incognito window against `https://jinfuyou.app`, sign in with your Google account → `/welcome` (profile incomplete for a fresh account). Complete the profile. Land on `/home`.
+In an incognito window against `https://goldenabundance.app`, sign in with your Google account → `/welcome` (profile incomplete for a fresh account). Complete the profile. Land on `/home`.
 
 - [ ] **Step 2: Task flow**
 
@@ -591,7 +591,7 @@ From a second Google account in another incognito window, sign in → complete p
 
 ```bash
 curl -sI -H 'Origin: https://evil.example' \
-  https://api.jinfuyou.app/api/v1/me | grep -i 'access-control-allow-origin' || echo 'CORS rejected ✓'
+  https://api.goldenabundance.app/api/v1/me | grep -i 'access-control-allow-origin' || echo 'CORS rejected ✓'
 ```
 
 Expected: `CORS rejected ✓` (no `Access-Control-Allow-Origin` header returned).
@@ -599,7 +599,7 @@ Expected: `CORS rejected ✓` (no `Access-Control-Allow-Origin` header returned)
 - [ ] **Step 5: Auth smoke**
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' https://api.jinfuyou.app/api/v1/me
+curl -s -o /dev/null -w '%{http_code}\n' https://api.goldenabundance.app/api/v1/me
 ```
 
 Expected: `401`.
@@ -608,7 +608,7 @@ Do **not** use `curl -I` / `-X HEAD` here — FastAPI's router only registers GE
 
 - [ ] **Step 6: Security headers smoke**
 
-Browse to https://securityheaders.com/?q=https%3A%2F%2Fjinfuyou.app → score should be **A** or better. If not, revisit `frontend/vercel.json` header set.
+Browse to https://securityheaders.com/?q=https%3A%2F%2Fgoldenabundance.app → score should be **A** or better. If not, revisit `frontend/vercel.json` header set.
 
 - [ ] **Step 7: Supabase rate-limit review**
 
@@ -627,12 +627,12 @@ git commit -m "fix(deploy): <what> (Phase 7a)"
 
 ## Final self-check before handoff to 7b
 
-- [ ] `https://jinfuyou.app` loads; `https://api.jinfuyou.app/health` returns 200.
+- [ ] `https://goldenabundance.app` loads; `https://api.goldenabundance.app/health` returns 200.
 - [ ] Google OAuth round-trip works end-to-end.
 - [ ] Prod Supabase Postgres has all 11 tables (check via Supabase Table Editor).
 - [ ] Railway auto-deploys on `main`; Vercel auto-deploys on `main` + PRs.
-- [ ] DNS resolves from a fresh external resolver (`dig +nocmd +nocomments +nostats +short jinfuyou.app @1.1.1.1`).
-- [ ] `securityheaders.com` grade ≥ A for `jinfuyou.app`.
+- [ ] DNS resolves from a fresh external resolver (`dig +nocmd +nocomments +nostats +short goldenabundance.app @1.1.1.1`).
+- [ ] `securityheaders.com` grade ≥ A for `goldenabundance.app`.
 - [ ] Custom-domain SSL certs valid.
 - [ ] Rollback path understood: if any smoke step fails and a fix-forward isn't fast, see spec §10 (`docs/superpowers/specs/2026-04-21-phase-6-7-auth-deploy-design.md`) — Railway "Redeploy prior build" + Vercel "Promote to Production" against an earlier deployment are both one-click; DNS TTL is held at 300s so a DNS swap propagates in < 5 min.
 

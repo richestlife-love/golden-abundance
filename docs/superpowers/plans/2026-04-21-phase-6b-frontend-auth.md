@@ -1725,4 +1725,4 @@ If anything breaks, fix and commit under this section; otherwise merge.
 - [ ] `frontend/src/dev/` no longer exists; `backend/src/backend/scripts/dump_demo_accounts.py` no longer exists; `justfile`'s `gen-demo-accounts` recipe no longer exists.
 - [ ] `frontend/src/test/setup.ts`'s `afterEach` clears the Supabase test override.
 
-Once this plan is merged, the app runs end-to-end locally (backend verifies real Supabase JWTs; frontend authenticates through Supabase). The next plan (7a) focuses entirely on getting it onto the public internet at `jinfuyou.app`.
+Once this plan is merged, the app runs end-to-end locally (backend verifies real Supabase JWTs; frontend authenticates through Supabase). The next plan (7a) focuses entirely on getting it onto the public internet at `goldenabundance.app`.

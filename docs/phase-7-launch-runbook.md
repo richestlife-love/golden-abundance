@@ -19,12 +19,12 @@ Sequence matters: Google Cloud → Supabase role → Railway → Vercel → DNS 
 
 ### 1. Google Cloud OAuth (plan 7a §0)
 
-https://console.cloud.google.com/ → new project `jinfuyou-prod`.
+https://console.cloud.google.com/ → new project `goldenabundance-prod`.
 
 **APIs & Services → Credentials → Create Credentials → OAuth 2.0 Client ID:**
 - Application type: Web application
-- Name: `jinfuyou.app web`
-- Authorized JavaScript origins: `https://jinfuyou.app`, `http://localhost:5173`
+- Name: `goldenabundance.app web`
+- Authorized JavaScript origins: `https://goldenabundance.app`, `http://localhost:5173`
 - Authorized redirect URIs: `https://<supabase-ref>.supabase.co/auth/v1/callback`
 
 Copy Client ID + Secret → paste into Supabase → Authentication → Providers → Google → Save.
@@ -32,8 +32,8 @@ Copy Client ID + Secret → paste into Supabase → Authentication → Providers
 **OAuth consent screen:**
 - User Type: External
 - App name: `金富有志工`
-- Application home page: `https://jinfuyou.app`
-- Authorized domains: `jinfuyou.app`
+- Application home page: `https://goldenabundance.app`
+- Authorized domains: `goldenabundance.app`
 - Scopes: defaults only (`openid`, `email`, `profile`)
 - Publishing status: In production
 
@@ -64,7 +64,7 @@ Environment variables:
 | `SUPABASE_URL` | `https://<ref>.supabase.co` |
 | `SUPABASE_JWT_AUD` | `authenticated` |
 | `APP_ENV` | `prod` |
-| `CORS_ORIGINS` | `https://jinfuyou.app` |
+| `CORS_ORIGINS` | `https://goldenabundance.app` |
 | `APP_RELEASE` | `${{RAILWAY_GIT_COMMIT_SHA}}` (literal — Railway substitutes at deploy time) |
 | `RATE_LIMIT_DISABLED` | **unset / `0`** — must be enabled in prod (CI sets it to `1` to avoid flapping idempotent-loop tests) |
 
@@ -75,7 +75,7 @@ curl https://<service>.up.railway.app/health   # {"status":"ok"}      — proces
 curl https://<service>.up.railway.app/readyz   # {"status":"ready"}   — DB reachable
 ```
 
-Settings → Networking → Custom Domains → add `api.jinfuyou.app`; record the target CNAME.
+Settings → Networking → Custom Domains → add `api.goldenabundance.app`; record the target CNAME.
 
 ### 4. Prod seed reference data (plan 7a §C2)
 
@@ -128,22 +128,22 @@ curl -sI https://<your-project>.vercel.app \
   | grep -iE 'content-security-policy|x-frame-options|x-content-type-options|referrer-policy|permissions-policy'
 ```
 
-Settings → Domains → add `jinfuyou.app`.
+Settings → Domains → add `goldenabundance.app`.
 
 ### 6. DNS (plan 7a §E)
 
 At the registrar:
-- Apex `jinfuyou.app`: `A` → `76.76.21.21` (verify in Vercel — IPs change) **or** CNAME-flatten / ALIAS → `cname.vercel-dns.com` if registrar supports it
-- `api.jinfuyou.app`: `CNAME` → Railway target from step 3
+- Apex `goldenabundance.app`: `A` → `76.76.21.21` (verify in Vercel — IPs change) **or** CNAME-flatten / ALIAS → `cname.vercel-dns.com` if registrar supports it
+- `api.goldenabundance.app`: `CNAME` → Railway target from step 3
 - TTL: **300s** through launch week; raise to 3600s after stability
 
 Verify:
 
 ```bash
-dig +short jinfuyou.app @1.1.1.1
-dig +short api.jinfuyou.app @1.1.1.1
-curl -sI https://jinfuyou.app | head -3
-curl -sI https://api.jinfuyou.app/health | head -3
+dig +short goldenabundance.app @1.1.1.1
+dig +short api.goldenabundance.app @1.1.1.1
+curl -sI https://goldenabundance.app | head -3
+curl -sI https://api.goldenabundance.app/health | head -3
 ```
 
 Let's Encrypt takes ~5 min after DNS propagates.
@@ -151,15 +151,15 @@ Let's Encrypt takes ~5 min after DNS propagates.
 ### 7. Supabase redirect URLs (plan 7a §F)
 
 Supabase → Authentication → URL Configuration:
-- **Site URL**: `https://jinfuyou.app`
+- **Site URL**: `https://goldenabundance.app`
 - **Additional redirect URLs** (one per line):
-  - `https://jinfuyou.app/auth/callback`
+  - `https://goldenabundance.app/auth/callback`
   - `http://localhost:5173/auth/callback`
   - `https://*.vercel.app/auth/callback` (PR previews — tighten post-launch to `https://jfy-web-*.vercel.app/auth/callback`)
 
 ### 8. Prod smoke (plan 7a §G)
 
-Incognito window against `https://jinfuyou.app`:
+Incognito window against `https://goldenabundance.app`:
 1. Sign in with a fresh Google account → `/welcome` → complete profile → `/home`
 2. Submit T1 → 50 points in `/rewards`
 3. Second Google account → join-request the first account's team → approve from first → reflects on both sides
@@ -168,14 +168,14 @@ CLI smoke:
 
 ```bash
 # CORS should reject evil origins
-curl -sI -H 'Origin: https://evil.example' https://api.jinfuyou.app/api/v1/me \
+curl -sI -H 'Origin: https://evil.example' https://api.goldenabundance.app/api/v1/me \
   | grep -i 'access-control-allow-origin' || echo 'CORS rejected ✓'
 
 # Unauth /me should 401 (not 405 — use GET, not HEAD)
-curl -s -o /dev/null -w '%{http_code}\n' https://api.jinfuyou.app/api/v1/me   # → 401
+curl -s -o /dev/null -w '%{http_code}\n' https://api.goldenabundance.app/api/v1/me   # → 401
 ```
 
-securityheaders.com grade ≥ A at https://securityheaders.com/?q=https%3A%2F%2Fjinfuyou.app
+securityheaders.com grade ≥ A at https://securityheaders.com/?q=https%3A%2F%2Fgoldenabundance.app
 
 ---
 
@@ -193,7 +193,7 @@ Redeploy. Smoke:
        raise RuntimeError("sentry smoke test — Phase 7b")
    ```
 2. Commit + push; wait for Railway deploy.
-3. `curl https://api.jinfuyou.app/debug/sentry-smoke` → 500.
+3. `curl https://api.goldenabundance.app/debug/sentry-smoke` → 500.
 4. Check Sentry → Issues: expect `RuntimeError: sentry smoke test — Phase 7b` with commit-SHA release tag + `environment=prod`.
 5. `git revert HEAD && git push`. Confirm `/debug/sentry-smoke` now 404s.
 
@@ -210,21 +210,21 @@ Vercel → Settings → Environment Variables:
 | `VITE_SENTRY_DSN` | Production + Preview | frontend DSN |
 | `SENTRY_AUTH_TOKEN` | Production (**Secret**) | token above |
 | `SENTRY_ORG` | Production | your Sentry org slug |
-| `SENTRY_PROJECT` | Production | `jinfuyou-frontend` |
+| `SENTRY_PROJECT` | Production | `goldenabundance-frontend` |
 
 Redeploy. Build logs should show `Uploaded <N> files to <SENTRY_ORG>/<SENTRY_PROJECT>`.
 
 Smoke:
 1. Add the `SentrySmokeButton` + `Bomb` component from plan 7b §B4 Step 5 (gated on `?debug=sentry`) into a screen.
 2. Commit + push; wait for Vercel deploy.
-3. Visit `https://jinfuyou.app/?debug=sentry` → click the button → fallback renders → Sentry issue lands within ~30s with source-mapped lines + `VITE_RELEASE` SHA.
+3. Visit `https://goldenabundance.app/?debug=sentry` → click the button → fallback renders → Sentry issue lands within ~30s with source-mapped lines + `VITE_RELEASE` SHA.
 4. `git revert HEAD && git push`. Confirm the button no longer renders.
 
 ### 11. UptimeRobot (plan 7b §C)
 
 https://uptimerobot.com/ (free tier):
-- Monitor 1: HTTP(s), `https://api.jinfuyou.app/health`, name `jinfuyou api`, 5-min interval
-- Monitor 2: HTTP(s), `https://jinfuyou.app/`, name `jinfuyou web`, 5-min interval
+- Monitor 1: HTTP(s), `https://api.goldenabundance.app/health`, name `goldenabundance api`, 5-min interval
+- Monitor 2: HTTP(s), `https://goldenabundance.app/`, name `goldenabundance web`, 5-min interval
 - Alert Contact: email (or Slack webhook); attach to both monitors
 - Verify via Alert Contact → "Test" (safer than pausing the Railway service)
 - Optional: enable public status page at `stats.uptimerobot.com/<slug>`
@@ -252,7 +252,7 @@ Incognito, fresh personal Google account (not pre-seeded):
 8. Security headers grade ≥ A (`securityheaders.com`); count 6 (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy + Vercel-added HSTS)
 9. CORS smoke (from step 8)
 10. Unauth `/me` → 401 (from step 8)
-11. Sign out on `jinfuyou.app` → `/sign-in`; direct URL `https://jinfuyou.app/me` bounces to `/sign-in?returnTo=%2Fme`
+11. Sign out on `goldenabundance.app` → `/sign-in`; direct URL `https://goldenabundance.app/me` bounces to `/sign-in?returnTo=%2Fme`
 12. DNS from fresh resolver (from step 6)
 13. Supabase rate limits — default 60 sign-ups/hr; file a support ticket for a temp bump if expecting a launch-day spike above that
 

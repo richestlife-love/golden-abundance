@@ -92,7 +92,7 @@ export default function TeamCard({
   // Use display_id for shareable team codes (team.id is a UUID that's neither
   // typeable nor memorable).
   const shareCode = team.display_id;
-  const shareUrl = "golden-abundance.vercel.app";
+  const shareUrl = "goldenabundance.app";
   const shareMessage = `嗨！我在「金富有」建立了志工團隊，一起來加入吧 ✨\n\n團隊編號：${shareCode}\n開啟 App：${shareUrl}\n\n進入 App 後，點「我的 › 搜尋加入」輸入編號 ${shareCode} 即可申請。`;
   const copyId = () => copyIdClipboard(shareCode);
   const copyShare = () => copyShareClipboard(shareMessage);

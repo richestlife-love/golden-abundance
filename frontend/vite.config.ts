@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => {
     plugins.push(
       sentryVitePlugin({
         authToken: env.SENTRY_AUTH_TOKEN,
-        org: env.SENTRY_ORG ?? "jinfuyou",
-        project: env.SENTRY_PROJECT ?? "jinfuyou-frontend",
+        org: env.SENTRY_ORG ?? "goldenabundance",
+        project: env.SENTRY_PROJECT ?? "goldenabundance-frontend",
         release: { name: env.VITE_RELEASE },
         sourcemaps: { assets: "./dist/**" },
       }),

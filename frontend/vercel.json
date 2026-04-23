@@ -5,7 +5,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.ingest.sentry.io https://api.jinfuyou.app; img-src 'self' data: https://*.googleusercontent.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.ingest.sentry.io https://api.goldenabundance.app; img-src 'self' data: https://*.googleusercontent.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         },
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
@@ -15,7 +15,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/v1/:path*", "destination": "https://api.jinfuyou.app/api/v1/:path*" },
+    { "source": "/api/v1/:path*", "destination": "https://api.goldenabundance.app/api/v1/:path*" },
     { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ]
 }

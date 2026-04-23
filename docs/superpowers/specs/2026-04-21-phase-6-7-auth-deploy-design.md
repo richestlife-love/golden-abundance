@@ -7,7 +7,7 @@
 
 ## 1. Goal
 
-Replace Phase 5b's email-stub auth with real Supabase Auth + deploy Phase 5's backend and Phase 4c's frontend to production on custom domains (`jinfuyou.app` + `api.jinfuyou.app`) fronted by observability. After this phase, a real volunteer can open `jinfuyou.app`, sign in with Google, interact with the live app end-to-end, and any production error lands in Sentry within seconds.
+Replace Phase 5b's email-stub auth with real Supabase Auth + deploy Phase 5's backend and Phase 4c's frontend to production on custom domains (`goldenabundance.app` + `api.goldenabundance.app`) fronted by observability. After this phase, a real volunteer can open `goldenabundance.app`, sign in with Google, interact with the live app end-to-end, and any production error lands in Sentry within seconds.
 
 This is the final phase of the "single-file prototype → production app" migration arc. The goal state is *running in production with real users*, not just *deployable*.
 
@@ -22,7 +22,7 @@ This is the final phase of the "single-file prototype → production app" migrat
 | 5 | Row-Level Security | Off. FastAPI is single auth plane. Dedicated `app_backend` Postgres role with `BYPASSRLS` |
 | 6 | Session storage | Frontend-owned — `@supabase/supabase-js` default (localStorage) + Bearer header + strict CSP |
 | 7 | Deploy platforms | Frontend → Vercel. Backend → Railway. DB+Auth → Supabase |
-| 8 | Domain | `jinfuyou.app` apex (frontend) + `api.jinfuyou.app` (backend) |
+| 8 | Domain | `goldenabundance.app` apex (frontend) + `api.goldenabundance.app` (backend) |
 | 9 | Environments | Prod only + Vercel per-PR previews (no separate staging) |
 | 10 | Observability | Sentry free tier (backend + frontend) + platform-built-in logs + UptimeRobot health checks |
 | 11 | Decomposition | Four sub-plans: 6a backend auth → 6b frontend auth → 7a deploy → 7b observability + launch polish |
@@ -34,11 +34,11 @@ Two items are judgment calls called out here so future readers see they were del
 ### 3.1 Auth data flow (after Phase 6 completes)
 
 ```
-[User taps "Sign in with Google" on jinfuyou.app]
+[User taps "Sign in with Google" on goldenabundance.app]
       │
       ▼
 ┌──────────────────────────────┐
-│ jinfuyou.app (Vercel)        │  @supabase/supabase-js →
+│ goldenabundance.app (Vercel)        │  @supabase/supabase-js →
 │                              │  signInWithOAuth({ provider: 'google',
 │                              │    options: { redirectTo: <origin>/auth/callback }})
 └──────────────┬───────────────┘
@@ -52,14 +52,14 @@ Two items are judgment calls called out here so future readers see they were del
                │ redirects to <origin>/auth/callback#access_token=...
                ▼
 ┌──────────────────────────────┐
-│ jinfuyou.app/auth/callback   │  SDK picks up session from URL fragment,
+│ goldenabundance.app/auth/callback   │  SDK picks up session from URL fragment,
 │                              │  persists to localStorage, auto-refreshes
 │                              │  near expiry; router navigates to returnTo
 └──────────────┬───────────────┘
                │ fetch('/api/v1/...', Authorization: Bearer <jwt>)
                ▼
 ┌──────────────────────────────┐
-│ api.jinfuyou.app (Railway)   │  current_user() dep:
+│ api.goldenabundance.app (Railway)   │  current_user() dep:
 │                              │   1. fetch JWKS (cached in-process)
 │                              │   2. verify RS256 signature + iss + aud + exp
 │                              │   3. resolve UserRow by UUID(claims.sub)
@@ -86,14 +86,14 @@ Two items are judgment calls called out here so future readers see they were del
 | Frontend token store | `localStorage[ga.token]` | Supabase SDK's own localStorage keys |
 | Postgres | `docker-compose` local | Supabase managed, `app_backend` role |
 | Hosting | local only | Vercel (frontend) + Railway (backend) |
-| Domain | `localhost` | `jinfuyou.app` + `api.jinfuyou.app` |
-| CORS origins | permissive dev | `https://jinfuyou.app` only |
+| Domain | `localhost` | `goldenabundance.app` + `api.goldenabundance.app` |
+| CORS origins | permissive dev | `https://goldenabundance.app` only |
 | Error handling | `print()` / stdout | Sentry on both tiers, with source maps + release tag |
 
 ### 3.3 Non-goals (deferred; rationale tracked in §11)
 
 - Admin role system / news publishing UI
-- Supabase custom Auth domain (`auth.jinfuyou.app` — requires Pro)
+- Supabase custom Auth domain (`auth.goldenabundance.app` — requires Pro)
 - Row-Level Security policies
 - Refresh-token revocation / session denylist
 - Staging environment (separate Supabase project + Railway env)
@@ -112,7 +112,7 @@ Two items are judgment calls called out here so future readers see they were del
 - Create a Supabase project. Record project reference and JWKS URL.
 - **Auth → Providers → Google:** enable; paste Google OAuth Client ID + Secret (obtained in §6.1).
 - **Auth → URL Configuration:**
-  - Site URL: `https://jinfuyou.app`
+  - Site URL: `https://goldenabundance.app`
   - Additional redirect URLs: `http://localhost:5173/auth/callback`, `https://*.vercel.app/auth/callback` (for PR previews)
 - **JWT → Signing Keys:** enable asymmetric (RS256). Note JWKS URL: `https://<ref>.supabase.co/auth/v1/.well-known/jwks.json`.
 - **Database → Roles:** create `app_backend` role
@@ -310,16 +310,16 @@ Phase 5's curated picker is deleted entirely. Local dev uses:
 
 - New GCP project (or existing).
 - APIs & Services → Credentials → **Create OAuth 2.0 Client ID (Web application)**.
-- Authorized JavaScript origins: `https://jinfuyou.app`, `http://localhost:5173`.
+- Authorized JavaScript origins: `https://goldenabundance.app`, `http://localhost:5173`.
 - Authorized redirect URIs: `https://<supabase-ref>.supabase.co/auth/v1/callback`.
 - Copy Client ID + Secret → Supabase Auth → Providers → Google (§4.1).
 
 ### 6.2 DNS
 
-At registrar (Namecheap / Cloudflare / wherever `jinfuyou.app` is bought):
+At registrar (Namecheap / Cloudflare / wherever `goldenabundance.app` is bought):
 
-- Apex `jinfuyou.app` → Vercel. Prefer CNAME flattening (Cloudflare, Porkbun) if the registrar supports it; otherwise `A 76.76.21.21` (Vercel's apex IP — confirm current value in Vercel's domain UI).
-- Subdomain `api.jinfuyou.app` CNAME → `<project>.up.railway.app` (Railway displays the exact value after custom-domain config).
+- Apex `goldenabundance.app` → Vercel. Prefer CNAME flattening (Cloudflare, Porkbun) if the registrar supports it; otherwise `A 76.76.21.21` (Vercel's apex IP — confirm current value in Vercel's domain UI).
+- Subdomain `api.goldenabundance.app` CNAME → `<project>.up.railway.app` (Railway displays the exact value after custom-domain config).
 - TTL 300s during launch week — fast rollback if DNS is wrong. Raise to 3600s after launch.
 
 ### 6.3 Backend (Railway)
@@ -349,7 +349,7 @@ CMD ["sh", "-c", "alembic upgrade head && uvicorn backend.server:app --host 0.0.
 Railway project config:
 - Root directory: `backend/`
 - Builder: Dockerfile
-- Custom domain: `api.jinfuyou.app` (auto-SSL via Let's Encrypt)
+- Custom domain: `api.goldenabundance.app` (auto-SSL via Let's Encrypt)
 - Healthcheck path: `/health`
 
 Env vars (Railway UI):
@@ -360,7 +360,7 @@ Env vars (Railway UI):
 | `SUPABASE_URL` | `https://<ref>.supabase.co` |
 | `SUPABASE_JWT_AUD` | `authenticated` |
 | `APP_ENV` | `prod` |
-| `CORS_ORIGINS` | `https://jinfuyou.app` |
+| `CORS_ORIGINS` | `https://goldenabundance.app` |
 | `APP_RELEASE` | `${{RAILWAY_GIT_COMMIT_SHA}}` (Railway template var) |
 | `SENTRY_DSN` | (set in §7.1) |
 
@@ -373,7 +373,7 @@ Vercel project config:
 - Framework preset: Vite
 - Build command: `pnpm install --frozen-lockfile && pnpm build`
 - Output directory: `dist`
-- Custom domain: `jinfuyou.app` apex (auto-SSL via Let's Encrypt)
+- Custom domain: `goldenabundance.app` apex (auto-SSL via Let's Encrypt)
 
 Env vars (Vercel UI, set for Production + Preview):
 
@@ -385,7 +385,7 @@ Env vars (Vercel UI, set for Production + Preview):
 | `VITE_RELEASE` | `${VERCEL_GIT_COMMIT_SHA}` |
 | `SENTRY_AUTH_TOKEN` | build-time only, upload source maps; Vercel secret |
 
-Preview deploys inherit these env vars and hit **the same prod Supabase + prod backend**. CORS is locked to `https://jinfuyou.app` only; preview API calls CORS-fail. Accepted tradeoff per Q7A — previews are for visual review, not full E2E. Developers wanting real backend access against a preview UI fall back to local dev.
+Preview deploys inherit these env vars and hit **the same prod Supabase + prod backend**. CORS is locked to `https://goldenabundance.app` only; preview API calls CORS-fail. Accepted tradeoff per Q7A — previews are for visual review, not full E2E. Developers wanting real backend access against a preview UI fall back to local dev.
 
 `vercel.json` (per §5.5) handles CSP + SPA rewrite + security headers.
 
@@ -438,8 +438,8 @@ Covered in §4.1. Reiterated here because it's the single most-forgettable prere
 
 Manual setup in UptimeRobot dashboard (free plan: 50 monitors, 5-min interval):
 
-- Monitor 1: `GET https://api.jinfuyou.app/health` — 200 expected
-- Monitor 2: `GET https://jinfuyou.app/` — 200 expected
+- Monitor 1: `GET https://api.goldenabundance.app/health` — 200 expected
+- Monitor 2: `GET https://goldenabundance.app/` — 200 expected
 - Alert contact: your email (SMS or Slack available on paid plans)
 - Optional: public status page URL (`stats.uptimerobot.com/...`) as a trust signal
 
@@ -461,13 +461,13 @@ New `.github/workflows/ci.yml`:
 - [ ] Team creation + join-request + approve flow works end-to-end from two accounts
 - [ ] Deliberate `raise Exception("sentry smoke")` from a test endpoint + `throw new Error(...)` from a dev-only button; both appear in Sentry with source maps + release tag
 - [ ] Both UptimeRobot monitors report green for 30+ min
-- [ ] `securityheaders.com` grade for `jinfuyou.app`: A or better (verifies CSP + HSTS + Referrer-Policy + Permissions-Policy + X-Frame-Options + X-Content-Type-Options all present)
-- [ ] `curl -H "Origin: https://evil.example" https://api.jinfuyou.app/api/v1/me` → no `Access-Control-Allow-Origin` header returned (CORS rejects)
-- [ ] `curl https://api.jinfuyou.app/api/v1/me` with no `Authorization` → 401
+- [ ] `securityheaders.com` grade for `goldenabundance.app`: A or better (verifies CSP + HSTS + Referrer-Policy + Permissions-Policy + X-Frame-Options + X-Content-Type-Options all present)
+- [ ] `curl -H "Origin: https://evil.example" https://api.goldenabundance.app/api/v1/me` → no `Access-Control-Allow-Origin` header returned (CORS rejects)
+- [ ] `curl https://api.goldenabundance.app/api/v1/me` with no `Authorization` → 401
 - [ ] Sign in from a second Google account (not pre-seeded) → fresh `UserRow` materialized, profile setup works
 - [ ] Sign out → redirected to `/sign-in` → `GET /api/v1/me` now returns 401
 - [ ] Supabase default Auth rate limits reviewed (60 sign-ups/hour default — request higher in Supabase support if launch-day spike expected)
-- [ ] DNS propagation verified (`dig jinfuyou.app`, `dig api.jinfuyou.app` from external resolver)
+- [ ] DNS propagation verified (`dig goldenabundance.app`, `dig api.goldenabundance.app` from external resolver)
 - [ ] `/health` green under load of ~10 concurrent requests (launch-day baseline)
 
 ## 8. Cross-cutting concerns
@@ -564,7 +564,7 @@ Repo-level:
 | # | Item | Revisit when |
 |---|---|---|
 | 1 | Admin role system + news publishing UI | Editorial workflow becomes real; insert via Supabase SQL editor until then |
-| 2 | Supabase custom Auth domain (`auth.jinfuyou.app`) | Post-launch; requires Pro plan ($25/mo) |
+| 2 | Supabase custom Auth domain (`auth.goldenabundance.app`) | Post-launch; requires Pro plan ($25/mo) |
 | 3 | RLS policies | If Supabase Realtime or non-FastAPI direct-DB access is ever added |
 | 4 | Refresh-token revocation / per-session kill switch | If abuse or credential-compromise becomes a real concern |
 | 5 | Staging environment (second Supabase project + Railway env) | After first scary migration or when team grows past 2 engineers |

@@ -4,7 +4,7 @@
 
 **Goal:** Wrap the deployed app (plan 7a) in error reporting, uptime monitoring, and CI gating before public launch. Sentry on both backend and frontend with source maps + release tagging. UptimeRobot pings `/health` and the apex every 5 minutes. GitHub Actions runs the full backend + frontend CI on every PR. A concrete launch checklist closes out Phase 6+7.
 
-**Prereqs:** Plan 7a merged and live at `jinfuyou.app` + `api.jinfuyou.app`. Sentry account (free tier).
+**Prereqs:** Plan 7a merged and live at `goldenabundance.app` + `api.goldenabundance.app`. Sentry account (free tier).
 
 **Architecture:** No business-logic changes. Additive instrumentation: one `sentry_sdk.init()` call in `server.py`, one `Sentry.init()` call in `main.tsx`, a Vite plugin that uploads source maps to Sentry at build time. CI workflow runs what `just -f backend/justfile ci` + `pnpm -C frontend` scripts already cover; no new test infra.
 
@@ -264,7 +264,7 @@ def sentry_smoke() -> None:
 Commit + push. Wait for Railway to deploy. Hit:
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' https://api.jinfuyou.app/debug/sentry-smoke
+curl -s -o /dev/null -w '%{http_code}\n' https://api.goldenabundance.app/debug/sentry-smoke
 ```
 
 Expected: `500`.
@@ -430,8 +430,8 @@ export default defineConfig(({ mode }) => {
     plugins.push(
       sentryVitePlugin({
         authToken: env.SENTRY_AUTH_TOKEN,
-        org: env.SENTRY_ORG ?? "jinfuyou",
-        project: env.SENTRY_PROJECT ?? "jinfuyou-frontend",
+        org: env.SENTRY_ORG ?? "goldenabundance",
+        project: env.SENTRY_PROJECT ?? "goldenabundance-frontend",
         release: { name: env.VITE_RELEASE },
         sourcemaps: { assets: "./dist/**" },
       }),
@@ -515,7 +515,7 @@ Vercel → Settings → Environment Variables → add for Production and Preview
 | `VITE_SENTRY_DSN` | the frontend DSN from Step 1 (Production + Preview) |
 | `SENTRY_AUTH_TOKEN` | the token from Step 2 (mark as **Secret**, Production only) |
 | `SENTRY_ORG` | your Sentry org slug (Production only) |
-| `SENTRY_PROJECT` | `jinfuyou-frontend` (or whatever you named it) (Production only) |
+| `SENTRY_PROJECT` | `goldenabundance-frontend` (or whatever you named it) (Production only) |
 
 Note: `SENTRY_AUTH_TOKEN` without `VITE_` prefix because it's only used at build time, never baked into the client bundle.
 
@@ -564,7 +564,7 @@ function SentrySmokeButton() {
 
 Place `<SentrySmokeButton />` inside the screen's return tree.
 
-Commit, push, wait for Vercel build. Visit `https://jinfuyou.app/?debug=sentry` and click the button. The next render throws inside `<Bomb>`, `Sentry.ErrorBoundary` catches it and renders the "出了點問題" fallback, and Sentry's global handler reports the crash. Within ~30s, a new issue appears in Sentry → Issues (frontend project) with source-mapped line numbers and the `VITE_RELEASE` git SHA as the release tag.
+Commit, push, wait for Vercel build. Visit `https://goldenabundance.app/?debug=sentry` and click the button. The next render throws inside `<Bomb>`, `Sentry.ErrorBoundary` catches it and renders the "出了點問題" fallback, and Sentry's global handler reports the crash. Within ~30s, a new issue appears in Sentry → Issues (frontend project) with source-mapped line numbers and the `VITE_RELEASE` git SHA as the release tag.
 
 - [ ] **Step 6: Revert the smoke component**
 
@@ -589,11 +589,11 @@ After Vercel redeploys, re-visit `?debug=sentry` and confirm the button no longe
 
 - [ ] **Step 2: Add monitor 1**
 
-Type: HTTP(s). URL: `https://api.jinfuyou.app/health`. Friendly Name: `jinfuyou api`. Monitoring Interval: 5 minutes.
+Type: HTTP(s). URL: `https://api.goldenabundance.app/health`. Friendly Name: `goldenabundance api`. Monitoring Interval: 5 minutes.
 
 - [ ] **Step 3: Add monitor 2**
 
-Type: HTTP(s). URL: `https://jinfuyou.app/`. Friendly Name: `jinfuyou web`. Monitoring Interval: 5 minutes.
+Type: HTTP(s). URL: `https://goldenabundance.app/`. Friendly Name: `goldenabundance web`. Monitoring Interval: 5 minutes.
 
 - [ ] **Step 4: Configure alert contact**
 
@@ -759,7 +759,7 @@ Save. Attempt a direct push to `main` — GitHub should reject.
 
 Run each of these in an incognito browser window, signed into a personal Google account (not pre-seeded):
 
-- [ ] **Step 1:** Open `https://jinfuyou.app` → click sign-in → Google consent → back to `jinfuyou.app/auth/callback` → lands on `/welcome` (if first time) → complete profile → lands on `/home`.
+- [ ] **Step 1:** Open `https://goldenabundance.app` → click sign-in → Google consent → back to `goldenabundance.app/auth/callback` → lands on `/welcome` (if first time) → complete profile → lands on `/home`.
 
 - [ ] **Step 2:** Submit T1 (interest form) → success overlay fires → `/rewards` shows +50 points.
 
@@ -776,16 +776,16 @@ Run each of these in an incognito browser window, signed into a personal Google 
 - [ ] **Step 8:** Security headers:
 
 ```bash
-curl -sI https://jinfuyou.app \
+curl -sI https://goldenabundance.app \
   | grep -ciE 'content-security-policy|x-frame-options|x-content-type-options|referrer-policy|permissions-policy|strict-transport-security'
 ```
 
-Expect `6` — five from `frontend/vercel.json` (CSP + X-Frame-Options + X-Content-Type-Options + Referrer-Policy + Permissions-Policy) plus HSTS auto-added by Vercel. A lower count means one is missing — dig into `frontend/vercel.json`. Then confirm grade at https://securityheaders.com/?q=https%3A%2F%2Fjinfuyou.app — expect **A** or better.
+Expect `6` — five from `frontend/vercel.json` (CSP + X-Frame-Options + X-Content-Type-Options + Referrer-Policy + Permissions-Policy) plus HSTS auto-added by Vercel. A lower count means one is missing — dig into `frontend/vercel.json`. Then confirm grade at https://securityheaders.com/?q=https%3A%2F%2Fgoldenabundance.app — expect **A** or better.
 
 - [ ] **Step 9:** CORS smoke:
 
 ```bash
-curl -sI -H 'Origin: https://evil.example' https://api.jinfuyou.app/api/v1/me \
+curl -sI -H 'Origin: https://evil.example' https://api.goldenabundance.app/api/v1/me \
   | grep -i 'access-control-allow-origin' || echo 'CORS rejects ✓'
 ```
 
@@ -794,18 +794,18 @@ Expected: `CORS rejects ✓`.
 - [ ] **Step 10:** Auth smoke:
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' https://api.jinfuyou.app/api/v1/me
+curl -s -o /dev/null -w '%{http_code}\n' https://api.goldenabundance.app/api/v1/me
 ```
 
 Expected: `401`.
 
-- [ ] **Step 11:** Sign out on `jinfuyou.app` → redirect to `/sign-in` → bare URL `https://jinfuyou.app/me` bounces to `/sign-in?returnTo=%2Fme`.
+- [ ] **Step 11:** Sign out on `goldenabundance.app` → redirect to `/sign-in` → bare URL `https://goldenabundance.app/me` bounces to `/sign-in?returnTo=%2Fme`.
 
 - [ ] **Step 12:** DNS propagation check from a fresh external resolver:
 
 ```bash
-dig +short jinfuyou.app @1.1.1.1
-dig +short api.jinfuyou.app @1.1.1.1
+dig +short goldenabundance.app @1.1.1.1
+dig +short api.goldenabundance.app @1.1.1.1
 ```
 
 Both should resolve.

@@ -35,7 +35,7 @@ These steps happen in the Supabase dashboard; they produce the env var values th
 
 - [ ] **Step 3: Configure URL allowlist**
   - Authentication → URL Configuration:
-    - Site URL: `https://jinfuyou.app` (will set in 7a)
+    - Site URL: `https://goldenabundance.app` (will set in 7a)
     - Additional redirect URLs: `http://localhost:5173/auth/callback`
 
 - [ ] **Step 4: Create `app_backend` role for local dev smoke**

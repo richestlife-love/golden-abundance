@@ -6518,7 +6518,7 @@ function TeamCard({
     setIdCopied(true);
     setTimeout(() => setIdCopied(false), 1800);
   };
-  const shareUrl = "golden-abundance.vercel.app";
+  const shareUrl = "goldenabundance.app";
   const shareMessage = `嗨！我在「金富有」建立了志工團隊，一起來加入吧 ✨\n\n團隊編號：${team.id}\n開啟 App：${shareUrl}\n\n進入 App 後，點「我的 › 搜尋加入」輸入編號 ${team.id} 即可申請。`;
   const copyShare = () => {
     try {

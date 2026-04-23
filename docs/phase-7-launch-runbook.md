@@ -164,7 +164,7 @@ Supabase → Authentication → URL Configuration:
 - **Additional redirect URLs** (one per line):
   - `https://goldenabundance.app/auth/callback`
   - `http://localhost:5173/auth/callback`
-  - `https://*.vercel.app/auth/callback` (PR previews — tighten post-launch to `https://jfy-web-*.vercel.app/auth/callback`)
+  - `https://*.vercel.app/auth/callback` (PR previews — tighten post-launch to `https://<your-vercel-project-slug>-*.vercel.app/auth/callback`; find the slug in Vercel → your project → Deployments → a preview URL's prefix before the first hash)
 
 ### 8. Prod smoke (plan 7a §G)
 

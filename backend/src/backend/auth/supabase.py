@@ -10,7 +10,6 @@ All verification failures surface as ``ValueError`` so callers (the
 ``current_user`` dep) don't import PyJWT's exception hierarchy.
 """
 
-import logging
 from functools import lru_cache
 
 import jwt as pyjwt
@@ -20,8 +19,6 @@ from backend.config import get_settings
 from backend.contract.auth import SupabaseClaims
 
 _ALGORITHMS = ["RS256", "ES256"]
-
-_log = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
@@ -50,14 +47,5 @@ def verify_supabase_jwt(token: str) -> SupabaseClaims:
         )
     except (pyjwt.PyJWTError, RuntimeError) as exc:
         # RuntimeError covers PyJWKClient raising bare on malformed headers.
-        # Diagnostic — the 401 surfaced to the client collapses every
-        # failure mode into one message, so we log the real exception type
-        # + message here for Railway to pick up. Remove once sign-in is
-        # stable in prod.
-        _log.warning(
-            "supabase jwt verify failed: %s: %s",
-            type(exc).__name__,
-            exc,
-        )
         raise ValueError(str(exc)) from exc
     return SupabaseClaims.model_validate(raw)

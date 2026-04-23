@@ -21,9 +21,6 @@ describe("401 interceptor — session expiry", () => {
     await waitFor(() => expect(router.state.location.pathname).toBe("/sign-in"));
     expect(router.state.location.search).toMatchObject({
       returnTo: expect.stringContaining("/me"),
-      // The `error` flag gates the sign-in auto-redirect — without it, a
-      // persistent 401 loops sign-in → Google → callback → 401 → … .
-      error: "expired",
     });
     await waitFor(() => expect(screen.getByText(/工作階段已過期/)).toBeInTheDocument());
   });

@@ -45,16 +45,14 @@ export async function signOut(opts: SignOutOpts = {}): Promise<void> {
 
     const router = getRouterRef();
     if (router) {
-      // Expired sessions bounce through /sign-in so the user can re-auth
-      // and land back where they were. The `error=expired` flag gates the
-      // auto-redirect — without it, a persistent 401 (e.g. JWKS / issuer
-      // mismatch) loops forever: sign-in → Google → callback → API 401 →
-      // signOut → sign-in → … Explicit logout just goes home; auto-
-      // redirecting them straight back to Google would be surprising.
+      // Expired sessions bounce through /sign-in with returnTo so the
+      // auto-redirect transparently re-auths the user. Explicit logout
+      // goes home — auto-redirecting them straight back to Google would
+      // be surprising.
       if (opts.reason === "expired") {
         await router.navigate({
           to: "/sign-in",
-          search: { error: "expired", returnTo: opts.returnTo },
+          search: opts.returnTo ? { returnTo: opts.returnTo } : {},
         });
       } else {
         await router.navigate({ to: "/" });

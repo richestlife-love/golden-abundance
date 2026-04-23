@@ -7,7 +7,7 @@ beforeAll(() => {
   // file needed — other tests install a fake via setSupabaseClientForTesting
   // and never trigger the real factory.
   vi.stubEnv("VITE_SUPABASE_URL", "https://test-ref.supabase.co");
-  vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-anon-key-not-a-real-jwt");
+  vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "sb_publishable_test-key-not-real");
 });
 
 afterEach(() => setSupabaseClientForTesting(null));

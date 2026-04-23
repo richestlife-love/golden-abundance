@@ -23,7 +23,7 @@ Local overrides live in `frontend/.env.local` (gitignored). Copy `frontend/.env.
 | `VITE_ALLOWED_HOSTS`     | Comma-separated hosts for Vite's `allowedHosts` (needed behind a tunnel such as ngrok).                                                         |
 | `NGROK_HOST`             | Hostname used by `just frontend tunnel`.                                                                                                        |
 | `VITE_SUPABASE_URL`      | Supabase project URL (`https://<ref>.supabase.co`). Required for sign-in to work.                                                               |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anon key (public by design). Required for sign-in to work.                                                                             |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key (public by design; format `sb_publishable_...`). Required for sign-in to work.                                  |
 | `VITE_SENTRY_DSN`        | Sentry DSN for browser error reporting. Optional — `Sentry.init()` is skipped when absent. Baked into the bundle at build time; safe to expose. |
 
 ## pnpm scripts

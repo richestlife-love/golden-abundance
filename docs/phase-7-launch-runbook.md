@@ -126,7 +126,7 @@ Environment variables (Production + Preview):
 | Var | Value |
 |---|---|
 | `VITE_SUPABASE_URL` | `https://<ref>.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | anon JWT from Supabase → Settings → API |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | publishable key from Supabase → Settings → API (format `sb_publishable_...`) |
 
 `VITE_RELEASE` is set via the build command above — do **not** add it to the env-var UI (the literal `${…}` would be baked into the bundle).
 

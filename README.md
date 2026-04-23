@@ -37,7 +37,7 @@ cd frontend && just ci
 
 | Recipe | Purpose | When to run |
 | --- | --- | --- |
-| `just gen-types` | Regenerate `frontend/src/api/schema.d.ts` from FastAPI OpenAPI (gitignored; loaded in-process, no running server or DB needed). | After backend routes/schemas change. |
+| `just gen-types` | Refresh the committed `frontend/openapi.json` snapshot from FastAPI's in-process `app.openapi()` and regenerate `frontend/src/api/schema.d.ts` from it. `pnpm build` / `pnpm typecheck` also regenerate `schema.d.ts` from the committed snapshot, so this recipe only needs to run when the backend API changes (commit the updated `openapi.json`). | After backend routes/schemas change. |
 
 ### Backend (`backend/justfile`)
 

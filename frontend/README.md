@@ -10,7 +10,7 @@ Vite proxies `/api/*` to the backend (default `http://localhost:8000`, overridab
 fetch("/api/v1/me");
 ```
 
-`just frontend dev` boots Vite only — API calls will 404 at the proxy unless a backend is already running (`just backend dev`). `pnpm build` and `pnpm typecheck` require `src/api/schema.d.ts`; run `just gen-types` from the repo root first.
+`just frontend dev` boots Vite only — API calls will 404 at the proxy unless a backend is already running (`just backend dev`). `pnpm build` and `pnpm typecheck` regenerate `src/api/schema.d.ts` from the committed `frontend/openapi.json` automatically, so no pre-step is required; run `just gen-types` from the repo root only when the backend API changes (it refreshes `openapi.json`, which is committed).
 
 ## Environment
 
@@ -34,15 +34,15 @@ Local overrides live in `frontend/.env.local` (gitignored). Copy `frontend/.env.
 | ------------------------------- | --------------------------------------------------- |
 | `pnpm dev`                      | Vite dev server.                                    |
 | `pnpm test` / `pnpm test:watch` | Vitest run / watch.                                 |
-| `pnpm build`                    | Production bundle (requires `src/api/schema.d.ts`). |
-| `pnpm typecheck`                | `tsc --noEmit` (requires `src/api/schema.d.ts`).    |
+| `pnpm build`                    | Regenerates `src/api/schema.d.ts` from `openapi.json`, then `tsc -b` + `vite build`. |
+| `pnpm typecheck`                | Regenerates `src/api/schema.d.ts` from `openapi.json`, then `tsc -b`.                |
 | `pnpm lint` / `pnpm format`     | ESLint / Prettier.                                  |
 
 ## Layout
 
 - `index.html` — Vite entry (loads `/src/main.tsx`)
 - `src/main.tsx` — React root with `StrictMode`, `QueryClientProvider`, `AuthProvider`, `UIStateProvider`, and TanStack Router
-- `src/api/` — fetch client, per-resource modules, `schema.d.ts` (gitignored — run `just gen-types`)
+- `src/api/` — fetch client, per-resource modules, `schema.d.ts` (gitignored; regenerated from the committed `frontend/openapi.json` by `pnpm build` / `pnpm typecheck`)
 - `src/auth/` — `AuthProvider`, `signOut()`, Supabase session wiring
 - `src/lib/supabase.ts` — Supabase client singleton (PKCE, `detectSessionInUrl: false`) with a test-override hook; `parseReturnTo` in the same folder scrubs URL `returnTo` params for open-redirect safety
 - `src/routes/` — TanStack Router route tree (file-per-route, co-exports the route object + component)

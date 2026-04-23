@@ -4,15 +4,38 @@ import type { AuthError } from "@supabase/supabase-js";
 import { renderRoute } from "../../test/renderRoute";
 
 describe("/auth/callback", () => {
-  it("calls exchangeCodeForSession with the URL query string", async () => {
+  it("calls exchangeCodeForSession with just the code value (not the query string)", async () => {
     const { fake } = renderRoute("/auth/callback?code=abc&state=xyz");
     await waitFor(() => {
       expect(fake.exchangeCalls).toHaveLength(1);
     });
-    // jsdom uses window.location.search, which is empty in memory-history
-    // tests. The point is we pass through SOMETHING — non-zero calls is
-    // the real assertion.
-    expect(typeof fake.exchangeCalls[0]).toBe("string");
+    // The SDK sends its arg verbatim as `auth_code` — passing the raw
+    // query string triggers "invalid flow state, no valid flow state
+    // found" on the server. Pin the exact value so the regression is
+    // unmistakable.
+    expect(fake.exchangeCalls[0]).toBe("abc");
+  });
+
+  it("skips the exchange and redirects to /sign-in when code is missing", async () => {
+    const { router, fake } = renderRoute("/auth/callback?returnTo=%2Fhome");
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/sign-in");
+    });
+    expect(fake.exchangeCalls).toHaveLength(0);
+    const toast = await screen.findByRole("status");
+    expect(toast).toHaveTextContent(/登入失敗/);
+  });
+
+  it("surfaces the provider's error_description when the callback carries one", async () => {
+    const { router, fake } = renderRoute(
+      "/auth/callback?error=access_denied&error_description=User%20cancelled",
+    );
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/sign-in");
+    });
+    expect(fake.exchangeCalls).toHaveLength(0);
+    const toast = await screen.findByRole("status");
+    expect(toast).toHaveTextContent(/User cancelled/);
   });
 
   it("navigates to returnTo on successful exchange", async () => {

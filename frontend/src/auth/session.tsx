@@ -45,10 +45,17 @@ export async function signOut(opts: SignOutOpts = {}): Promise<void> {
 
     const router = getRouterRef();
     if (router) {
-      await router.navigate({
-        to: "/sign-in",
-        search: opts.returnTo ? { returnTo: opts.returnTo } : {},
-      });
+      // Expired sessions bounce through /sign-in so the user can re-auth
+      // and land back where they were. Explicit logout goes home —
+      // auto-redirecting them straight back to Google would be surprising.
+      if (opts.reason === "expired") {
+        await router.navigate({
+          to: "/sign-in",
+          search: opts.returnTo ? { returnTo: opts.returnTo } : {},
+        });
+      } else {
+        await router.navigate({ to: "/" });
+      }
     }
     // Cache clear last so in-flight queries don't refetch with the
     // (now-cleared) token mid-teardown.

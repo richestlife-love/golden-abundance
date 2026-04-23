@@ -29,15 +29,15 @@ describe("_authed layout", () => {
 describe("public routes", () => {
   it("renders sign-in at /sign-in", async () => {
     renderRoute("/sign-in");
-    // GoogleAuthScreen.tsx:98 renders "使用 Google 帳號登入" (Traditional — present in source).
+    // sign-in.tsx renders "正在前往 Google 登入⋯" while it kicks off the OAuth redirect.
     await waitFor(() => {
-      expect(screen.getByText("使用 Google 帳號登入")).toBeInTheDocument();
+      expect(screen.getByText("正在前往 Google 登入⋯")).toBeInTheDocument();
     });
   });
 
   it("guest visiting /welcome is redirected to /sign-in", async () => {
     const { router } = renderRoute("/welcome");
-    await expectScreen(router, "/sign-in", "使用 Google 帳號登入");
+    await expectScreen(router, "/sign-in", "正在前往 Google 登入⋯");
   });
 });
 
@@ -52,7 +52,7 @@ describe("authed simple routes", () => {
 
   it("redirects guest /home to /sign-in", async () => {
     const { router } = renderRoute("/home");
-    await expectScreen(router, "/sign-in", "使用 Google 帳號登入");
+    await expectScreen(router, "/sign-in", "正在前往 Google 登入⋯");
   });
 
   it("redirects authed-incomplete /home to /welcome", async () => {
@@ -105,7 +105,7 @@ describe("landing CTA", () => {
     const { router } = renderRoute("/");
     await waitFor(() => expect(screen.getByText("金富有志工")).toBeInTheDocument());
     await userEvent.click(screen.getByRole("button", { name: /開啟/ }));
-    await expectScreen(router, "/sign-in", "使用 Google 帳號登入");
+    await expectScreen(router, "/sign-in", "正在前往 Google 登入⋯");
   });
 
   it("authed + complete visiting / → /home (auto redirect)", async () => {
@@ -138,12 +138,14 @@ describe("guard sweep", () => {
     await expectScreen(router, "/welcome", "完善個人資料");
   });
 
-  it("signing out while on /home redirects to /sign-in", async () => {
+  it("signing out while on /home redirects to the landing page", async () => {
     const { router } = renderRoute("/home", { session: "signed-in" });
     await expectScreen(router, "/home", "首頁");
     const user = userEvent.setup();
     await user.click(screen.getByLabelText("登出"));
-    await waitFor(() => expect(router.state.location.pathname).toBe("/sign-in"));
+    // Explicit logout lands on / — only expired-session signOut routes
+    // through /sign-in (covered separately in session-expiry.test.tsx).
+    await waitFor(() => expect(router.state.location.pathname).toBe("/"));
   });
 });
 

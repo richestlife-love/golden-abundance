@@ -1,16 +1,13 @@
-"""Unit tests for observability — Sentry scrubbing and structured logging."""
+"""Unit tests for observability — Sentry scrubbing and access logging."""
 
 from __future__ import annotations
 
-import io
-import json
 import logging
 from typing import Any, cast
 
 from sentry_sdk.types import Event
 
 from backend.observability import (
-    JsonFormatter,
     configure_logging,
     scrub_sensitive_bodies,
 )
@@ -94,88 +91,19 @@ def test_scrub_does_not_confuse_similar_path_prefix() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Structured logging
+# Logging configuration
 # ---------------------------------------------------------------------------
 
 
-def test_json_formatter_emits_required_fields() -> None:
-    record = logging.LogRecord(
-        name="test.logger",
-        level=logging.INFO,
-        pathname=__file__,
-        lineno=1,
-        msg="hello %s",
-        args=("world",),
-        exc_info=None,
-    )
-    payload = json.loads(JsonFormatter().format(record))
-    assert payload["level"] == "INFO"
-    assert payload["logger"] == "test.logger"
-    assert payload["msg"] == "hello world"
-    assert "ts" in payload
-
-
-def test_json_formatter_lifts_structured_extras() -> None:
-    record = logging.LogRecord(
-        name="backend.request",
-        level=logging.INFO,
-        pathname=__file__,
-        lineno=1,
-        msg="request",
-        args=(),
-        exc_info=None,
-    )
-    record.method = "GET"
-    record.path = "/api/v1/news"
-    record.status = 200
-    record.duration_ms = 12
-    record.user_id = "00000000-0000-0000-0000-000000000001"
-    payload = json.loads(JsonFormatter().format(record))
-    assert payload["method"] == "GET"
-    assert payload["path"] == "/api/v1/news"
-    assert payload["status"] == 200
-    assert payload["duration_ms"] == 12
-    assert payload["user_id"] == "00000000-0000-0000-0000-000000000001"
-
-
-def test_json_formatter_omits_missing_extras() -> None:
-    """Extras that weren't set must not appear in the payload as null."""
-    record = logging.LogRecord(
-        name="test",
-        level=logging.INFO,
-        pathname=__file__,
-        lineno=1,
-        msg="plain",
-        args=(),
-        exc_info=None,
-    )
-    payload = json.loads(JsonFormatter().format(record))
-    assert "user_id" not in payload
-    assert "duration_ms" not in payload
-
-
-def test_configure_logging_attaches_json_handler_once() -> None:
+def test_configure_logging_is_idempotent() -> None:
     configure_logging()
     configure_logging()
     root = logging.getLogger()
-    json_handlers = [h for h in root.handlers if isinstance(h.formatter, JsonFormatter)]
-    assert len(json_handlers) == 1
+    backend_handlers = [h for h in root.handlers if getattr(h, "name", None) == "backend.root"]
+    assert len(backend_handlers) == 1
 
 
-def test_configure_logging_output_is_valid_json() -> None:
-    """Smoke: a log emitted through the configured handler parses as JSON."""
+def test_configure_logging_silences_uvicorn_loggers() -> None:
     configure_logging()
-    root = logging.getLogger()
-    stream = io.StringIO()
-    json_handler = next(h for h in root.handlers if isinstance(h.formatter, JsonFormatter))
-    original_stream = json_handler.stream  # type: ignore[attr-defined]
-    json_handler.stream = stream  # type: ignore[attr-defined]
-    try:
-        logging.getLogger("test.observability").info("probe", extra={"user_id": "abc"})
-    finally:
-        json_handler.stream = original_stream  # type: ignore[attr-defined]
-
-    line = stream.getvalue().strip().splitlines()[-1]
-    payload = json.loads(line)
-    assert payload["msg"] == "probe"
-    assert payload["user_id"] == "abc"
+    assert logging.getLogger("uvicorn.access").propagate is False
+    assert logging.getLogger("uvicorn").propagate is False

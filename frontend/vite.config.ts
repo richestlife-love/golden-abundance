@@ -15,6 +15,12 @@ export default defineConfig(({ mode }) => {
         .filter(Boolean)
     : [];
 
+  if (env.VERCEL_ENV === "production" && !(env.SENTRY_AUTH_TOKEN && env.VITE_RELEASE)) {
+    throw new Error(
+      "Prod build requires SENTRY_AUTH_TOKEN and VITE_RELEASE. Without them the Sentry plugin is skipped and .map files ship to visitors.",
+    );
+  }
+
   const plugins: PluginOption[] = [react()];
   if (env.SENTRY_AUTH_TOKEN && env.VITE_RELEASE) {
     plugins.push(
@@ -39,11 +45,11 @@ export default defineConfig(({ mode }) => {
   return {
     plugins,
     build: {
-      // Emit .map files + `//# sourceMappingURL=` comment so the Sentry
-      // plugin can auto-detect references (avoids a noisy warning). The
-      // plugin then deletes the .map files after upload, so visitors never
-      // fetch them — only Sentry resolves stack traces.
-      sourcemap: true,
+      // 'hidden' emits .map files without the `//# sourceMappingURL=`
+      // comment, so devtools doesn't 404 on them. The Sentry plugin
+      // uploads via its explicit assets glob (debug IDs match JS↔map)
+      // then deletes the maps from dist before Vercel uploads.
+      sourcemap: "hidden",
       rolldownOptions: {
         output: {
           // Split heavy third-party libs into their own chunks so the main

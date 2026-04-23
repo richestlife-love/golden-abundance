@@ -1,0 +1,2729 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Golden Abundance API",
+    "description": "Phase 7 backend \u2014 see backend/src/backend/contract/endpoints.md",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Readyz",
+        "operationId": "readyz_readyz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Readyz Readyz Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Get Me",
+        "operationId": "get_me_api_v1_me_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Patch Me",
+        "operationId": "patch_me_api_v1_me_patch",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/profile": {
+      "post": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Complete Profile",
+        "operationId": "complete_profile_api_v1_me_profile_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeProfileCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/teams": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Get Me Teams",
+        "operationId": "get_me_teams_api_v1_me_teams_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeTeamsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/tasks": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Get Me Tasks",
+        "operationId": "get_me_tasks_api_v1_me_tasks_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Task"
+                  },
+                  "title": "Response Get Me Tasks Api V1 Me Tasks Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/rewards": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Get Me Rewards",
+        "operationId": "get_me_rewards_api_v1_me_rewards_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Reward"
+                  },
+                  "title": "Response Get Me Rewards Api V1 Me Rewards Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/news": {
+      "get": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Get News",
+        "operationId": "get_news_api_v1_news_get",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paginated_NewsItem_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/leaderboard/users": {
+      "get": {
+        "tags": [
+          "leaderboard"
+        ],
+        "summary": "Get Leaderboard Users",
+        "operationId": "get_leaderboard_users_api_v1_leaderboard_users_get",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "week",
+                "month",
+                "all_time"
+              ],
+              "type": "string",
+              "default": "week",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paginated_UserLeaderboardEntry_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/leaderboard/teams": {
+      "get": {
+        "tags": [
+          "leaderboard"
+        ],
+        "summary": "Get Leaderboard Teams",
+        "operationId": "get_leaderboard_teams_api_v1_leaderboard_teams_get",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "week",
+                "month",
+                "all_time"
+              ],
+              "type": "string",
+              "default": "week",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paginated_TeamLeaderboardEntry_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/{task_id}": {
+      "get": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Get Task",
+        "operationId": "get_task_api_v1_tasks__task_id__get",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/{task_id}/submit": {
+      "post": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Submit",
+        "operationId": "submit_api_v1_tasks__task_id__submit_post",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/InterestFormBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/TicketFormBody"
+                  }
+                ],
+                "discriminator": {
+                  "propertyName": "form_type",
+                  "mapping": {
+                    "interest": "#/components/schemas/InterestFormBody",
+                    "ticket": "#/components/schemas/TicketFormBody"
+                  }
+                },
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSubmissionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/teams": {
+      "get": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "List Teams",
+        "operationId": "list_teams_api_v1_teams_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "topic",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Topic"
+            }
+          },
+          {
+            "name": "leader_display_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Leader Display Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paginated_TeamRef_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/teams/{team_id}": {
+      "get": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "Get Team",
+        "operationId": "get_team_api_v1_teams__team_id__get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Team Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Team"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "Update Team",
+        "operationId": "update_team_api_v1_teams__team_id__patch",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Team Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Team"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/teams/{team_id}/join-requests": {
+      "post": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "Request To Join",
+        "operationId": "request_to_join_api_v1_teams__team_id__join_requests_post",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Team Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinRequest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/teams/{team_id}/join-requests/{req_id}": {
+      "delete": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "Cancel Join Request",
+        "operationId": "cancel_join_request_api_v1_teams__team_id__join_requests__req_id__delete",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Team Id"
+            }
+          },
+          {
+            "name": "req_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Req Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/teams/{team_id}/join-requests/{req_id}/approve": {
+      "post": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "Approve Request",
+        "operationId": "approve_request_api_v1_teams__team_id__join_requests__req_id__approve_post",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Team Id"
+            }
+          },
+          {
+            "name": "req_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Req Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Team"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/teams/{team_id}/join-requests/{req_id}/reject": {
+      "post": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "Reject Request",
+        "operationId": "reject_request_api_v1_teams__team_id__join_requests__req_id__reject_post",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Team Id"
+            }
+          },
+          {
+            "name": "req_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Req Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/teams/{team_id}/leave": {
+      "post": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "Leave",
+        "operationId": "leave_api_v1_teams__team_id__leave_post",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Team Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InterestFormBody": {
+        "properties": {
+          "form_type": {
+            "type": "string",
+            "const": "interest",
+            "title": "Form Type"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Phone"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Interests"
+          },
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "availability": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Availability"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "form_type",
+          "name",
+          "phone",
+          "interests",
+          "availability"
+        ],
+        "title": "InterestFormBody",
+        "description": "POST /tasks/{id}/submit body for tasks with form_type == 'interest'\n(task 1)."
+      },
+      "JoinRequest": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "team_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Team Id"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserRef"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "title": "Status"
+          },
+          "requested_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Requested At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "team_id",
+          "user",
+          "status",
+          "requested_at"
+        ],
+        "title": "JoinRequest",
+        "description": "A pending/approved/rejected request to join a team. Visible to\nthe team's leader and to the requester themselves."
+      },
+      "MeProfileCreateResponse": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "led_team": {
+            "$ref": "#/components/schemas/Team"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "user",
+          "led_team"
+        ],
+        "title": "MeProfileCreateResponse",
+        "description": "Response body for POST /me/profile. Returned atomically with the\nprofile completion and led-team creation."
+      },
+      "MeTeamsResponse": {
+        "properties": {
+          "led": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Team"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "joined": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Team"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MeTeamsResponse",
+        "description": "Response body for GET /me/teams. Named envelope over an inline\ndict so Phase 4 TS codegen and Phase 5 FastAPI share one OpenAPI\nschema."
+      },
+      "NewsItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "\u516c\u544a",
+              "\u6d3b\u52d5",
+              "\u901a\u77e5"
+            ],
+            "title": "Category"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Published At"
+          },
+          "pinned": {
+            "type": "boolean",
+            "title": "Pinned",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "body",
+          "category",
+          "published_at"
+        ],
+        "title": "NewsItem",
+        "description": "A single entry in the home-screen news carousel."
+      },
+      "Paginated_NewsItem_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NewsItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "Paginated[NewsItem]"
+      },
+      "Paginated_TeamLeaderboardEntry_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TeamLeaderboardEntry"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "Paginated[TeamLeaderboardEntry]"
+      },
+      "Paginated_TeamRef_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TeamRef"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "Paginated[TeamRef]"
+      },
+      "Paginated_UserLeaderboardEntry_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UserLeaderboardEntry"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "Paginated[UserLeaderboardEntry]"
+      },
+      "ProfileCreate": {
+        "properties": {
+          "zh_name": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Zh Name"
+          },
+          "en_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "En Name"
+          },
+          "nickname": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nickname"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Phone"
+          },
+          "phone_code": {
+            "type": "string",
+            "maxLength": 8,
+            "minLength": 1,
+            "title": "Phone Code"
+          },
+          "line_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Id"
+          },
+          "telegram_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Id"
+          },
+          "country": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Country"
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Location"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "zh_name",
+          "phone",
+          "phone_code",
+          "country",
+          "location"
+        ],
+        "title": "ProfileCreate",
+        "description": "Request body for POST /me/profile (first-time profile completion).\nSide effect on the backend: user's led team is created in the same\ntransaction."
+      },
+      "ProfileUpdate": {
+        "properties": {
+          "zh_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zh Name"
+          },
+          "en_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "En Name"
+          },
+          "nickname": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nickname"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "phone_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 8,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Code"
+          },
+          "line_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Id"
+          },
+          "telegram_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Id"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ProfileUpdate",
+        "description": "Request body for PATCH /me. Partial update; all fields optional.\n\nSetting a field to ``null`` clears it; empty strings are rejected.\nFields omitted from the request are left unchanged."
+      },
+      "Reward": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Id"
+          },
+          "task_title": {
+            "type": "string",
+            "title": "Task Title"
+          },
+          "bonus": {
+            "type": "string",
+            "title": "Bonus"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "earned",
+              "claimed"
+            ],
+            "title": "Status"
+          },
+          "earned_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Earned At"
+          },
+          "claimed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "task_id",
+          "task_title",
+          "bonus",
+          "status",
+          "earned_at"
+        ],
+        "title": "Reward",
+        "description": "A user's earned (or claimed) reward."
+      },
+      "Task": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "display_id": {
+            "type": "string",
+            "title": "Display Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "tag": {
+            "type": "string",
+            "enum": [
+              "\u63a2\u7d22",
+              "\u793e\u533a",
+              "\u966a\u4f34"
+            ],
+            "title": "Tag"
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$",
+            "title": "Color"
+          },
+          "points": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Points"
+          },
+          "bonus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bonus"
+          },
+          "due_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
+          },
+          "est_minutes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Est Minutes"
+          },
+          "is_challenge": {
+            "type": "boolean",
+            "title": "Is Challenge",
+            "default": false
+          },
+          "requires": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Requires"
+          },
+          "cap": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap"
+          },
+          "form_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "interest",
+                  "ticket"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Form Type"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "todo",
+              "in_progress",
+              "completed",
+              "expired",
+              "locked"
+            ],
+            "title": "Status"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/TaskStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "team_progress": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TeamChallengeProgress"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "display_id",
+          "title",
+          "summary",
+          "description",
+          "tag",
+          "color",
+          "points",
+          "est_minutes",
+          "status",
+          "created_at"
+        ],
+        "title": "Task",
+        "description": "User-facing task view. Server-side merge of the global task\ndefinition and the caller's per-user state."
+      },
+      "TaskStep": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "done": {
+            "type": "boolean",
+            "title": "Done"
+          },
+          "order": {
+            "type": "integer",
+            "title": "Order"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "done",
+          "order"
+        ],
+        "title": "TaskStep",
+        "description": "One step in a task's checklist. `done` reflects the caller's state."
+      },
+      "TaskSubmissionResponse": {
+        "properties": {
+          "task": {
+            "$ref": "#/components/schemas/Task"
+          },
+          "reward": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Reward"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "title": "TaskSubmissionResponse",
+        "description": "Response body for POST /tasks/{id}/submit.\n\n`reward` is null when the task has `bonus is None`."
+      },
+      "Team": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "display_id": {
+            "type": "string",
+            "pattern": "^T-[A-Z0-9]{3,10}$",
+            "title": "Display Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "alias": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alias"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "leader": {
+            "$ref": "#/components/schemas/UserRef"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/UserRef"
+            },
+            "type": "array",
+            "title": "Members"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "leader",
+                  "member"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "requests": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/JoinRequest"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requests"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "display_id",
+          "name",
+          "topic",
+          "leader",
+          "created_at"
+        ],
+        "title": "Team",
+        "description": "Full team view.\n\n`role` reflects the caller's relationship to the team (leader /\nmember / None for outsiders). `requests` is populated only when the\ncaller is the leader; members and outsiders see `None`.\n\nAggregate points (all-time / week) live in the leaderboard view \u2014\nnot on the team row. The team size cap (currently 6) is a property\nof the T3 challenge task def (``TaskDefRow.cap``), not stored here."
+      },
+      "TeamChallengeProgress": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "cap": {
+            "type": "integer",
+            "title": "Cap"
+          },
+          "led_total": {
+            "type": "integer",
+            "title": "Led Total"
+          },
+          "joined_total": {
+            "type": "integer",
+            "title": "Joined Total"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "total",
+          "cap",
+          "led_total",
+          "joined_total"
+        ],
+        "title": "TeamChallengeProgress",
+        "description": "Aggregate progress for a team-challenge task.\n\n`total = max(led_total, joined_total)` \u2014 the higher of the caller's\nled-team or joined-team head count (server-computed)."
+      },
+      "TeamLeaderboardEntry": {
+        "properties": {
+          "team": {
+            "$ref": "#/components/schemas/TeamRef"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "week_points": {
+            "type": "integer",
+            "title": "Week Points"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "team",
+          "rank",
+          "points",
+          "week_points"
+        ],
+        "title": "TeamLeaderboardEntry",
+        "description": "Single entry in the team leaderboard."
+      },
+      "TeamRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "display_id": {
+            "type": "string",
+            "title": "Display Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "leader": {
+            "$ref": "#/components/schemas/UserRef"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "display_id",
+          "name",
+          "topic",
+          "leader"
+        ],
+        "title": "TeamRef",
+        "description": "Thin team embedding for leaderboard entries and search results."
+      },
+      "TeamUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "alias": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alias"
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "TeamUpdate",
+        "description": "Request body for PATCH /teams/{id} (leader only). All fields\noptional for partial update.\n\nSetting a field to ``null`` clears it where the column is nullable;\nempty strings are rejected. Fields omitted from the request are\nleft unchanged."
+      },
+      "TicketFormBody": {
+        "properties": {
+          "form_type": {
+            "type": "string",
+            "const": "ticket",
+            "title": "Form Type"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          },
+          "ticket_725": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Ticket 725"
+          },
+          "ticket_726": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Ticket 726"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "form_type",
+          "name",
+          "ticket_725",
+          "ticket_726"
+        ],
+        "title": "TicketFormBody",
+        "description": "POST /tasks/{id}/submit body for tasks with form_type == 'ticket'\n(task 2)."
+      },
+      "User": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "display_id": {
+            "type": "string",
+            "pattern": "^U[A-Z0-9]{3,7}$",
+            "title": "Display Id"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "zh_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zh Name"
+          },
+          "en_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "En Name"
+          },
+          "nickname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nickname"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "phone_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Code"
+          },
+          "line_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Id"
+          },
+          "telegram_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Id"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "profile_complete": {
+            "type": "boolean",
+            "title": "Profile Complete"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "display_id",
+          "email",
+          "name",
+          "profile_complete",
+          "created_at"
+        ],
+        "title": "User",
+        "description": "Authenticated caller's profile. Returned by GET /me."
+      },
+      "UserLeaderboardEntry": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserRef"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "week_points": {
+            "type": "integer",
+            "title": "Week Points"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "user",
+          "rank",
+          "points",
+          "week_points"
+        ],
+        "title": "UserLeaderboardEntry",
+        "description": "Single entry in the user leaderboard."
+      },
+      "UserRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "display_id": {
+            "type": "string",
+            "title": "Display Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "display_id",
+          "name"
+        ],
+        "title": "UserRef",
+        "description": "Thin user embedding (id + display_id + name + avatar_url)."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

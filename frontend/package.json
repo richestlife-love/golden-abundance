@@ -10,9 +10,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "openapi-typescript openapi.json -o src/api/schema.d.ts && tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b",
+    "typecheck": "openapi-typescript openapi.json -o src/api/schema.d.ts && tsc -b",
     "format": "prettier --write --ignore-unknown .",
     "format:check": "prettier --check --ignore-unknown .",
     "lint": "eslint --fix .",

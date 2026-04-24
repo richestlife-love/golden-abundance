@@ -67,18 +67,20 @@ def test_verify_rejects_alg_none() -> None:
 def test_verify_rejects_hs256_signed_token() -> None:
     """Attacker can't downgrade RS256 → HS256 by signing with a guessed secret."""
     import jwt as pyjwt
+    from jwt.warnings import InsecureKeyLengthWarning
 
-    forged = pyjwt.encode(
-        {
-            "sub": str(UUID(int=1)),
-            "email": "x@x.com",
-            "aud": "authenticated",
-            "iss": "https://test-ref.supabase.co/auth/v1",
-            "exp": 9_999_999_999,
-            "iat": 0,
-        },
-        key="guessed-secret",
-        algorithm="HS256",
-    )
+    with pytest.warns(InsecureKeyLengthWarning):
+        forged = pyjwt.encode(
+            {
+                "sub": str(UUID(int=1)),
+                "email": "x@x.com",
+                "aud": "authenticated",
+                "iss": "https://test-ref.supabase.co/auth/v1",
+                "exp": 9_999_999_999,
+                "iat": 0,
+            },
+            key="guessed-secret",
+            algorithm="HS256",
+        )
     with pytest.raises(ValueError, match=r"."):
         verify_supabase_jwt(forged)

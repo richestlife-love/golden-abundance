@@ -42,10 +42,9 @@ export default function GoogleAuthScreen({ onCancel, onSignIn }: GoogleAuthScree
           padding: "16px 24px 0",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: "flex-end",
         }}
       >
-        <GoogleLogo />
         {!pending && (
           <button
             type="button"

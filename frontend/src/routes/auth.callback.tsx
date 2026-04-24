@@ -59,7 +59,8 @@ function AuthCallbackRoute() {
     })();
   }, [navigate, search.code, search.error, search.error_description, search.returnTo]);
 
-  return <div style={{ padding: 32, textAlign: "center", color: "var(--fg)" }}>正在完成登入⋯</div>;
+  // TODO: add a skeleton page for the destination route.
+  return null;
 }
 
 export const authCallbackRoute = createRoute({

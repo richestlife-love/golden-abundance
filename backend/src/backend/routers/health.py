@@ -10,14 +10,15 @@ connection takes the pod out of rotation instead of silently serving
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import text
 
+from backend.config import get_settings
 from backend.db.engine import get_engine
 
 router = APIRouter()
 
 
 @router.api_route("/health", methods=["GET", "HEAD"], tags=["internal"], include_in_schema=False)
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
+async def health() -> dict[str, str | None]:
+    return {"status": "ok", "release": get_settings().app_release}
 
 
 @router.api_route("/readyz", methods=["GET", "HEAD"], tags=["internal"], include_in_schema=False)

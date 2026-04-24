@@ -54,9 +54,11 @@ COPY --from=build --chown=app:app /app/.venv /app/.venv
 COPY --from=build --chown=app:app /app/alembic /app/alembic
 COPY --from=build --chown=app:app /app/alembic.ini /app/alembic.ini
 
+ARG RAILWAY_GIT_COMMIT_SHA=""
 ENV PATH="/app/.venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1 \
-    PORT=8000
+    PORT=8000 \
+    APP_RELEASE=$RAILWAY_GIT_COMMIT_SHA
 
 EXPOSE 8000
 
